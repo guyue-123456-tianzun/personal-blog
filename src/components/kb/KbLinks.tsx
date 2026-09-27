@@ -15,6 +15,7 @@ const LINKS = [
   { href: "/kb/finance", label: "记账" },
   { href: "/kb/navlinks", label: "导航页" },
   { href: "/kb/timeline", label: "时间线" },
+  { href: "/kb/graph", label: "图谱" },
   { href: "/kb/report", label: "周报" },
   { href: "/kb/media", label: "书影音" },
   { href: "/kb/friends", label: "好友" },

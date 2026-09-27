@@ -1,38 +1,85 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
   <defs>
-    <linearGradient id="sky" x1="0" y1="0" x2="0.6" y2="1">
-      <stop offset="0" stop-color="#1e1b4b"/>
-      <stop offset="0.45" stop-color="#5b21b6"/>
-      <stop offset="0.8" stop-color="#be185d"/>
-      <stop offset="1" stop-color="#f472b6"/>
+    <linearGradient id="sky" x1="0" y1="0" x2="0.35" y2="1">
+      <stop offset="0" stop-color="#171336"/>
+      <stop offset="0.38" stop-color="#4c2a85"/>
+      <stop offset="0.68" stop-color="#9d4edd"/>
+      <stop offset="0.86" stop-color="#e0659b"/>
+      <stop offset="1" stop-color="#f7a1c4"/>
     </linearGradient>
-    <radialGradient id="moonglow" cx="0.72" cy="0.26" r="0.35">
-      <stop offset="0" stop-color="#fef9c3" stop-opacity="0.9"/>
-      <stop offset="0.35" stop-color="#fde68a" stop-opacity="0.35"/>
-      <stop offset="1" stop-color="#fde68a" stop-opacity="0"/>
+    <radialGradient id="moonGlow" cx="0.74" cy="0.24" r="0.42">
+      <stop offset="0" stop-color="#fff7d6" stop-opacity="0.95"/>
+      <stop offset="0.25" stop-color="#ffe9a8" stop-opacity="0.4"/>
+      <stop offset="1" stop-color="#ffe9a8" stop-opacity="0"/>
     </radialGradient>
-    <radialGradient id="nebula" cx="0.2" cy="0.55" r="0.5">
-      <stop offset="0" stop-color="#a78bfa" stop-opacity="0.4"/>
-      <stop offset="1" stop-color="#a78bfa" stop-opacity="0"/>
+    <radialGradient id="nebula1" cx="0.18" cy="0.4" r="0.55">
+      <stop offset="0" stop-color="#c084fc" stop-opacity="0.42"/>
+      <stop offset="1" stop-color="#c084fc" stop-opacity="0"/>
     </radialGradient>
+    <radialGradient id="nebula2" cx="0.55" cy="0.62" r="0.5">
+      <stop offset="0" stop-color="#67e8f9" stop-opacity="0.25"/>
+      <stop offset="1" stop-color="#67e8f9" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="mist" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f0abfc" stop-opacity="0"/>
+      <stop offset="1" stop-color="#f0abfc" stop-opacity="0.35"/>
+    </linearGradient>
+    <linearGradient id="ridgeA" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#6d28d9"/><stop offset="1" stop-color="#4c1d95"/>
+    </linearGradient>
+    <linearGradient id="ridgeB" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3b1a78"/><stop offset="1" stop-color="#221145"/>
+    </linearGradient>
+    <linearGradient id="ridgeC" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#251352"/><stop offset="1" stop-color="#120a2e"/>
+    </linearGradient>
   </defs>
+
   <rect width="1600" height="900" fill="url(#sky)"/>
-  <rect width="1600" height="900" fill="url(#moonglow)"/>
-  <rect width="1600" height="900" fill="url(#nebula)"/>
-  <circle cx="1150" cy="230" r="86" fill="#fefce8" opacity="0.95"/>
-  <circle cx="1128" cy="212" r="14" fill="#e7dcb8" opacity="0.5"/>
-  <circle cx="1172" cy="250" r="9" fill="#e7dcb8" opacity="0.4"/>
-  <g fill="#fefce8">
-    <circle cx="180" cy="120" r="2.5" opacity="0.9"/><circle cx="320" cy="220" r="1.8" opacity="0.7"/>
-    <circle cx="470" cy="90" r="2.2" opacity="0.8"/><circle cx="620" cy="180" r="1.6" opacity="0.6"/>
-    <circle cx="760" cy="70" r="2.4" opacity="0.85"/><circle cx="900" cy="150" r="1.7" opacity="0.65"/>
-    <circle cx="1330" cy="90" r="2.2" opacity="0.8"/><circle cx="1450" cy="200" r="1.8" opacity="0.7"/>
-    <circle cx="1010" cy="60" r="2" opacity="0.75"/><circle cx="240" cy="330" r="1.6" opacity="0.6"/>
-    <circle cx="1390" cy="380" r="1.7" opacity="0.55"/><circle cx="540" cy="300" r="1.9" opacity="0.65"/>
+  <rect width="1600" height="900" fill="url(#nebula1)"/>
+  <rect width="1600" height="900" fill="url(#nebula2)"/>
+  <rect width="1600" height="900" fill="url(#moonGlow)"/>
+
+  <!-- 星星:两层,带大小与透明度差 -->
+  <g fill="#ffffff">
+    <circle cx="95" cy="85" r="2.1" opacity="0.9"/><circle cx="240" cy="150" r="1.4" opacity="0.6"/>
+    <circle cx="388" cy="66" r="1.8" opacity="0.8"/><circle cx="530" cy="140" r="1.3" opacity="0.55"/>
+    <circle cx="660" cy="52" r="2.3" opacity="0.85"/><circle cx="810" cy="110" r="1.5" opacity="0.6"/>
+    <circle cx="935" cy="46" r="1.9" opacity="0.8"/><circle cx="1060" cy="128" r="1.3" opacity="0.5"/>
+    <circle cx="1210" cy="70" r="2.2" opacity="0.85"/><circle cx="1385" cy="120" r="1.5" opacity="0.65"/>
+    <circle cx="1520" cy="60" r="2" opacity="0.8"/><circle cx="180" cy="260" r="1.3" opacity="0.5"/>
+    <circle cx="455" cy="230" r="1.6" opacity="0.6"/><circle cx="700" cy="205" r="1.4" opacity="0.55"/>
+    <circle cx="990" cy="215" r="1.7" opacity="0.6"/><circle cx="1440" cy="250" r="1.6" opacity="0.6"/>
+    <circle cx="1245" cy="170" r="2.6" opacity="0.95"/><circle cx="316" cy="95" r="2.5" opacity="0.9"/>
   </g>
-  <path d="M0 720 L280 560 L520 700 L760 520 L1030 690 L1290 540 L1600 700 L1600 900 L0 900 Z" fill="#2e1065" opacity="0.85"/>
-  <path d="M0 800 L350 660 L640 780 L960 640 L1260 780 L1600 660 L1600 900 L0 900 Z" fill="#1e1b4b" opacity="0.95"/>
-  <g stroke="#f0abfc" stroke-width="2" opacity="0.5">
-    <line x1="880" y1="120" x2="940" y2="120"/><line x1="910" y1="90" x2="910" y2="150"/>
+
+  <!-- 月亮与光晕 -->
+  <circle cx="1180" cy="215" r="92" fill="#fffbe8"/>
+  <circle cx="1150" cy="190" r="14" fill="#efe6c0" opacity="0.55"/>
+  <circle cx="1205" cy="240" r="10" fill="#efe6c0" opacity="0.45"/>
+  <circle cx="1180" cy="215" r="130" fill="none" stroke="#fff7d6" stroke-opacity="0.18" stroke-width="2"/>
+  <circle cx="1180" cy="215" r="175" fill="none" stroke="#fff7d6" stroke-opacity="0.08" stroke-width="2"/>
+
+  <!-- 远景云带 -->
+  <g fill="#c9a7ff" opacity="0.28">
+    <ellipse cx="330" cy="330" rx="230" ry="26"/>
+    <ellipse cx="560" cy="300" rx="160" ry="18"/>
+    <ellipse cx="1120" cy="355" rx="260" ry="24"/>
+  </g>
+  <g fill="#fbb6ce" opacity="0.22">
+    <ellipse cx="880" cy="420" rx="300" ry="30"/>
+    <ellipse cx="220" cy="450" rx="200" ry="24"/>
+  </g>
+
+  <!-- 远山:曲线剪影,柔和不硬 -->
+  <path d="M0 640 C 180 560, 340 590, 470 555 C 620 515, 760 575, 900 545 C 1060 510, 1220 570, 1380 540 C 1470 522, 1540 535, 1600 520 L1600 900 L0 900 Z" fill="url(#ridgeA)" opacity="0.9"/>
+  <rect x="0" y="610" width="1600" height="120" fill="url(#mist)"/>
+  <path d="M0 720 C 200 660, 380 700, 560 665 C 760 625, 940 690, 1140 655 C 1300 628, 1460 672, 1600 645 L1600 900 L0 900 Z" fill="url(#ridgeB)" opacity="0.95"/>
+
+  <!-- 近景剪影:曲线山丘 + 一棵小树 -->
+  <path d="M0 810 C 240 745, 430 790, 620 755 C 830 715, 1030 780, 1230 745 C 1390 718, 1510 755, 1600 735 L1600 900 L0 900 Z" fill="url(#ridgeC)"/>
+  <g fill="#0e0824">
+    <path d="M1330 762 c -5 -28 3 -52 14 -68 c -2 22 4 40 12 52 c 8 -14 6 -34 12 -44 c 2 24 -2 44 -8 60 c 14 -2 26 -12 32 -22 c 0 22 -22 40 -48 40 c -8 0 -12 -8 -14 -18 Z"/>
+    <rect x="1340" y="760" width="4" height="26"/>
   </g>
 </svg>

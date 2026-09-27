@@ -106,12 +106,18 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* 小部件浮上 Hero 底边:参考站的标志构图 */}
+      {/* 小部件浮上 Hero 底边:参考站的标志构图;入场动画逐个错峰 */}
       <main className="mx-auto w-full max-w-5xl px-4 pb-10 sm:px-6">
         <div className="relative z-20 -mt-24 grid gap-4 md:grid-cols-3">
-          <ProfileCard stats={stats} appearance={appearance} />
-          <StatsCard stats={stats} />
-          <MusicPlayer />
+          <div className="fade-up" style={{ animationDelay: "0ms" }}>
+            <ProfileCard stats={stats} appearance={appearance} />
+          </div>
+          <div className="fade-up" style={{ animationDelay: "120ms" }}>
+            <StatsCard stats={stats} />
+          </div>
+          <div className="fade-up" style={{ animationDelay: "240ms" }}>
+            <MusicPlayer />
+          </div>
         </div>
 
         <div className="mt-6 space-y-6">
@@ -127,8 +133,14 @@ export default async function Home() {
                 </p>
               ) : (
                 <div className="grid gap-4 sm:grid-cols-2">
-                  {posts.map((post) => (
-                    <ArticleCard key={post.slug} post={post} />
+                  {posts.map((post, index) => (
+                    <div
+                      key={post.slug}
+                      className="fade-up"
+                      style={{ animationDelay: `${300 + index * 100}ms` }}
+                    >
+                      <ArticleCard post={post} />
+                    </div>
                   ))}
                 </div>
               )}

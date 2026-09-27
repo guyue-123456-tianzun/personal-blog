@@ -44,9 +44,32 @@ body {
 /* 玻璃卡片:半透明底 + 背景模糊 + 细边框(设计系统核心零件) */
 .glass {
   background: var(--card);
-  backdrop-filter: blur(16px) saturate(1.4);
-  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  backdrop-filter: blur(16px) saturate(1.5);
+  -webkit-backdrop-filter: blur(16px) saturate(1.5);
   border: 1px solid var(--border);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+.dark .glass {
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+/* 入场动画:卡片/区块加载时自下而上淡入(纯 CSS,无需 JS) */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.fade-up {
+  animation: fade-up 0.7s ease-out both;
 }
 
 /* 背景装饰光斑:给玻璃提供可供模糊的色彩,深浅色下强度不同 */

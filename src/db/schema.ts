@@ -30,6 +30,7 @@ export const notes = sqliteTable("notes", {
   excerpt: text("excerpt"), // 摘要,列表页展示,可空
   content: text("content").notNull(), // Markdown 原文
   cover: text("cover"), // 封面图 URL;空 = 用渐变占位图
+  sourceUrl: text("source_url"), // 剪藏来源网页地址(B2)
   userId: integer("user_id"), // 内容归属用户;null = 站长早期的历史内容
   isPublic: integer("is_public").notNull().default(0),
   pinned: integer("pinned").notNull().default(0), // 置顶文章排最前
@@ -106,6 +107,96 @@ export const mediaItems = sqliteTable("media_items", {
   userId: integer("user_id"), // 归属用户;null = 站长历史内容
   createdAt: text("created_at").notNull().default(now),
   updatedAt: text("updated_at").notNull().default(now),
+});
+
+// 书签(C2):轻量链接收藏
+export const bookmarks = sqliteTable("bookmarks", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  userId: integer("user_id")
+    .notNull()
+    .references(() => users.id),
+  title: text("title").notNull(),
+  url: text("url").notNull(),
+  description: text("description"),
+  createdAt: text("created_at").notNull().default(now),
+});
+
+// 学习路线(B7):路线 → 节点,逐个打卡完成
+export const learningPaths = sqliteTable("learning_paths", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  userId: integer("user_id")
+    .notNull()
+    .references(() => users.id),
+  title: text("title").notNull(),
+  description: text("description"),
+  createdAt: text("created_at").notNull().default(now),
+});
+export const pathNodes = sqliteTable("path_nodes", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  pathId: integer("path_id")
+    .notNull()
+    .references(() => learningPaths.id),
+  title: text("title").notNull(),
+  done: integer("done").notNull().default(0),
+  sortOrder: integer("sort_order").notNull().default(0),
+});
+
+// 成长时间线(B8):重要节点大事记
+export const timelineEvents = sqliteTable("timeline_events", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  userId: integer("user_id")
+    .notNull()
+    .references(() => users.id),
+  date: text("date").notNull(), // YYYY-MM-DD
+  title: text("title").notNull(),
+  content: text("content"),
+  createdAt: text("created_at").notNull().default(now),
+});
+
+// 习惯打卡(C3):习惯 + 每日打卡记录(同一习惯同一天只一条)
+export const habits = sqliteTable("habits", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  userId: integer("user_id")
+    .notNull()
+    .references(() => users.id),
+  name: text("name").notNull(),
+  createdAt: text("created_at").notNull().default(now),
+});
+export const habitChecks = sqliteTable(
+  "habit_checks",
+  {
+    habitId: integer("habit_id")
+      .notNull()
+      .references(() => habits.id),
+    date: text("date").notNull(), // YYYY-MM-DD
+  },
+  (t) => [primaryKey({ columns: [t.habitId, t.date] })],
+);
+
+// 记账(C9):金额以"分"为单位存储,避免浮点误差
+export const financeRecords = sqliteTable("finance_records", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  userId: integer("user_id")
+    .notNull()
+    .references(() => users.id),
+  kind: text("kind").notNull().default("expense"), // income | expense
+  amount: integer("amount").notNull(), // 分
+  category: text("category"),
+  note: text("note"),
+  date: text("date").notNull(), // YYYY-MM-DD
+  createdAt: text("created_at").notNull().default(now),
+});
+
+// 个人导航页(C4):常用链接分组
+export const navLinks = sqliteTable("nav_links", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  userId: integer("user_id")
+    .notNull()
+    .references(() => users.id),
+  name: text("name").notNull(),
+  url: text("url").notNull(),
+  category: text("category").notNull().default("常用"),
+  sortOrder: integer("sort_order").notNull().default(0),
 });
 
 // 好友关系:双向确认制——A 发申请,B 同意后成为好友

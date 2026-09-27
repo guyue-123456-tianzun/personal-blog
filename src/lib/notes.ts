@@ -25,6 +25,7 @@ export type NoteInput = {
   slug?: string;
   excerpt?: string | null;
   cover?: string | null;
+  sourceUrl?: string | null;
   tags?: string[];
   isPublic?: number;
   pinned?: number;
@@ -114,6 +115,7 @@ export async function createNote(
       content: input.content,
       excerpt: input.excerpt ?? null,
       cover: input.cover ?? null,
+      sourceUrl: input.sourceUrl ?? null,
       isPublic: input.isPublic ?? 0,
       pinned: input.pinned ?? 0,
       publishedAt: input.publishedAt ?? null,

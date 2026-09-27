@@ -14,6 +14,7 @@
 
 - `docs/DEVELOPMENT.md` — 项目开发文档:需求清单(含验收标准)、架构、里程碑、决策记录。**做任何功能前先对照它的验收标准。**
 - `docs/ARCHITECTURE.md` — 基础设施架构(服务器/部署/CI/备份),仍然有效。
+- `docs/CODE-TOUR.md` — 代码导读(给非程序员的逐文件讲解),**随里程碑同步更新,和新代码一起提交**。
 
 ## 技术栈与约定
 
@@ -39,6 +40,7 @@ docker compose -f deploy/docker-compose.yml up -d   # 生产部署(服务器上)
 ## 代码规范
 
 - 中文注释与中文文档;注释解释"为什么",不复述"是什么"
+- **站长要求的三条铁律(2026-09-27 起)**:① 架构严格按本文档与 DEVELOPMENT.md 的目录约定,新文件先想清楚放哪一层;② 每个模块的含义用两道渠道讲清楚——代码内中文注释 + docs/CODE-TOUR.md 逐文件导读(随代码同步更新);③ 核心模块(认证/内容读写等)必须带 Vitest 功能测试放在 `tests/`,`npm run test` 不全绿不交验收
 - 提交信息用 conventional commits(`feat: …` / `fix: …`),中文描述
 - 组件放 `src/components/`,业务逻辑不写在页面文件里
 - 新增内容类型 = notes.type 新枚举 + 扩展表 + 私有区一个视图页,勿另起炉灶
@@ -47,7 +49,7 @@ docker compose -f deploy/docker-compose.yml up -d   # 生产部署(服务器上)
 
 - [x] 规划完成(DEVELOPMENT.md v1.1,C1~C10 全部纳入一期)
 - [x] M0 立项与骨架(2026-09-27:Next.js 15.5 骨架 + SQLite/Drizzle 迁移 + 站长登录 + 私有区守卫,五项登录流程验收通过,本地 git 已提交)
-- [ ] M1 博客公开区
+- [x] M1 博客公开区(2026-09-27:首页列表/详情/标签/归档/关于 + Markdown 渲染与代码高亮 + 2 篇示例文章;八项验收通过;13 个自动化测试全绿;代码已推送 GitHub)
 - [ ] M2 知识库地基
 - [ ] M3 记录模块
 - [ ] M4 服务器上线

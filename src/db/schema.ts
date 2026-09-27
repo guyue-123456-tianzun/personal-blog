@@ -1,14 +1,56 @@
 import { sql } from "drizzle-orm";
-import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import {
+  integer,
+  primaryKey,
+  sqliteTable,
+  text,
+} from "drizzle-orm/sqlite-core";
 
-// M0 只建站长账号表;内容表(notes / tags / attachments …)在 M2 里程碑按
-// docs/DEVELOPMENT.md 第 5 节的数据设计扩展,改表一律走 drizzle-kit generate 迁移
+// 注意:SQLite 的 DEFAULT 子句要求函数调用必须包在括号里,裸写 datetime('now') 会报语法错误
+const now = sql`(datetime('now'))`;
+
 export const users = sqliteTable("users", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   username: text("username").notNull().unique(),
   passwordHash: text("password_hash").notNull(),
-  // 注意:SQLite 的 DEFAULT 子句要求函数调用必须包在括号里,裸写 datetime('now') 会报语法错误
-  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+  createdAt: text("created_at").notNull().default(now),
 });
 
-export type User = typeof users.$inferSelect;
+// 内容主表:博客文章 / 知识库笔记 / 剪藏 / 动态 / 日记…全部按 type 区分
+// (设计见 docs/DEVELOPMENT.md 第 5 节;M1 先启用 post,M2/M3 逐步启用其余类型)
+export const notes = sqliteTable("notes", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  type: text("type").notNull(), // 'post' = 公开博客文章
+  slug: text("slug").notNull().unique(), // URL 标识,如 /posts/hello-world
+  title: text("title").notNull(),
+  excerpt: text("excerpt"), // 摘要,列表页展示,可空
+  content: text("content").notNull(), // Markdown 原文
+  isPublic: integer("is_public").notNull().default(0),
+  pinned: integer("pinned").notNull().default(0), // 置顶文章排最前
+  publishedAt: text("published_at"),
+  createdAt: text("created_at").notNull().default(now),
+  updatedAt: text("updated_at").notNull().default(now),
+  deletedAt: text("deleted_at"), // 非空 = 已进回收站(软删除)
+});
+
+export const tags = sqliteTable("tags", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  name: text("name").notNull().unique(),
+});
+
+// 文章与标签的多对多关联
+export const noteTags = sqliteTable(
+  "note_tags",
+  {
+    noteId: integer("note_id")
+      .notNull()
+      .references(() => notes.id),
+    tagId: integer("tag_id")
+      .notNull()
+      .references(() => tags.id),
+  },
+  (t) => [primaryKey({ columns: [t.noteId, t.tagId] })],
+);
+
+export type Note = typeof notes.$inferSelect;
+export type Tag = typeof tags.$inferSelect;

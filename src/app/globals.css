@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 
 :root {
   --background: #fafafa;
@@ -31,4 +32,107 @@ body {
   color: var(--foreground);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
     "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+}
+
+/* 代码高亮配色:自己维护 highlight.js 的 hljs-* 类色值,浅色/深色各一套,跟随系统切换 */
+.hljs {
+  color: #24292e;
+  background: transparent;
+}
+.hljs-comment,
+.hljs-quote {
+  color: #6a737d;
+  font-style: italic;
+}
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-literal,
+.hljs-section,
+.hljs-doctag,
+.hljs-type,
+.hljs-name,
+.hljs-strong {
+  color: #d73a49;
+}
+.hljs-string,
+.hljs-regexp,
+.hljs-addition,
+.hljs-attribute,
+.hljs-meta .hljs-string {
+  color: #032f62;
+}
+.hljs-number,
+.hljs-variable,
+.hljs-template-variable,
+.hljs-params {
+  color: #e36209;
+}
+.hljs-title,
+.hljs-title.function_,
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-symbol {
+  color: #6f42c1;
+}
+.hljs-attr,
+.hljs-property,
+.hljs-selector-attr,
+.hljs-selector-class,
+.hljs-selector-id,
+.hljs-meta {
+  color: #005cc5;
+}
+.hljs-tag {
+  color: #22863a;
+}
+
+@media (prefers-color-scheme: dark) {
+  .hljs {
+    color: #e6edf3;
+  }
+  .hljs-comment,
+  .hljs-quote {
+    color: #8b949e;
+  }
+  .hljs-keyword,
+  .hljs-selector-tag,
+  .hljs-literal,
+  .hljs-section,
+  .hljs-doctag,
+  .hljs-type,
+  .hljs-name,
+  .hljs-strong {
+    color: #ff7b72;
+  }
+  .hljs-string,
+  .hljs-regexp,
+  .hljs-addition,
+  .hljs-attribute,
+  .hljs-meta .hljs-string {
+    color: #a5d6ff;
+  }
+  .hljs-number,
+  .hljs-variable,
+  .hljs-template-variable,
+  .hljs-params {
+    color: #79c0ff;
+  }
+  .hljs-title,
+  .hljs-title.function_,
+  .hljs-built_in,
+  .hljs-builtin-name,
+  .hljs-symbol {
+    color: #d2a8ff;
+  }
+  .hljs-attr,
+  .hljs-property,
+  .hljs-selector-attr,
+  .hljs-selector-class,
+  .hljs-selector-id,
+  .hljs-meta {
+    color: #79c0ff;
+  }
+  .hljs-tag {
+    color: #7ee787;
+  }
 }

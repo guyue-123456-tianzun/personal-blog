@@ -133,6 +133,15 @@ export default function AppearanceForm({ initial }: Props) {
   const [songTitle, setSongTitle] = useState("");
   const [songUrl, setSongUrl] = useState("");
   const [neteaseInput, setNeteaseInput] = useState("");
+  const [loveEnabled, setLoveEnabled] = useState(initial.loveEnabled);
+  const [loveNickname, setLoveNickname] = useState(initial.lovePartnerNickname ?? "");
+  const [loveAvatar, setLoveAvatar] = useState(initial.lovePartnerAvatar ?? "");
+  const [loveDate, setLoveDate] = useState(initial.loveStartDate ?? "");
+  const [weatherEnabled, setWeatherEnabled] = useState(initial.weatherEnabled);
+  const [weatherCity, setWeatherCity] = useState(initial.weatherDefaultCity);
+  const [weatherCitiesText, setWeatherCitiesText] = useState(
+    initial.weatherCities.join(", "),
+  );
   const [playlistInput, setPlaylistInput] = useState(initial.neteasePlaylistId ?? "");
   const [wallpapers, setWallpapers] = useState<{ name: string; url: string }[]>([]);
   const [signature, setSignature] = useState(initial.signature);
@@ -223,6 +232,13 @@ export default function AppearanceForm({ initial }: Props) {
         setWallImageDay(data.appearance.wallImageDay);
         setWallBlur(data.appearance.wallBlur);
         setCarouselEnabled(data.appearance.wallCarouselEnabled);
+        setLoveEnabled(data.appearance.loveEnabled);
+        setLoveNickname(data.appearance.lovePartnerNickname ?? "");
+        setLoveAvatar(data.appearance.lovePartnerAvatar ?? "");
+        setLoveDate(data.appearance.loveStartDate ?? "");
+        setWeatherEnabled(data.appearance.weatherEnabled);
+        setWeatherCity(data.appearance.weatherDefaultCity);
+        setWeatherCitiesText(data.appearance.weatherCities.join(", "));
         setCarouselSeconds(data.appearance.wallCarouselSeconds);
         setSignature(data.appearance.signature);
         setAnnouncements(data.appearance.announcements.join("\n"));
@@ -546,6 +562,128 @@ export default function AppearanceForm({ initial }: Props) {
           </div>
           <p className="mt-1.5 text-[10px] opacity-40">
             轮播范围 = 夜间/白天壁纸 + 壁纸库全部文件;访客可在导航栏 🖼️ 里设置只属于自己的节奏。
+          </p>
+        </div>
+      </div>
+
+      {/* 恋爱模块:首页恋爱卡(参考站同款) */}
+      <div className="glass rounded-2xl p-5">
+        <div className="flex items-center justify-between">
+          <h3 className="font-semibold">💕 恋爱模块</h3>
+          <button
+            onClick={() => {
+              const next = !loveEnabled;
+              setLoveEnabled(next);
+              patchValues({ love_enabled: next ? "1" : "0" });
+            }}
+            disabled={busy}
+            className={`rounded-full px-3 py-1 text-xs transition-colors disabled:opacity-50 ${
+              loveEnabled ? "bg-accent text-white" : "border border-border opacity-70"
+            }`}
+          >
+            {loveEnabled ? "已开启" : "已关闭"}
+          </button>
+        </div>
+        <div className="mt-3 space-y-3">
+          <div>
+            <label className="text-xs opacity-70">对象昵称(留空显示单身状态)</label>
+            <input
+              value={loveNickname}
+              onChange={(e) => setLoveNickname(e.target.value)}
+              maxLength={30}
+              className={`${inputClass} mt-1`}
+            />
+          </div>
+          <div>
+            <label className="text-xs opacity-70">对象头像 URL(可空)</label>
+            <input
+              value={loveAvatar}
+              onChange={(e) => setLoveAvatar(e.target.value)}
+              placeholder="https://... 或 /images/avatar-default.svg"
+              className={`${inputClass} mt-1`}
+            />
+          </div>
+          <div>
+            <label className="text-xs opacity-70">在一起的日期(恋爱计时起点)</label>
+            <input
+              type="date"
+              value={loveDate}
+              onChange={(e) => setLoveDate(e.target.value)}
+              className={`${inputClass} mt-1`}
+            />
+          </div>
+          <div className="flex justify-end">
+            <button
+              onClick={async () => {
+                await patchValues({
+                  love_partner_nickname: loveNickname,
+                  love_partner_avatar: loveAvatar,
+                  love_start_date: loveDate,
+                });
+              }}
+              disabled={busy}
+              className="rounded-lg border border-border px-4 py-2 text-sm transition-opacity hover:opacity-80 disabled:opacity-50"
+            >
+              保存恋爱信息
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* 天气预报:Open-Meteo 免费数据,可切地区 */}
+      <div className="glass rounded-2xl p-5">
+        <div className="flex items-center justify-between">
+          <h3 className="font-semibold">🌤️ 天气预报</h3>
+          <button
+            onClick={() => {
+              const next = !weatherEnabled;
+              setWeatherEnabled(next);
+              patchValues({ weather_enabled: next ? "1" : "0" });
+            }}
+            disabled={busy}
+            className={`rounded-full px-3 py-1 text-xs transition-colors disabled:opacity-50 ${
+              weatherEnabled ? "bg-accent text-white" : "border border-border opacity-70"
+            }`}
+          >
+            {weatherEnabled ? "已开启" : "已关闭"}
+          </button>
+        </div>
+        <div className="mt-3 space-y-3">
+          <div>
+            <label className="text-xs opacity-70">默认城市</label>
+            <input
+              value={weatherCity}
+              onChange={(e) => setWeatherCity(e.target.value)}
+              placeholder="如 北京 / 永修县"
+              className={`${inputClass} mt-1`}
+            />
+          </div>
+          <div>
+            <label className="text-xs opacity-70">备选城市(逗号隔开,卡片里可切换地区)</label>
+            <input
+              value={weatherCitiesText}
+              onChange={(e) => setWeatherCitiesText(e.target.value)}
+              placeholder="如 上海, 广州, 成都"
+              className={`${inputClass} mt-1`}
+            />
+          </div>
+          <div className="flex justify-end">
+            <button
+              onClick={async () => {
+                const ok = await patchValues({
+                  weather_default_city: weatherCity,
+                  weather_cities: weatherCitiesText,
+                });
+                if (ok) setStatus("天气城市已保存 ✓");
+              }}
+              disabled={busy}
+              className="rounded-lg border border-border px-4 py-2 text-sm transition-opacity hover:opacity-80 disabled:opacity-50"
+            >
+              保存城市
+            </button>
+          </div>
+          <p className="text-[10px] opacity-40">
+            数据来自 Open-Meteo(免费无 Key);城市支持中文。
           </p>
         </div>
       </div>

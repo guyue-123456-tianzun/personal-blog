@@ -1,0 +1,1 @@
+ALTER TABLE `friendships` ADD `type` text DEFAULT 'friend' NOT NULL;

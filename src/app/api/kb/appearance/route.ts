@@ -52,6 +52,13 @@ const VALIDATORS: Record<AppearanceKey, (value: string) => string> = {
     if (!id) throw new Error("没解析出网易云歌单编号");
     return id[1];
   },
+  love_enabled: (v) => (v === "1" ? "1" : "0"),
+  love_partner_nickname: (v) => v.slice(0, 30),
+  love_partner_avatar: (v) => v.slice(0, 500),
+  love_start_date: (v) => v.slice(0, 10),
+  weather_enabled: (v) => (v === "0" ? "0" : "1"),
+  weather_default_city: (v) => v.slice(0, 30),
+  weather_cities: (v) => v.slice(0, 300),
   music: (v) => {
     const parsed = JSON.parse(v) as unknown;
     if (!Array.isArray(parsed)) throw new Error("歌单格式不正确");

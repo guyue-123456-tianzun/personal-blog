@@ -57,6 +57,13 @@
       "when": 1790528084726,
       "tag": "0007_slippery_reptil",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1790533016061,
+      "tag": "0008_curly_loa",
+      "breakpoints": true
     }
   ]
 }

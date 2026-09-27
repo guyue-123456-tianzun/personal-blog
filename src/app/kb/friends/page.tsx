@@ -134,6 +134,7 @@ export default async function KbFriendsPage() {
                   friendshipId={friend.friendshipId}
                   target={friend.user.nickname ?? friend.user.username}
                   mode="friend"
+                  type={friend.type}
                 />
               </li>
             ))}

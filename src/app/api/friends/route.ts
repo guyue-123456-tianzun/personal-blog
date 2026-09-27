@@ -6,6 +6,7 @@ import {
   getRelationStatus,
   removeFriendship,
   sendFriendRequest,
+  setFriendType,
 } from "@/lib/friends";
 import { getUserByUsername } from "@/lib/users";
 
@@ -21,6 +22,7 @@ export async function POST(request: Request) {
     action?: string;
     targetUsername?: string;
     requestId?: number;
+    type?: string;
   } | null;
   if (!body?.action) {
     return NextResponse.json({ error: "缺少 action" }, { status: 400 });
@@ -49,6 +51,18 @@ export async function POST(request: Request) {
         await removeFriendship(body.requestId, user.id);
       }
       return NextResponse.json({ ok: true });
+    }
+
+    // 升级关系类型:best 铁哥们 / love 恋爱 / friend 普通好友
+    if (body.action === "set-type") {
+      if (!body.requestId || !body.type) {
+        return NextResponse.json({ error: "缺少参数" }, { status: 400 });
+      }
+      const row = await setFriendType(body.requestId, body.type, user.id);
+      if (!row) {
+        return NextResponse.json({ error: "关系不存在或未确认" }, { status: 404 });
+      }
+      return NextResponse.json({ ok: true, type: row.type });
     }
 
     if (body.action === "remove") {

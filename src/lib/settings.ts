@@ -23,6 +23,13 @@ export const APPEARANCE_KEYS = [
   "wall_carousel_enabled",
   "wall_carousel_seconds",
   "netease_playlist_id",
+  "love_enabled",
+  "love_partner_nickname",
+  "love_partner_avatar",
+  "love_start_date",
+  "weather_enabled",
+  "weather_default_city",
+  "weather_cities",
   "music",
 ] as const;
 
@@ -46,6 +53,13 @@ export type Appearance = {
   wallCarouselEnabled: boolean; // 壁纸轮播开关(全站默认)
   wallCarouselSeconds: number; // 轮播间隔秒数(1~60)
   wallLibrary: string[]; // 壁纸库:public/wallpapers/ 下的全部文件
+  loveEnabled: boolean; // 恋爱模块卡片开关
+  lovePartnerNickname: string | null; // 恋爱对象昵称(未填且无恋爱好友关系时显示单身)
+  lovePartnerAvatar: string | null;
+  loveStartDate: string | null; // 在一起的日期(YYYY-MM-DD)
+  weatherEnabled: boolean; // 天气预报卡片开关
+  weatherDefaultCity: string; // 默认城市
+  weatherCities: string[]; // 备选城市列表(卡片里可切换)
 };
 
 /** 壁纸库:public/wallpapers/ 下的图片与视频文件(Wallpaper Engine 的 mp4 可直接丢进来) */
@@ -142,6 +156,16 @@ export async function getAppearance(): Promise<Appearance> {
     ),
     wallLibrary: getWallLibrary(),
     neteasePlaylistId: map.get("netease_playlist_id") ?? null,
+    loveEnabled: map.get("love_enabled") === "1",
+    lovePartnerNickname: map.get("love_partner_nickname") ?? null,
+    lovePartnerAvatar: map.get("love_partner_avatar") ?? null,
+    loveStartDate: map.get("love_start_date") ?? null,
+    weatherEnabled: map.get("weather_enabled") !== "0", // 默认开
+    weatherDefaultCity: map.get("weather_default_city") ?? "北京",
+    weatherCities: (map.get("weather_cities") ?? "")
+      .split(/[,，]/)
+      .map((c) => c.trim())
+      .filter(Boolean),
   };
 }
 

@@ -9,6 +9,8 @@ import MusicPlayer from "@/components/home/MusicPlayer";
 import TypewriterBanner from "@/components/home/TypewriterBanner";
 import CalendarWidget from "@/components/home/CalendarWidget";
 import ArticleBoard from "@/components/home/ArticleBoard";
+import LoveCard from "@/components/home/LoveCard";
+import WeatherCard from "@/components/home/WeatherCard";
 
 // 首页 = 全屏 Hero + 错落三栏浮层(参考站构图):
 //   左栏 资料卡+公告打字机+音乐 | 中栏 文章区(列表/网格切换) | 右栏 站点数据+日历
@@ -142,10 +144,21 @@ export default async function Home() {
       {/* ===== 错落三栏浮层:压在 Hero 下沿(参考站构图) ===== */}
       <main className="mx-auto w-full max-w-6xl px-4 pb-10 sm:px-6">
         <div className="relative z-20 -mt-28 grid items-start gap-4 lg:grid-cols-[260px_minmax(0,1fr)_270px]">
-          {/* 左栏:人物 + 公告 + 音乐(高度与右栏错开) */}
+          {/* 左栏:人物 + 公告 + 恋爱 + 天气 + 音乐(高度与右栏错开) */}
           <div className="fade-up space-y-4" style={{ animationDelay: "0ms" }}>
             <ProfileCard stats={stats} appearance={appearance} />
             <TypewriterBanner />
+            <LoveCard
+              enabled={appearance.loveEnabled}
+              partnerNickname={appearance.lovePartnerNickname}
+              partnerAvatar={appearance.lovePartnerAvatar}
+              startDate={appearance.loveStartDate}
+              myAvatar={appearance.avatar}
+            />
+            <WeatherCard
+              defaultCity={appearance.weatherDefaultCity}
+              cities={appearance.weatherCities}
+            />
             <MusicPlayer playlist={appearance.music} neteasePlaylistId={appearance.neteasePlaylistId} />
           </div>
 

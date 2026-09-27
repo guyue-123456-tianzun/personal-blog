@@ -118,6 +118,8 @@ export const friendships = sqliteTable("friendships", {
     .notNull()
     .references(() => users.id),
   status: text("status").notNull().default("pending"), // pending | accepted
+  // 关系类型:friend 好友 | best 铁哥们 | love 恋爱(双方任意一方可设置)
+  type: text("type").notNull().default("friend"),
   createdAt: text("created_at").notNull().default(now),
 });
 

@@ -1,4 +1,5 @@
 import { listPublicImages } from "@/lib/content-api";
+import PublicShell from "@/components/public/PublicShell";
 
 // 照片墙(C6):全部公开图片,点击看原图
 export const dynamic = "force-dynamic";
@@ -9,7 +10,7 @@ export default async function PhotosPage() {
   const images = await listPublicImages();
 
   return (
-    <main className="mx-auto max-w-4xl px-4 py-10 sm:px-6">
+    <PublicShell>
       <h1 className="text-2xl font-bold">照片墙</h1>
       <p className="mt-2 text-sm opacity-60">共 {images.length} 张,点击查看原图。</p>
 
@@ -40,6 +41,6 @@ export default async function PhotosPage() {
           ))}
         </div>
       )}
-    </main>
+    </PublicShell>
   );
 }

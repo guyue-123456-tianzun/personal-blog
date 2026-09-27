@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { getArchives } from "@/lib/content-api";
+import PublicShell from "@/components/public/PublicShell";
 
 export const dynamic = "force-dynamic";
 
@@ -11,7 +12,7 @@ export default async function ArchivesPage() {
   const archives = await getArchives();
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
+    <PublicShell>
       <h1 className="text-2xl font-bold">归档</h1>
 
       {archives.length === 0 ? (
@@ -44,6 +45,6 @@ export default async function ArchivesPage() {
           ))}
         </div>
       )}
-    </main>
+    </PublicShell>
   );
 }

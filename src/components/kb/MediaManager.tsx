@@ -15,9 +15,11 @@ type Item = {
 type Props = { initial: Item[] };
 
 const TYPES = [
-  { key: "book", label: "书" },
-  { key: "movie", label: "影" },
-  { key: "game", label: "游" },
+  { key: "book", label: "书籍" },
+  { key: "movie", label: "影视" },
+  { key: "anime", label: "动漫" },
+  { key: "music", label: "音乐" },
+  { key: "game", label: "游戏" },
 ];
 
 const STATUS_BY_TYPE: Record<string, { key: string; label: string }[]> = {

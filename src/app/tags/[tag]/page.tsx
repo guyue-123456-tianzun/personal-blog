@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { getPostsByTag } from "@/lib/content-api";
+import PublicShell from "@/components/public/PublicShell";
 
 export const dynamic = "force-dynamic";
 
@@ -11,7 +12,7 @@ export default async function TagPage({ params }: Props) {
   const posts = await getPostsByTag(decodeURIComponent(tag));
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-10">
+    <PublicShell>
       <h1 className="text-3xl font-bold">标签「{decodeURIComponent(tag)}」</h1>
       <p className="mt-2 text-sm opacity-60">共 {posts.length} 篇文章</p>
 
@@ -42,6 +43,6 @@ export default async function TagPage({ params }: Props) {
       <Link href="/" className="mt-8 inline-block text-sm text-accent hover:underline">
         ← 返回首页
       </Link>
-    </main>
+    </PublicShell>
   );
 }

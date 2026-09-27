@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import PublicShell from "@/components/public/PublicShell";
 import { getAppearance } from "@/lib/settings";
 import { siteConfig } from "@/lib/site-config";
 
@@ -29,7 +30,7 @@ export default async function AboutPage() {
         </div>
       </section>
 
-      <main className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
+    <PublicShell>
         <div className="glass rounded-2xl p-6 sm:p-8">
           <h2 className="flex items-center gap-2 text-lg font-bold">
             <span className="inline-block h-5 w-1 rounded-full bg-accent" />
@@ -72,7 +73,7 @@ export default async function AboutPage() {
             这里没什么特别,只是一个记录成长、思考和生活的地方。欢迎常来坐坐。
           </p>
         </div>
-      </main>
+      </PublicShell>
     </>
   );
 }

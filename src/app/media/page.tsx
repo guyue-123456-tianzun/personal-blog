@@ -1,26 +1,28 @@
 import Link from "next/link";
 
 import { fallbackCover } from "@/lib/site-config";
-import { listMedia, statusLabel } from "@/lib/media";
+import { listMedia, mediaTypeLabel, statusLabel } from "@/lib/media";
+import { PublicShell } from "@/components/public/PublicShell";
 
-// 书影音(C1):书/影/游 清单,带状态与评分
+// 书影音·番组计划(C1):全站记录,封面卡网格 + 状态筛选 + 评分角标
 export const dynamic = "force-dynamic";
 
 export const metadata = { title: "书影音" };
 
-const TYPES = [
-  { key: "", label: "全部" },
-  { key: "book", label: "书" },
-  { key: "movie", label: "影" },
-  { key: "game", label: "游" },
-];
+const TYPES = ["", "book", "movie", "anime", "music", "game"];
+const STATUS = ["", "wish", "doing", "done"];
 
-type Props = { searchParams: Promise<{ type?: string }> };
+type Props = { searchParams: Promise<{ type?: string; status?: string }> };
 
 export default async function MediaPage({ searchParams }: Props) {
-  const { type } = await searchParams;
-  const active = ["book", "movie", "game"].includes(type ?? "") ? type : "";
-  const items = await listMedia(active || undefined);
+  const { type, status } = await searchParams;
+  const activeType = TYPES.includes(type ?? "") ? (type ?? "") : "";
+  const activeStatus = STATUS.includes(status ?? "") ? (status ?? "") : "";
+
+  let items = await listMedia(activeType || undefined);
+  if (activeStatus) {
+    items = items.filter((item) => item.status === activeStatus);
+  }
 
   function stars(rating: number | null) {
     if (rating === null) return "";
@@ -29,61 +31,92 @@ export default async function MediaPage({ searchParams }: Props) {
   }
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
-      <h1 className="text-2xl font-bold">书影音</h1>
-      <p className="mt-2 text-sm opacity-60">读过的书、看过的片、玩过的游。</p>
+    <PublicShell>
+      <div className="glass rounded-2xl p-5">
+        <div className="flex items-center gap-2.5">
+          <span className="inline-block h-5 w-1 rounded-full bg-accent" />
+          <h1 className="text-lg font-bold">番组计划</h1>
+        </div>
+        <p className="mt-1 text-sm opacity-60">记录读过的书、看过的片、玩过的游。</p>
 
-      <div className="mt-4 flex flex-wrap gap-2">
-        {TYPES.map((tab) => (
-          <Link
-            key={tab.key}
-            href={tab.key ? `/media?type=${tab.key}` : "/media"}
-            className={`rounded-full border px-3.5 py-1.5 text-sm transition-colors ${
-              active === tab.key
-                ? "border-accent bg-accent text-white"
-                : "border-border hover:bg-foreground/10"
-            }`}
-          >
-            {tab.label}
-          </Link>
-        ))}
-      </div>
+        {/* 类型页签 */}
+        <div className="mt-4 flex flex-wrap gap-2">
+          {TYPES.map((key) => {
+            const label = key === "" ? "全部" : mediaTypeLabel(key);
+            const active = activeType === key;
+            return (
+              <Link
+                key={key || "all"}
+                href={key ? `/media?type=${key}` : "/media"}
+                className={`rounded-full border px-3.5 py-1.5 text-sm transition-colors ${
+                  active
+                    ? "border-accent bg-accent text-white"
+                    : "border-border hover:bg-foreground/10"
+                }`}
+              >
+                {label}
+              </Link>
+            );
+          })}
+        </div>
 
-      {items.length === 0 ? (
-        <p className="glass mt-8 rounded-2xl p-8 text-center text-sm opacity-60">
-          这个分类下还没有记录。
-        </p>
-      ) : (
-        <div className="mt-6 grid gap-4 sm:grid-cols-2">
-          {items.map((item) => (
-            <article key={item.id} className="glass flex gap-4 rounded-2xl p-4">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={item.coverUrl || fallbackCover(item.title)}
-                alt=""
-                className="h-24 w-16 shrink-0 rounded-lg object-cover"
-              />
-              <div className="min-w-0 flex-1">
-                <div className="flex items-baseline justify-between gap-2">
-                  <h3 className="truncate font-semibold">{item.title}</h3>
-                  <span className="shrink-0 rounded-full border border-border px-2 py-0.5 text-xs opacity-60">
-                    {statusLabel(item.type, item.status)}
-                  </span>
-                </div>
+        {/* 状态筛选 */}
+        <div className="mt-2.5 flex flex-wrap gap-2">
+          {STATUS.map((key) => {
+            const label = key === "" ? "全部状态" : statusLabel(activeType || "movie", key);
+            const active = activeStatus === key;
+            return (
+              <Link
+                key={key || "all-status"}
+                href={`/media?${new URLSearchParams({ ...(activeType ? { type: activeType } : {}), ...(key ? { status: key } : {}) }).toString()}`}
+                className={`rounded-full border px-3 py-1 text-xs transition-colors ${
+                  activeStatus === key
+                    ? "border-accent bg-accent text-white"
+                    : "border-border hover:bg-foreground/10"
+                }`}
+              >
+                {label}
+              </Link>
+            );
+          })}
+        </div>
+
+        {/* 卡片网格 */}
+        {items.length === 0 ? (
+          <p className="mt-6 text-sm opacity-60">这个分类下还没有记录。</p>
+        ) : (
+          <div className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+            {items.map((item) => (
+              <div key={item.id} className="group relative overflow-hidden rounded-xl">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={item.coverUrl || fallbackCover(item.title)}
+                  alt=""
+                  className="aspect-[3/4] w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                {/* 状态徽章 */}
+                <span className="absolute left-2 top-2 rounded-md bg-emerald-500/90 px-1.5 py-0.5 text-[10px] font-medium text-white">
+                  {statusLabel(item.type, item.status)}
+                </span>
+                {/* 评分角标 */}
                 {item.rating !== null && (
-                  <p className="mt-1 text-sm text-amber-400">
-                    {stars(item.rating)}
-                    <span className="ml-1.5 opacity-60">{item.rating}/10</span>
-                  </p>
+                  <span className="absolute right-2 top-2 rounded-md bg-black/50 px-1.5 py-0.5 text-[10px] font-medium text-amber-300">
+                    ★ {item.rating}
+                  </span>
                 )}
+                <div className="absolute bottom-2 left-2.5 right-2.5 text-white">
+                  <p className="truncate text-sm font-bold drop-shadow">{item.title}</p>
+                  <p className="truncate text-[10px] opacity-80">{mediaTypeLabel(item.type)}</p>
+                </div>
                 {item.comment && (
-                  <p className="mt-1 line-clamp-2 text-sm opacity-70">{item.comment}</p>
+                  <p className="mt-1.5 line-clamp-2 text-xs opacity-70">{item.comment}</p>
                 )}
               </div>
-            </article>
-          ))}
-        </div>
-      )}
-    </main>
+            ))}
+          </div>
+        )}
+      </div>
+    </PublicShell>
   );
 }

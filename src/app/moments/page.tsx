@@ -5,6 +5,7 @@ import MomentsFeed from "@/components/social/MomentsFeed";
 import { listPublicMoments } from "@/lib/content-api";
 import { getRelationStatus } from "@/lib/friends";
 import { getSessionUser } from "@/lib/session";
+import PublicShell from "@/components/public/PublicShell";
 
 // 朋友圈(B4 + 社交层):登录用户可发动态;feed 汇集全站用户的公开动态,
 // 支持随机刷新,可向作者发好友申请。访客只能围观。
@@ -45,7 +46,7 @@ export default async function MomentsPage({ searchParams }: Props) {
   const hasMore = moments.length === PAGE_SIZE;
 
   return (
-    <main className="mx-auto max-w-2xl px-4 py-10 sm:px-6">
+    <PublicShell>
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">朋友圈</h1>
         <Link href="/" className="text-sm text-accent hover:underline">
@@ -97,6 +98,6 @@ export default async function MomentsPage({ searchParams }: Props) {
           </Link>
         )}
       </div>
-    </main>
+    </PublicShell>
   );
 }

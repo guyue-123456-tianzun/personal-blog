@@ -17,18 +17,26 @@ export type MediaInput = {
 };
 
 export const MEDIA_TYPES = [
-  { key: "book", label: "书" },
-  { key: "movie", label: "影" },
-  { key: "game", label: "游" },
+  { key: "book", label: "书籍" },
+  { key: "movie", label: "影视" },
+  { key: "anime", label: "动漫" },
+  { key: "music", label: "音乐" },
+  { key: "game", label: "游戏" },
 ] as const;
 
 export function statusLabel(type: string, status: string): string {
   const table: Record<string, Record<string, string>> = {
     book: { wish: "想读", doing: "在读", done: "读完" },
     movie: { wish: "想看", doing: "在看", done: "看过" },
+    anime: { wish: "想看", doing: "在看", done: "看完" },
+    music: { wish: "想听", doing: "在听", done: "听过" },
     game: { wish: "想玩", doing: "在玩", done: "玩过" },
   };
   return table[type]?.[status] ?? status;
+}
+
+export function mediaTypeLabel(type: string): string {
+  return MEDIA_TYPES.find((t) => t.key === type)?.label ?? type;
 }
 
 function validate(input: MediaInput) {

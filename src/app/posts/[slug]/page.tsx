@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import CommentsSection from "@/components/CommentsSection";
 import { Markdown } from "@/components/Markdown";
 import { getPostBySlug } from "@/lib/content-api";
+import PublicShell from "@/components/public/PublicShell";
 import { listComments } from "@/lib/comments";
 import { fallbackCover } from "@/lib/site-config";
 import { getPostViews, recordPostView } from "@/lib/site-stats";
@@ -30,7 +31,7 @@ export default async function PostPage({ params }: Props) {
   const views = await getPostViews(post.slug);
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
+    <PublicShell>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={post.cover || fallbackCover(post.slug)}
@@ -62,6 +63,6 @@ export default async function PostPage({ params }: Props) {
       </Link>
 
       <CommentsSection slug={post.slug} initial={await listComments(post.slug)} />
-    </main>
+    </PublicShell>
   );
 }

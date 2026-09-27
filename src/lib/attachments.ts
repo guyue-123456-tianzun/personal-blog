@@ -60,7 +60,11 @@ export function extensionFor(mime: string, originalName: string): string {
   return table[mime] ?? "";
 }
 
-export async function saveUpload(file: File, noteId: number | null) {
+export async function saveUpload(
+  file: File,
+  noteId: number | null,
+  isPublic = 0,
+) {
   if (file.size <= 0) throw new Error("空文件");
   if (file.size > MAX_UPLOAD_BYTES) throw new Error("文件超过 20MB 上限");
   if (!ALLOWED_MIME.has(file.type)) {
@@ -85,6 +89,7 @@ export async function saveUpload(file: File, noteId: number | null) {
       storedPath: rel,
       mime: file.type,
       size: file.size,
+      isPublic,
     })
     .returning();
   return row;

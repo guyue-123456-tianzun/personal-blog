@@ -4,11 +4,13 @@ import { and, desc, eq, isNull, sql } from "drizzle-orm";
 
 import { db } from "@/lib/db";
 import { noteTags, notes, tags } from "@/db/schema";
+import { escapeLike, makeSnippet } from "./search";
 
 export type PostListItem = {
   slug: string;
   title: string;
   excerpt: string | null;
+  cover: string | null;
   publishedAt: string | null;
   tags: string[];
 };
@@ -44,6 +46,7 @@ export async function getPublishedPosts(): Promise<PostListItem[]> {
       slug: notes.slug,
       title: notes.title,
       excerpt: notes.excerpt,
+      cover: notes.cover,
       publishedAt: notes.publishedAt,
     })
     .from(notes)
@@ -88,6 +91,7 @@ export async function getPostsByTag(tagName: string): Promise<PostListItem[]> {
       slug: notes.slug,
       title: notes.title,
       excerpt: notes.excerpt,
+      cover: notes.cover,
       publishedAt: notes.publishedAt,
     })
     .from(notes)
@@ -96,6 +100,36 @@ export async function getPostsByTag(tagName: string): Promise<PostListItem[]> {
     .where(and(publishedPost, eq(tags.name, tagName)))
     .orderBy(desc(notes.publishedAt));
   return attachTags(rows);
+}
+
+/** 公开区搜索:只搜公开文章,返回命中摘要(私有区搜索在 kb 侧,互不相通) */
+export async function searchPublishedPosts(
+  query: string,
+  limit = 30,
+): Promise<{ slug: string; title: string; snippet: string; publishedAt: string | null }[]> {
+  const q = query.trim();
+  if (!q) return [];
+  const pattern = `%${escapeLike(q)}%`;
+  const rows = await db
+    .select({
+      slug: notes.slug,
+      title: notes.title,
+      content: notes.content,
+      publishedAt: notes.publishedAt,
+    })
+    .from(notes)
+    .where(
+      and(
+        publishedPost,
+        sql`(${notes.title} LIKE ${pattern} ESCAPE '\\' OR ${notes.content} LIKE ${pattern} ESCAPE '\\')`,
+      ),
+    )
+    .orderBy(desc(notes.publishedAt))
+    .limit(limit);
+  return rows.map(({ content, ...rest }) => ({
+    ...rest,
+    snippet: makeSnippet(content, q),
+  }));
 }
 
 /** 归档:按年分组的公开文章 */

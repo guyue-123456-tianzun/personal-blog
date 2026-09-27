@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0.6" y2="1">
+      <stop offset="0" stop-color="#1e1b4b"/>
+      <stop offset="0.45" stop-color="#5b21b6"/>
+      <stop offset="0.8" stop-color="#be185d"/>
+      <stop offset="1" stop-color="#f472b6"/>
+    </linearGradient>
+    <radialGradient id="moonglow" cx="0.72" cy="0.26" r="0.35">
+      <stop offset="0" stop-color="#fef9c3" stop-opacity="0.9"/>
+      <stop offset="0.35" stop-color="#fde68a" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#fde68a" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="nebula" cx="0.2" cy="0.55" r="0.5">
+      <stop offset="0" stop-color="#a78bfa" stop-opacity="0.4"/>
+      <stop offset="1" stop-color="#a78bfa" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1600" height="900" fill="url(#sky)"/>
+  <rect width="1600" height="900" fill="url(#moonglow)"/>
+  <rect width="1600" height="900" fill="url(#nebula)"/>
+  <circle cx="1150" cy="230" r="86" fill="#fefce8" opacity="0.95"/>
+  <circle cx="1128" cy="212" r="14" fill="#e7dcb8" opacity="0.5"/>
+  <circle cx="1172" cy="250" r="9" fill="#e7dcb8" opacity="0.4"/>
+  <g fill="#fefce8">
+    <circle cx="180" cy="120" r="2.5" opacity="0.9"/><circle cx="320" cy="220" r="1.8" opacity="0.7"/>
+    <circle cx="470" cy="90" r="2.2" opacity="0.8"/><circle cx="620" cy="180" r="1.6" opacity="0.6"/>
+    <circle cx="760" cy="70" r="2.4" opacity="0.85"/><circle cx="900" cy="150" r="1.7" opacity="0.65"/>
+    <circle cx="1330" cy="90" r="2.2" opacity="0.8"/><circle cx="1450" cy="200" r="1.8" opacity="0.7"/>
+    <circle cx="1010" cy="60" r="2" opacity="0.75"/><circle cx="240" cy="330" r="1.6" opacity="0.6"/>
+    <circle cx="1390" cy="380" r="1.7" opacity="0.55"/><circle cx="540" cy="300" r="1.9" opacity="0.65"/>
+  </g>
+  <path d="M0 720 L280 560 L520 700 L760 520 L1030 690 L1290 540 L1600 700 L1600 900 L0 900 Z" fill="#2e1065" opacity="0.85"/>
+  <path d="M0 800 L350 660 L640 780 L960 640 L1260 780 L1600 660 L1600 900 L0 900 Z" fill="#1e1b4b" opacity="0.95"/>
+  <g stroke="#f0abfc" stroke-width="2" opacity="0.5">
+    <line x1="880" y1="120" x2="940" y2="120"/><line x1="910" y1="90" x2="910" y2="150"/>
+  </g>
+</svg>

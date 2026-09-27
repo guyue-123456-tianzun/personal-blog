@@ -15,12 +15,12 @@ export type SearchHit = {
 };
 
 // LIKE 的通配符 % 和 _ 要转义,不然搜"100%"会变成搜"100任意字符"
-function escapeLike(query: string) {
+export function escapeLike(query: string) {
   return query.replace(/[\\%_]/g, (ch) => "\\" + ch);
 }
 
 // 命中摘要:定位关键词位置,截取前后各约 40 字;没命中正文(即命中标题)就取开头
-function makeSnippet(content: string, query: string) {
+export function makeSnippet(content: string, query: string) {
   const idx = content.toLowerCase().indexOf(query.toLowerCase());
   if (idx < 0) return content.slice(0, 80);
   const start = Math.max(0, idx - 40);

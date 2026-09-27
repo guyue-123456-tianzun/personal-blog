@@ -12,6 +12,7 @@ const demoPosts = [
     excerpt: "从一份架构文档到第一个可见的里程碑,记录这个网站是怎么搭起来的。",
     tags: ["随笔"],
     publishedAt: "2026-09-27 12:00:00",
+    cover: "/images/cover-1.svg",
     content: `## 这个站是怎么来的
 
 先写了一份企业级风格的规划文档,把需求、架构、里程碑全部定下来,然后一个里程碑一个里程碑地推进——你现在看到的这个页面,就是 **M1 里程碑** 的成果。
@@ -48,6 +49,7 @@ async function getPublishedPosts(): Promise<Post[]> {
     excerpt: "一篇包含各类 Markdown 元素的自检文章,用来验收渲染效果。",
     tags: ["测试"],
     publishedAt: "2026-09-27 13:00:00",
+    cover: "/images/cover-2.svg",
     content: `## 文本元素
 
 行内代码 \`npm run dev\`,**加粗**,*斜体*,[链接](https://github.com),~~删除线~~。
@@ -96,6 +98,7 @@ async function main() {
         title: post.title,
         excerpt: post.excerpt,
         content: post.content,
+        cover: post.cover,
         isPublic: 1,
         publishedAt: post.publishedAt,
       })
@@ -105,6 +108,7 @@ async function main() {
           title: post.title,
           excerpt: post.excerpt,
           content: post.content,
+          cover: post.cover,
           publishedAt: post.publishedAt,
         },
       })

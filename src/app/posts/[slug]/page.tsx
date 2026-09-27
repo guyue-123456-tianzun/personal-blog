@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 
 import { Markdown } from "@/components/Markdown";
 import { getPostBySlug } from "@/lib/content-api";
+import { fallbackCover } from "@/lib/site-config";
+import { getPostViews, recordPostView } from "@/lib/site-stats";
 
 export const dynamic = "force-dynamic";
 
@@ -21,10 +23,22 @@ export default async function PostPage({ params }: Props) {
   const post = await getPostBySlug(slug);
   if (!post) notFound();
 
+  // 浏览计数:先记再取,本次访问也计入
+  await recordPostView(post.slug);
+  const views = await getPostViews(post.slug);
+
   return (
-    <main className="mx-auto max-w-3xl px-6 py-10">
-      <h1 className="text-3xl font-bold">{post.title}</h1>
-      <p className="mt-2 text-sm opacity-50">{post.publishedAt?.slice(0, 10)}</p>
+    <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={post.cover || fallbackCover(post.slug)}
+        alt=""
+        className="mt-2 h-48 w-full rounded-2xl object-cover shadow-lg sm:h-64"
+      />
+      <h1 className="mt-8 text-3xl font-bold">{post.title}</h1>
+      <p className="mt-2 text-sm opacity-50">
+        {post.publishedAt?.slice(0, 10)} · 👁 {views} 次浏览
+      </p>
       {post.tags.length > 0 && (
         <div className="mt-3 flex flex-wrap gap-2">
           {post.tags.map((tag) => (

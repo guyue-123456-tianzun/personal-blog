@@ -1,22 +1,27 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
+/* 深浅色切换改为"手动 class 驱动":
+   html 上有没有 .dark 决定整套配色,初始状态由 layout 里的内联脚本按
+   "上次手动选择(localStorage) → 系统偏好"设定。dark: 工具类也随之生效 */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
-  --background: #fafafa;
-  --foreground: #171717;
-  --card: #ffffff;
-  --border: #e5e5e5;
-  --accent: #2563eb;
+  --background: #f4f3fb;
+  --foreground: #1c1c28;
+  --card: rgba(255, 255, 255, 0.62);
+  --border: rgba(28, 28, 40, 0.12);
+  --accent: #6d5ef2;
+  --accent-2: #e879f9;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-    --card: #171717;
-    --border: #262626;
-    --accent: #3b82f6;
-  }
+.dark {
+  --background: #0b0b15;
+  --foreground: #ecebf5;
+  --card: rgba(24, 24, 40, 0.55);
+  --border: rgba(236, 235, 245, 0.14);
+  --accent: #8b7bff;
+  --accent-2: #f0abfc;
 }
 
 @theme inline {
@@ -25,6 +30,7 @@
   --color-card: var(--card);
   --color-border: var(--border);
   --color-accent: var(--accent);
+  --color-accent-2: var(--accent-2);
 }
 
 body {
@@ -32,9 +38,48 @@ body {
   color: var(--foreground);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
     "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  min-height: 100vh;
 }
 
-/* 代码高亮配色:自己维护 highlight.js 的 hljs-* 类色值,浅色/深色各一套,跟随系统切换 */
+/* 玻璃卡片:半透明底 + 背景模糊 + 细边框(设计系统核心零件) */
+.glass {
+  background: var(--card);
+  backdrop-filter: blur(16px) saturate(1.4);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  border: 1px solid var(--border);
+}
+
+/* 背景装饰光斑:给玻璃提供可供模糊的色彩,深浅色下强度不同 */
+.deco-blob {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(90px);
+  opacity: 0.45;
+}
+.dark .deco-blob {
+  opacity: 0.28;
+}
+
+/* Hero 漂浮粒子:从底部缓缓上浮的透明小圆点 */
+.hero-particle {
+  position: absolute;
+  bottom: -12px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.55);
+  animation: float-up 9s linear infinite;
+}
+@keyframes float-up {
+  from {
+    transform: translateY(0);
+    opacity: 0.6;
+  }
+  to {
+    transform: translateY(-70vh);
+    opacity: 0;
+  }
+}
+
+/* 代码高亮配色:浅色一套,深色(.dark)一套 */
 .hljs {
   color: #24292e;
   background: transparent;
@@ -86,53 +131,51 @@ body {
   color: #22863a;
 }
 
-@media (prefers-color-scheme: dark) {
-  .hljs {
-    color: #e6edf3;
-  }
-  .hljs-comment,
-  .hljs-quote {
-    color: #8b949e;
-  }
-  .hljs-keyword,
-  .hljs-selector-tag,
-  .hljs-literal,
-  .hljs-section,
-  .hljs-doctag,
-  .hljs-type,
-  .hljs-name,
-  .hljs-strong {
-    color: #ff7b72;
-  }
-  .hljs-string,
-  .hljs-regexp,
-  .hljs-addition,
-  .hljs-attribute,
-  .hljs-meta .hljs-string {
-    color: #a5d6ff;
-  }
-  .hljs-number,
-  .hljs-variable,
-  .hljs-template-variable,
-  .hljs-params {
-    color: #79c0ff;
-  }
-  .hljs-title,
-  .hljs-title.function_,
-  .hljs-built_in,
-  .hljs-builtin-name,
-  .hljs-symbol {
-    color: #d2a8ff;
-  }
-  .hljs-attr,
-  .hljs-property,
-  .hljs-selector-attr,
-  .hljs-selector-class,
-  .hljs-selector-id,
-  .hljs-meta {
-    color: #79c0ff;
-  }
-  .hljs-tag {
-    color: #7ee787;
-  }
+.dark .hljs {
+  color: #e6edf3;
+}
+.dark .hljs-comment,
+.dark .hljs-quote {
+  color: #8b949e;
+}
+.dark .hljs-keyword,
+.dark .hljs-selector-tag,
+.dark .hljs-literal,
+.dark .hljs-section,
+.dark .hljs-doctag,
+.dark .hljs-type,
+.dark .hljs-name,
+.dark .hljs-strong {
+  color: #ff7b72;
+}
+.dark .hljs-string,
+.dark .hljs-regexp,
+.dark .hljs-addition,
+.dark .hljs-attribute,
+.dark .hljs-meta .hljs-string {
+  color: #a5d6ff;
+}
+.dark .hljs-number,
+.dark .hljs-variable,
+.dark .hljs-template-variable,
+.dark .hljs-params {
+  color: #79c0ff;
+}
+.dark .hljs-title,
+.dark .hljs-title.function_,
+.dark .hljs-built_in,
+.dark .hljs-builtin-name,
+.dark .hljs-symbol {
+  color: #d2a8ff;
+}
+.dark .hljs-attr,
+.dark .hljs-property,
+.dark .hljs-selector-attr,
+.dark .hljs-selector-class,
+.dark .hljs-selector-id,
+.dark .hljs-meta {
+  color: #79c0ff;
+}
+.dark .hljs-tag {
+  color: #7ee787;
 }

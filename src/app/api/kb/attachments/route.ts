@@ -22,9 +22,11 @@ export async function POST(request: Request) {
   }
   const noteIdRaw = form.get("noteId");
   const noteId = noteIdRaw ? Number(noteIdRaw) : null;
+  // public=1 表示公开资源(站点背景图/头像等),访客无需登录即可访问;默认私有
+  const isPublic = form.get("public") === "1" ? 1 : 0;
 
   try {
-    const row = await saveUpload(file, noteId);
+    const row = await saveUpload(file, noteId, isPublic);
     return NextResponse.json({ ok: true, attachment: row });
   } catch (error) {
     return NextResponse.json(

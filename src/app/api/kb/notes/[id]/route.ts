@@ -18,6 +18,7 @@ export async function PATCH(request: Request, { params }: Params) {
     content?: string;
     slug?: string;
     excerpt?: string;
+    cover?: string;
     tags?: string[];
     isPublic?: number;
     pinned?: number;

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="av" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#818cf8"/>
+      <stop offset="0.55" stop-color="#c084fc"/>
+      <stop offset="1" stop-color="#f472b6"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="400" fill="url(#av)"/>
+  <circle cx="110" cy="90" r="26" fill="#ffffff" opacity="0.18"/>
+  <circle cx="320" cy="300" r="48" fill="#ffffff" opacity="0.12"/>
+  <text x="200" y="252" text-anchor="middle" font-family="PingFang SC, Microsoft YaHei, sans-serif" font-size="170" font-weight="700" fill="#ffffff" opacity="0.92">博</text>
+</svg>

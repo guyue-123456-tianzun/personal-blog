@@ -16,6 +16,7 @@ export async function POST(request: Request) {
     content?: string;
     slug?: string;
     excerpt?: string;
+    cover?: string;
     tags?: string[];
     isPublic?: number;
     publishedAt?: string;
@@ -31,6 +32,7 @@ export async function POST(request: Request) {
       content: body.content,
       slug: body.slug,
       excerpt: body.excerpt,
+      cover: body.cover,
       tags: body.tags,
       isPublic: body.isPublic,
       publishedAt: body.publishedAt,

@@ -25,6 +25,7 @@ export const notes = sqliteTable("notes", {
   title: text("title").notNull(),
   excerpt: text("excerpt"), // 摘要,列表页展示,可空
   content: text("content").notNull(), // Markdown 原文
+  cover: text("cover"), // 封面图 URL;空 = 用渐变占位图
   isPublic: integer("is_public").notNull().default(0),
   pinned: integer("pinned").notNull().default(0), // 置顶文章排最前
   publishedAt: text("published_at"),
@@ -60,7 +61,16 @@ export const attachments = sqliteTable("attachments", {
   storedPath: text("stored_path").notNull(), // 相对 data\ 目录的磁盘路径,如 uploads\2026\09\x.png
   mime: text("mime").notNull(),
   size: integer("size").notNull(), // 字节
+  // 公开标记:1 = 访客无需登录即可访问(站点背景图/头像/公开配图用);默认 0 = 仅站长
+  isPublic: integer("is_public").notNull().default(0),
   createdAt: text("created_at").notNull().default(now),
+});
+
+// 站点外观/配置项:键值对,后台"外观设置"页写入,前台即时生效
+export const siteSettings = sqliteTable("site_settings", {
+  key: text("key").primaryKey(),
+  value: text("value").notNull(),
+  updatedAt: text("updated_at").notNull().default(now),
 });
 
 // 笔记版本历史(C7):每次保存前把旧版拍快照存进来,只保留最近 20 份
@@ -72,6 +82,12 @@ export const noteVersions = sqliteTable("note_versions", {
   title: text("title").notNull(),
   content: text("content").notNull(),
   savedAt: text("saved_at").notNull().default(now),
+});
+
+// 浏览计数:以 slug 为键,每次访问文章详情页 +1(个人站点,粗粒度足够)
+export const postViews = sqliteTable("post_views", {
+  slug: text("slug").primaryKey(),
+  views: integer("views").notNull().default(0),
 });
 
 export type Note = typeof notes.$inferSelect;

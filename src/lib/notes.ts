@@ -16,6 +16,7 @@ export type NoteInput = {
   content: string;
   slug?: string;
   excerpt?: string | null;
+  cover?: string | null;
   tags?: string[];
   isPublic?: number;
   pinned?: number;
@@ -101,6 +102,7 @@ export async function createNote(input: NoteInput) {
       title: input.title,
       content: input.content,
       excerpt: input.excerpt ?? null,
+      cover: input.cover ?? null,
       isPublic: input.isPublic ?? 0,
       pinned: input.pinned ?? 0,
       publishedAt: input.publishedAt ?? null,
@@ -129,6 +131,7 @@ export async function updateNote(
       ...(input.title !== undefined ? { title: input.title } : {}),
       ...(input.content !== undefined ? { content: input.content } : {}),
       ...(input.excerpt !== undefined ? { excerpt: input.excerpt } : {}),
+      ...(input.cover !== undefined ? { cover: input.cover } : {}),
       ...(input.isPublic !== undefined ? { isPublic: input.isPublic } : {}),
       ...(input.pinned !== undefined ? { pinned: input.pinned } : {}),
       ...(input.publishedAt !== undefined

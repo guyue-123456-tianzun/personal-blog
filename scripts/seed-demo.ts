@@ -1,9 +1,10 @@
 // 写入示例文章(幂等,按 slug 覆盖更新):用于 M1 里程碑验收。
 // 正式发布界面在 M2 落地;届时站长从私有区后台写文章,不再依赖本脚本。
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 
 import { db } from "../src/lib/db";
-import { noteTags, notes, tags } from "../src/db/schema";
+import { comments, noteTags, notes, tags } from "../src/db/schema";
+import { addComment } from "../src/lib/comments";
 
 const demoPosts = [
   {
@@ -126,6 +127,22 @@ async function main() {
     }
   }
   console.log("✅ 示例文章已写入(2 篇)");
+
+  // 示例评论:只在还没有评论时写入,保证脚本可重复执行
+  const [existing] = await db
+    .select({ id: comments.id })
+    .from(comments)
+    .where(and(eq(comments.postSlug, "hello-world"), eq(comments.isVisible, 1)))
+    .limit(1);
+  if (!existing) {
+    try {
+      await addComment("seed", "hello-world", { author: "路人甲", content: "支持!期待后续更新。" });
+      await addComment("seed", "hello-world", { author: "路过的小明", content: "写得不错,学到了。" });
+      console.log("✅ 示例评论已写入(2 条)");
+    } catch {
+      console.log("ℹ️ 示例评论跳过(可能触发了限流)");
+    }
+  }
 }
 
 main()

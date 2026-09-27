@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import CommentsSection from "@/components/CommentsSection";
 import { Markdown } from "@/components/Markdown";
 import { getPostBySlug } from "@/lib/content-api";
+import { listComments } from "@/lib/comments";
 import { fallbackCover } from "@/lib/site-config";
 import { getPostViews, recordPostView } from "@/lib/site-stats";
 
@@ -58,6 +60,8 @@ export default async function PostPage({ params }: Props) {
       <Link href="/" className="mt-10 inline-block text-sm text-accent hover:underline">
         ← 返回首页
       </Link>
+
+      <CommentsSection slug={post.slug} initial={await listComments(post.slug)} />
     </main>
   );
 }

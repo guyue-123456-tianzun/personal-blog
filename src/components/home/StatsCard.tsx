@@ -9,6 +9,7 @@ export default function StatsCard({ stats }: Props) {
     { icon: "📝", label: "文章", value: `${stats.posts} 篇` },
     { icon: "🏷️", label: "标签", value: `${stats.tags} 个` },
     { icon: "✍️", label: "总字数", value: stats.words.toLocaleString() },
+    { icon: "📅", label: "今日浏览", value: `${stats.today} 次` },
     { icon: "👁️", label: "总浏览", value: `${stats.views} 次` },
   ];
 

@@ -73,6 +73,22 @@ export const siteSettings = sqliteTable("site_settings", {
   updatedAt: text("updated_at").notNull().default(now),
 });
 
+// 博客评论(公开区唯一的访客写入):软隐藏(is_visible=0)而非真删,站长可管理
+export const comments = sqliteTable("comments", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  postSlug: text("post_slug").notNull(),
+  author: text("author").notNull(),
+  content: text("content").notNull(),
+  isVisible: integer("is_visible").notNull().default(1),
+  createdAt: text("created_at").notNull().default(now),
+});
+
+// 站点每日浏览:按天计数,支撑站点数据卡的"今日浏览"
+export const siteViews = sqliteTable("site_views", {
+  date: text("date").primaryKey(), // YYYY-MM-DD
+  views: integer("views").notNull().default(0),
+});
+
 // 笔记版本历史(C7):每次保存前把旧版拍快照存进来,只保留最近 20 份
 export const noteVersions = sqliteTable("note_versions", {
   id: integer("id").primaryKey({ autoIncrement: true }),

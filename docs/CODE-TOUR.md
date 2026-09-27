@@ -149,6 +149,10 @@ personal-blog\
 | `app\kb\appearance\` | 外观设置后台 | 换背景图/头像(上传即生效)、虚化滑杆、Hero 占屏高度滑杆、签名、公告 |
 | `app\search\` | 公开搜索页 | Hero 搜索框的目的地;只搜公开文章 |
 | `app\friends\` `/moments\` `/photos\` | 友链页 + 两个占位页 | 说说/照片墙 M4 上线 |
+| `lib\comments.ts` + `app\api\comments\` | 文章评论 | 访客填昵称即可留言;限流(同 IP 每分钟 5 条)/长度校验/归属校验全在写入口;站长可隐藏/删除 |
+| `lib\rss.ts` + `app\feed.xml\` `app\sitemap.ts` `app\robots.ts` | 订阅与 SEO | RSS 阅读器订阅 /feed.xml;域名填进 site-config 后 sitemap 自动变绝对地址 |
+| `scripts\gen-demo-music.mjs` + `public\music\demo.wav` | 示例曲目 | 代码合成的 30 秒氛围乐,让播放器开箱能响;站长以后放自己的 mp3 进 public\music\ |
+| `components\home\FloatingMusicButton.tsx` | 浮动音乐圆盘 | 固定左下角,播放时旋转(参考站同款) |
 | `public\images\*.svg` | 占位图 | Hero 夜景/头像/4 张封面渐变;站长上传自己的图后自动被替换 |
 
 **外观系统怎么运作**:外观设置存数据库表 `site_settings`,页面每次渲染都读它——所以在后台换背景图、拖虚化滑杆,首页刷新就变,不用碰任何代码。`site-config.ts` 里的静态值只是"没设置时的默认值",保证永远有图可用。
@@ -195,7 +199,7 @@ SQLite 的规矩：默认值里的函数必须写成 `DEFAULT (datetime('now'))`
 | `tests\notes-ops.test.ts` | 笔记写操作 | 5 个：slug 去重、更新自动存档、回滚可撤销、版本只留 20 份、软删→还原→彻底删三连 |
 | `tests\export.test.ts` | 全量导出 | 3 个：zip 目录结构、frontmatter 完整、清单数量对得上 |
 
-目前 **36 个测试，全绿**。页面类功能（点按钮、看排版）继续走"浏览器验收"，因为那部分测的是人的体验。
+目前 **43 个测试，全绿**。页面类功能（点按钮、看排版）继续走"浏览器验收"，因为那部分测的是人的体验。
 
 ---
 

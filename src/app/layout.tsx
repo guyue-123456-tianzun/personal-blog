@@ -3,6 +3,7 @@ import Link from "next/link";
 import "./globals.css";
 
 import SiteHeader from "@/components/SiteHeader";
+import FloatingMusicButton from "@/components/home/FloatingMusicButton";
 import { siteConfig } from "@/lib/site-config";
 
 export const metadata: Metadata = {
@@ -64,8 +65,13 @@ export default function RootLayout({
 
         <SiteHeader />
         <div className="flex-1">{children}</div>
+        <FloatingMusicButton />
         <footer className="glass mt-10 py-5 text-center text-xs opacity-80">
           © {new Date().getFullYear()} {siteConfig.siteName} ·{" "}
+          <Link href="/feed.xml" className="underline hover:opacity-100">
+            RSS
+          </Link>{" "}
+          ·{" "}
           <Link href="/friends" className="underline hover:opacity-100">
             友链
           </Link>{" "}

@@ -8,18 +8,36 @@ export const siteConfig = {
   /** TODO(站长): 一句话签名,显示在首页 Hero 大标题下面 */
   signature: "把日子过成自己喜欢的样子。",
 
+  /** TODO(站长): 域名下来后填完整地址(https://xxx.com),RSS/sitemap 用 */
+  siteUrl: "",
+
   /** Hero 背景大图(横图最佳);换成你自己的图:丢进 public/images/ 然后改这里的路径 */
   heroImage: "/images/hero-default.svg",
 
   /** 头像(方形或圆形均可,显示时会裁圆) */
   avatar: "/images/avatar-default.svg",
 
+  /** 所在城市/位置(资料卡显示,可留空隐藏) */
+  location: "",
+
   /** 建站日期:站点数据卡的"运行天数"从这里算 */
   siteStartDate: "2026-09-27",
 
-  /** 社交链接(显示在资料卡);不想放的删掉即可 */
+  /** 社交链接:type 支持 github / mail / rss / bilibili / zhihu,资料卡会渲染对应图标 */
   socials: [
-    { label: "GitHub", url: "https://github.com/guyue-123456-tianzun" },
+    { type: "github", label: "GitHub", url: "https://github.com/guyue-123456-tianzun" },
+  ] as { type: string; label: string; url: string }[],
+
+  /** 关于页"关于我"段落(一段一条) */
+  aboutMe: [
+    "你好,欢迎来到我的个人站。",
+    "这里记录我的技术学习与日常生活——踩过的坑、看过的书、想过的事。",
+  ],
+
+  /** 关于页"关于博客"段落(一段一条) */
+  aboutBlog: [
+    "这个站点分两面:公开的博客,和只属于我自己的私人知识库。",
+    "它基于 Next.js 构建,部署在阿里云上,由自己一点一点打磨出来,还在成长中。欢迎常来坐坐。",
   ],
 
   /** 公告/打字机横幅:轮流播放的句子 */
@@ -34,7 +52,9 @@ export const siteConfig = {
    * 1. 把 mp3 放进 public\music\ 目录,url 填 "/music/歌名.mp3"
    * 2. 用任意外链音频地址
    */
-  music: [] as { title: string; artist: string; url: string }[],
+  music: [
+    { title: "晚风 (示例曲目)", artist: "站点内置", url: "/music/demo.wav" },
+  ] as { title: string; artist: string; url: string }[],
 
   /** 友链(显示在 /friends 页) */
   friends: [

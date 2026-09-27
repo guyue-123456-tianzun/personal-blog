@@ -9,8 +9,8 @@
 :root {
   --background: #f4f3fb;
   --foreground: #1c1c28;
-  --card: rgba(255, 255, 255, 0.62);
-  --border: rgba(28, 28, 40, 0.12);
+  --card: rgba(255, 255, 255, 0.78);
+  --border: rgba(28, 28, 40, 0.1);
   --accent: #6d5ef2;
   --accent-2: #e879f9;
 }
@@ -18,8 +18,8 @@
 .dark {
   --background: #0b0b15;
   --foreground: #ecebf5;
-  --card: rgba(24, 24, 40, 0.55);
-  --border: rgba(236, 235, 245, 0.14);
+  --card: rgba(22, 22, 38, 0.66);
+  --border: rgba(236, 235, 245, 0.12);
   --accent: #8b7bff;
   --accent-2: #f0abfc;
 }

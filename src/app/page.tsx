@@ -1,5 +1,3 @@
-import Link from "next/link";
-
 import { getPublishedPosts, getTagCloud } from "@/lib/content-api";
 import { getSiteStats, recordSiteVisit } from "@/lib/site-stats";
 import { getAppearance } from "@/lib/settings";
@@ -10,10 +8,11 @@ import StatsCard from "@/components/home/StatsCard";
 import MusicPlayer from "@/components/home/MusicPlayer";
 import TypewriterBanner from "@/components/home/TypewriterBanner";
 import CalendarWidget from "@/components/home/CalendarWidget";
-import ArticleCard from "@/components/home/ArticleCard";
+import ArticleBoard from "@/components/home/ArticleBoard";
 
-// 首页 = 全屏 Hero + 三栏浮层(参考站构图):
-//   左栏 资料卡+音乐 | 中栏 文章卡流 | 右栏 站点数据+日历,整体压在 Hero 下沿上
+// 首页 = 全屏 Hero + 错落三栏浮层(参考站构图):
+//   左栏 资料卡+公告打字机+音乐 | 中栏 文章区(列表/网格切换) | 右栏 站点数据+日历
+// 三栏高度各自独立,避免"格子化"的呆板感
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
@@ -130,61 +129,25 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* ===== 三栏浮层:压在 Hero 下沿(参考站构图) ===== */}
+      {/* ===== 错落三栏浮层:压在 Hero 下沿(参考站构图) ===== */}
       <main className="mx-auto w-full max-w-6xl px-4 pb-10 sm:px-6">
-        <div className="relative z-20 -mt-24">
-          <TypewriterBanner />
+        <div className="relative z-20 -mt-28 grid items-start gap-4 lg:grid-cols-[260px_minmax(0,1fr)_270px]">
+          {/* 左栏:人物 + 公告 + 音乐(高度与右栏错开) */}
+          <div className="fade-up space-y-4" style={{ animationDelay: "0ms" }}>
+            <ProfileCard stats={stats} appearance={appearance} />
+            <TypewriterBanner />
+            <MusicPlayer playlist={appearance.music} />
+          </div>
 
-          <div className="mt-4 grid items-start gap-4 lg:grid-cols-[250px_1fr_260px]">
-            {/* 左栏:资料 + 音乐 */}
-            <div className="fade-up space-y-4" style={{ animationDelay: "0ms" }}>
-              <ProfileCard stats={stats} appearance={appearance} />
-              <MusicPlayer playlist={appearance.music} />
-            </div>
+          {/* 中栏:文章区(列表/网格切换,第一篇大卡) */}
+          <div className="fade-up" style={{ animationDelay: "120ms" }}>
+            <ArticleBoard posts={posts} tags={tags} />
+          </div>
 
-            {/* 中栏:文章卡流 */}
-            <div className="fade-up glass rounded-2xl p-5" style={{ animationDelay: "120ms" }}>
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-bold">最新文章</h2>
-                <span className="text-xs opacity-50">共 {posts.length} 篇</span>
-              </div>
-              {posts.length === 0 ? (
-                <p className="mt-4 text-sm opacity-60">
-                  还没有文章。站长登录后写一篇,发布到这里。
-                </p>
-              ) : (
-                <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                  {posts.map((post, index) => (
-                    <div
-                      key={post.slug}
-                      className="fade-up"
-                      style={{ animationDelay: `${200 + index * 100}ms` }}
-                    >
-                      <ArticleCard post={post} />
-                    </div>
-                  ))}
-                </div>
-              )}
-              {tags.length > 0 && (
-                <div className="mt-5 flex flex-wrap gap-2 border-t border-border pt-4">
-                  {tags.map((tag) => (
-                    <Link
-                      key={tag.name}
-                      href={`/tags/${tag.name}`}
-                      className="rounded-full border border-border px-2.5 py-1 text-xs transition-colors hover:bg-foreground/10"
-                    >
-                      {tag.name} · {tag.count}
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* 右栏:站点数据 + 日历 */}
-            <div className="fade-up space-y-4" style={{ animationDelay: "240ms" }}>
-              <StatsCard stats={stats} />
-              <CalendarWidget />
-            </div>
+          {/* 右栏:站点数据 + 日历 */}
+          <div className="fade-up space-y-4" style={{ animationDelay: "240ms" }}>
+            <StatsCard stats={stats} />
+            <CalendarWidget />
           </div>
         </div>
       </main>

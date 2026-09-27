@@ -4,6 +4,8 @@ import "./globals.css";
 
 import SiteHeader from "@/components/SiteHeader";
 import FloatingMusicButton from "@/components/home/FloatingMusicButton";
+import Heartbeat from "@/components/Heartbeat";
+import { getAppearance } from "@/lib/settings";
 import { siteConfig } from "@/lib/site-config";
 
 export const metadata: Metadata = {
@@ -17,55 +19,40 @@ export const metadata: Metadata = {
 // 首帧防闪烁:在页面渲染前根据"上次选择 → 系统偏好"给 html 挂上 .dark
 const themeScript = `try{var t=localStorage.getItem("theme");if(t==="dark"||(!t&&window.matchMedia("(prefers-color-scheme: dark)").matches)){document.documentElement.classList.add("dark")}}catch(e){}`;
 
-export default function RootLayout({
+// 沉浸式布局:整站背景 = 壁纸图(可换/可调虚化),所有玻璃卡片浮在它上面。
+// 这是对齐参考站观感的关键:玻璃"透"的是真实的图,而不是纯色。
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const appearance = await getAppearance();
+
   return (
     <html lang="zh-CN" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body className="flex min-h-screen flex-col antialiased">
-        {/* 背景装饰光斑:玻璃卡片靠它才有"透"的感觉 */}
-        <div className="fixed inset-0 -z-10 overflow-hidden" aria-hidden>
-          <div
-            className="deco-blob"
+        {/* 沉浸式壁纸:虚化 + 主题色遮罩,保证前景文字可读 */}
+        <div className="fixed inset-0 -z-10" aria-hidden>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={appearance.wallImage}
+            alt=""
+            className="h-full w-full object-cover"
             style={{
-              width: 480,
-              height: 480,
-              top: -140,
-              left: -100,
-              background: "#8b7bff",
+              filter: `blur(${appearance.wallBlur}px)`,
+              transform: "scale(1.1)",
             }}
           />
-          <div
-            className="deco-blob"
-            style={{
-              width: 420,
-              height: 420,
-              bottom: -160,
-              right: -80,
-              background: "#f0abfc",
-            }}
-          />
-          <div
-            className="deco-blob"
-            style={{
-              width: 320,
-              height: 320,
-              top: "38%",
-              left: "56%",
-              background: "#67e8f9",
-              opacity: 0.3,
-            }}
-          />
+          <div className="absolute inset-0 bg-background/70 dark:bg-[#07070f]/75" />
         </div>
 
         <SiteHeader />
         <div className="flex-1">{children}</div>
         <FloatingMusicButton />
+        <Heartbeat />
         <footer className="glass mt-10 py-5 text-center text-xs opacity-80">
           © {new Date().getFullYear()} {siteConfig.siteName} ·{" "}
           <Link href="/feed.xml" className="underline hover:opacity-100">

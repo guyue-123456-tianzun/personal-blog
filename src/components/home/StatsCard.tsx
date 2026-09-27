@@ -11,6 +11,7 @@ export default function StatsCard({ stats }: Props) {
     { icon: "✍️", label: "总字数", value: stats.words.toLocaleString() },
     { icon: "📅", label: "今日浏览", value: `${stats.today} 次` },
     { icon: "👁️", label: "总浏览", value: `${stats.views} 次` },
+    { icon: "👥", label: "在线访客", value: `${stats.online} 人` },
   ];
 
   return (

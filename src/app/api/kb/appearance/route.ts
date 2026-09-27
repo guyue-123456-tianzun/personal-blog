@@ -31,6 +31,11 @@ const VALIDATORS: Record<AppearanceKey, (value: string) => string> = {
     if (!Array.isArray(parsed)) throw new Error("公告格式不正确");
     return JSON.stringify(parsed.map(String).filter(Boolean).slice(0, 10));
   },
+  wall_image_url: (v) => {
+    if (!v || v.length > 500) throw new Error("壁纸地址不合法");
+    return v;
+  },
+  wall_blur: (v) => String(clamp(Math.round(Number(v)) || 0, 0, 30)),
 };
 
 export async function GET() {

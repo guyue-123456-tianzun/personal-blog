@@ -3,7 +3,7 @@
 import { and, desc, eq, isNull, sql } from "drizzle-orm";
 
 import { db } from "@/lib/db";
-import { noteTags, notes, tags } from "@/db/schema";
+import { noteTags, notes, postViews, tags } from "@/db/schema";
 import { escapeLike, makeSnippet } from "./search";
 
 export type PostListItem = {
@@ -12,6 +12,7 @@ export type PostListItem = {
   excerpt: string | null;
   cover: string | null;
   publishedAt: string | null;
+  views: number;
   tags: string[];
 };
 
@@ -38,7 +39,7 @@ async function attachTags<T extends { id: number }>(
   return rows.map((row) => ({ ...row, tags: byNote.get(row.id) ?? [] }));
 }
 
-/** 首页文章列表:置顶优先,其余按发布时间倒序 */
+/** 首页文章列表:置顶优先,其余按发布时间倒序;带浏览量 */
 export async function getPublishedPosts(): Promise<PostListItem[]> {
   const rows = await db
     .select({
@@ -48,8 +49,10 @@ export async function getPublishedPosts(): Promise<PostListItem[]> {
       excerpt: notes.excerpt,
       cover: notes.cover,
       publishedAt: notes.publishedAt,
+      views: sql<number>`ifnull(${postViews.views}, 0)`.mapWith(Number),
     })
     .from(notes)
+    .leftJoin(postViews, eq(notes.slug, postViews.slug))
     .where(publishedPost)
     .orderBy(desc(notes.pinned), desc(notes.publishedAt), desc(notes.createdAt));
   return attachTags(rows);
@@ -93,8 +96,10 @@ export async function getPostsByTag(tagName: string): Promise<PostListItem[]> {
       excerpt: notes.excerpt,
       cover: notes.cover,
       publishedAt: notes.publishedAt,
+      views: sql<number>`ifnull(${postViews.views}, 0)`.mapWith(Number),
     })
     .from(notes)
+    .leftJoin(postViews, eq(notes.slug, postViews.slug))
     .innerJoin(noteTags, eq(notes.id, noteTags.noteId))
     .innerJoin(tags, eq(noteTags.tagId, tags.id))
     .where(and(publishedPost, eq(tags.name, tagName)))

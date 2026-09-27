@@ -18,6 +18,7 @@ export type SiteStats = {
   days: number;
   views: number;
   today: number;
+  online: number;
 };
 
 export async function getSiteStats(): Promise<SiteStats> {
@@ -60,7 +61,28 @@ export async function getSiteStats(): Promise<SiteStats> {
     days,
     views: viewSum.v ?? 0,
     today: todayRow?.views ?? 0,
+    online: getOnlineCount(),
   };
+}
+
+// ===== 在线访客(心跳版) =====
+// 页面每 45 秒向后端报一次到,5 分钟内报过到的算"在线"。
+// 单实例内存实现:重启清零、不跨服务器——对个人站点是诚实且够用的口径。
+const onlineMap = new Map<string, number>();
+const ONLINE_WINDOW_MS = 5 * 60 * 1000;
+
+export function recordHeartbeat(clientKey: string) {
+  onlineMap.set(clientKey, Date.now());
+}
+
+export function getOnlineCount(): number {
+  const cutoff = Date.now() - ONLINE_WINDOW_MS;
+  let online = 0;
+  for (const [key, lastSeen] of onlineMap) {
+    if (lastSeen >= cutoff) online++;
+    else onlineMap.delete(key);
+  }
+  return online;
 }
 
 /** 站点每日浏览:首页每次渲染记一次(个人站点,粗粒度足够) */

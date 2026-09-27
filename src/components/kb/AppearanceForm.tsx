@@ -15,6 +15,8 @@ export default function AppearanceForm({ initial }: Props) {
   const [avatar, setAvatar] = useState(initial.avatar);
   const [blur, setBlur] = useState(initial.heroBlur);
   const [height, setHeight] = useState(initial.heroHeightVh);
+  const [wallImage, setWallImage] = useState(initial.wallImage);
+  const [wallBlur, setWallBlur] = useState(initial.wallBlur);
   const [signature, setSignature] = useState(initial.signature);
   const [announcements, setAnnouncements] = useState(
     initial.announcements.join("\n"),
@@ -23,9 +25,12 @@ export default function AppearanceForm({ initial }: Props) {
   const [busy, setBusy] = useState(false);
   const heroInputRef = useRef<HTMLInputElement | null>(null);
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
+  const wallInputRef = useRef<HTMLInputElement | null>(null);
+
+  type UploadKind = "hero_image_url" | "avatar_url" | "wall_image_url";
 
   async function uploadImage(
-    kind: "hero_image_url" | "avatar_url",
+    kind: UploadKind,
     file: File,
   ) {
     setBusy(true);
@@ -58,6 +63,7 @@ export default function AppearanceForm({ initial }: Props) {
         return;
       }
       if (kind === "hero_image_url") setHeroImage(url);
+      else if (kind === "wall_image_url") setWallImage(url);
       else setAvatar(url);
       setStatus("图片已更新 ✓");
       router.refresh();
@@ -82,6 +88,8 @@ export default function AppearanceForm({ initial }: Props) {
         setAvatar(data.appearance.avatar);
         setBlur(data.appearance.heroBlur);
         setHeight(data.appearance.heroHeightVh);
+        setWallImage(data.appearance.wallImage);
+        setWallBlur(data.appearance.wallBlur);
         setSignature(data.appearance.signature);
         setAnnouncements(data.appearance.announcements.join("\n"));
         setStatus("已恢复默认");
@@ -103,6 +111,7 @@ export default function AppearanceForm({ initial }: Props) {
           values: {
             hero_blur: String(blur),
             hero_height: String(height),
+            wall_blur: String(wallBlur),
             signature,
             announcements: JSON.stringify(
               announcements.split("\n").map((line) => line.trim()).filter(Boolean),
@@ -206,6 +215,57 @@ export default function AppearanceForm({ initial }: Props) {
               e.target.value = "";
               if (file) uploadImage("avatar_url", file);
             }}
+          />
+        </div>
+      </div>
+
+      {/* 页面壁纸(沉浸式背景):所有玻璃卡片都垫在这张图上 */}
+      <div className="glass rounded-2xl p-5">
+        <h3 className="font-semibold">页面壁纸(沉浸式背景)</h3>
+        <p className="mt-1 text-xs opacity-50">
+          整站所有玻璃卡片都会浮在这张虚化后的图上;默认跟随 Hero 背景图,也可以单独指定。
+        </p>
+        <div className="mt-3 flex flex-wrap items-center gap-3">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={wallImage} alt="" className="h-12 w-20 rounded-lg object-cover" />
+          <button
+            onClick={() => wallInputRef.current?.click()}
+            disabled={busy}
+            className="rounded-lg border border-border px-4 py-2 text-sm transition-opacity hover:opacity-80 disabled:opacity-50"
+          >
+            上传新壁纸
+          </button>
+          <button
+            onClick={() => resetOne("wall_image_url")}
+            disabled={busy}
+            className="text-sm text-accent hover:underline disabled:opacity-50"
+          >
+            跟随 Hero 图
+          </button>
+          <input
+            ref={wallInputRef}
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              e.target.value = "";
+              if (file) uploadImage("wall_image_url", file);
+            }}
+          />
+        </div>
+        <div className="mt-4">
+          <div className="flex items-center justify-between text-sm">
+            <span className="font-semibold">壁纸虚化强度</span>
+            <span className="opacity-60">{wallBlur} px</span>
+          </div>
+          <input
+            type="range"
+            min={0}
+            max={30}
+            value={wallBlur}
+            onChange={(e) => setWallBlur(Number(e.target.value))}
+            className="mt-2 w-full accent-[var(--accent)]"
           />
         </div>
       </div>

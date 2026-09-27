@@ -13,6 +13,8 @@ export const APPEARANCE_KEYS = [
   "hero_height",
   "signature",
   "announcements",
+  "wall_image_url",
+  "wall_blur",
 ] as const;
 
 export type AppearanceKey = (typeof APPEARANCE_KEYS)[number];
@@ -20,10 +22,12 @@ export type AppearanceKey = (typeof APPEARANCE_KEYS)[number];
 export type Appearance = {
   heroImage: string;
   avatar: string;
-  heroBlur: number; // 0~24 px
+  heroBlur: number; // 0~24 px(Hero 大图的虚化)
   heroHeightVh: number; // 40~100 (vh)
   signature: string;
   announcements: string[];
+  wallImage: string; // 全站沉浸式壁纸(所有玻璃卡片垫在它上面)
+  wallBlur: number; // 0~30 px(壁纸虚化,默认 18:能看清氛围又不抢内容)
 };
 
 function clamp(value: number, min: number, max: number) {
@@ -36,6 +40,7 @@ export async function getAppearance(): Promise<Appearance> {
 
   const blur = Number(map.get("hero_blur"));
   const height = Number(map.get("hero_height"));
+  const wallBlur = Number(map.get("wall_blur"));
   let announcements: string[] = siteConfig.announcements as unknown as string[];
   try {
     const stored = map.get("announcements");
@@ -54,6 +59,12 @@ export async function getAppearance(): Promise<Appearance> {
     heroHeightVh: Number.isFinite(height) ? clamp(height, 40, 100) : 70,
     signature: map.get("signature") ?? siteConfig.signature,
     announcements: announcements.length > 0 ? announcements : ["欢迎来到我的个人站。"],
+    // 壁纸默认跟随 Hero 图:换一次 Hero 图,整站氛围跟着换
+    wallImage:
+      map.get("wall_image_url") ??
+      map.get("hero_image_url") ??
+      siteConfig.heroImage,
+    wallBlur: Number.isFinite(wallBlur) ? clamp(wallBlur, 0, 30) : 18,
   };
 }
 

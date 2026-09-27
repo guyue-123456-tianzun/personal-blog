@@ -64,7 +64,7 @@ export default async function Home() {
             }}
           />
         ))}
-        <div className="relative z-10 mx-auto w-full max-w-2xl px-6 pb-10 text-center text-white">
+        <div className="relative z-10 mx-auto w-full max-w-2xl px-6 pb-36 text-center text-white">
           <h1 className="text-4xl font-bold drop-shadow-lg sm:text-5xl">
             {siteConfig.siteName}
           </h1>
@@ -88,19 +88,34 @@ export default async function Home() {
               搜索
             </button>
           </form>
+          {/* Hero 数据胶囊条:参考站同款,一眼看到站点活跃度 */}
+          <div className="mt-7 flex flex-wrap items-center justify-center gap-2.5 text-sm">
+            <span className="glass rounded-full px-4 py-1.5 text-white">
+              📝 文章 {posts.length}
+            </span>
+            <span className="glass rounded-full px-4 py-1.5 text-white">
+              👁️ 总浏览 {stats.views}
+            </span>
+            <span className="glass rounded-full px-4 py-1.5 text-white">
+              👥 在线 {stats.online}
+            </span>
+            <span className="glass rounded-full px-4 py-1.5 text-white">
+              📅 运行 {stats.days} 天
+            </span>
+          </div>
         </div>
       </section>
 
-      <main className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6">
-        <div className="space-y-6">
-          <TypewriterBanner />
+      {/* 小部件浮上 Hero 底边:参考站的标志构图 */}
+      <main className="mx-auto w-full max-w-5xl px-4 pb-10 sm:px-6">
+        <div className="relative z-20 -mt-24 grid gap-4 md:grid-cols-3">
+          <ProfileCard stats={stats} appearance={appearance} />
+          <StatsCard stats={stats} />
+          <MusicPlayer />
+        </div>
 
-          {/* 小部件区:资料 / 站点数据 / 音乐 */}
-          <div className="grid gap-4 md:grid-cols-3">
-            <ProfileCard stats={stats} appearance={appearance} />
-            <StatsCard stats={stats} />
-            <MusicPlayer />
-          </div>
+        <div className="mt-6 space-y-6">
+          <TypewriterBanner />
 
           {/* 文章流 + 右侧日历 */}
           <div className="grid gap-6 lg:grid-cols-[1fr_270px]">

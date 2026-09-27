@@ -4,26 +4,32 @@ import { useEffect, useRef, useState } from "react";
 
 import { siteConfig } from "@/lib/site-config";
 
-// 音乐播放器小部件:歌单在 src/lib/site-config.ts 的 music 里配置。
-// 没配歌时显示引导态(不影响页面)。
+// 音乐播放器小部件:旋转碟片 + 进度条 + 时间,歌单在 src/lib/site-config.ts 配置。
 export default function MusicPlayer() {
   const playlist = siteConfig.music;
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [index, setIndex] = useState(0);
   const [playing, setPlaying] = useState(false);
-  const [progress, setProgress] = useState(0); // 0~1
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
 
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
     const onTime = () => {
-      if (audio.duration > 0) setProgress(audio.currentTime / audio.duration);
+      setCurrentTime(audio.currentTime);
+      if (audio.duration > 0) setDuration(audio.duration);
     };
-    const onEnd = () => setIndex((i) => (i + 1) % playlist.length);
+    const onEnd = () => {
+      setIndex((i) => (i + 1) % playlist.length);
+      setPlaying(true);
+    };
     audio.addEventListener("timeupdate", onTime);
+    audio.addEventListener("loadedmetadata", onTime);
     audio.addEventListener("ended", onEnd);
     return () => {
       audio.removeEventListener("timeupdate", onTime);
+      audio.removeEventListener("loadedmetadata", onTime);
       audio.removeEventListener("ended", onEnd);
     };
   }, [playlist.length]);
@@ -58,7 +64,7 @@ export default function MusicPlayer() {
 
   function switchTo(delta: number) {
     setIndex((i) => (i + delta + playlist.length) % playlist.length);
-    setProgress(0);
+    setCurrentTime(0);
     setPlaying(true);
   }
 
@@ -68,22 +74,41 @@ export default function MusicPlayer() {
   }
 
   return (
-    <section className="glass h-full rounded-2xl p-5">
+    <section className="glass flex h-full flex-col rounded-2xl p-5">
       <h3 className="mb-3 flex items-center gap-2 font-semibold">
         <span className="inline-block h-4 w-1 rounded-full bg-accent-2" />
         音乐
       </h3>
-      <p className="truncate font-medium">{current.title}</p>
-      <p className="mt-0.5 truncate text-xs opacity-60">{current.artist}</p>
 
-      <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-foreground/10">
-        <div
-          className="h-full rounded-full bg-accent transition-[width] duration-300"
-          style={{ width: `${progress * 100}%` }}
+      <div className="flex items-center gap-3">
+        {/* 旋转碟片:播放时转起来 */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/images/avatar-default.svg"
+          alt=""
+          className={`h-14 w-14 shrink-0 rounded-full border border-border object-cover ${
+            playing ? "animate-spin [animation-duration:8s]" : ""
+          }`}
         />
+        <div className="min-w-0 flex-1">
+          <p className="truncate font-medium">{current.title}</p>
+          <p className="mt-0.5 truncate text-xs opacity-60">{current.artist}</p>
+          <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-foreground/10">
+            <div
+              className="h-full rounded-full bg-accent transition-[width] duration-300"
+              style={{
+                width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%`,
+              }}
+            />
+          </div>
+          <div className="mt-1 flex justify-between text-[10px] opacity-50">
+            <span>{fmt(currentTime)}</span>
+            <span>{fmt(duration)}</span>
+          </div>
+        </div>
       </div>
 
-      <div className="mt-3 flex items-center justify-center gap-5 text-xl">
+      <div className="mt-auto flex items-center justify-center gap-5 pt-4 text-xl">
         <button onClick={() => switchTo(-1)} aria-label="上一首" className="transition-opacity hover:opacity-70">
           ⏮
         </button>
@@ -99,7 +124,7 @@ export default function MusicPlayer() {
         </button>
       </div>
 
-      <audio ref={audioRef} src={current.url} onEnded={() => setPlaying(false)} />
+      <audio ref={audioRef} src={current.url} autoPlay={playing} onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} />
     </section>
   );
 }

@@ -28,8 +28,8 @@ export default function ArticleCard({ post }: { post: PostListItem }) {
         {post.excerpt && (
           <p className="mt-1.5 line-clamp-2 text-sm opacity-70">{post.excerpt}</p>
         )}
-        {post.tags.length > 0 && (
-          <div className="mt-3 flex flex-wrap gap-1.5">
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+          <div className="flex flex-wrap gap-1.5">
             {post.tags.map((tag) => (
               <span
                 key={tag}
@@ -39,7 +39,8 @@ export default function ArticleCard({ post }: { post: PostListItem }) {
               </span>
             ))}
           </div>
-        )}
+          <span className="shrink-0 text-xs opacity-50">👁 {post.views}</span>
+        </div>
       </div>
     </Link>
   );

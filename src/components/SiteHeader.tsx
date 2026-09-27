@@ -5,12 +5,12 @@ import { getAppearance } from "@/lib/settings";
 import ThemeToggle from "@/components/ThemeToggle";
 
 const NAV = [
-  { href: "/", label: "首页" },
-  { href: "/archives", label: "归档" },
-  { href: "/moments", label: "说说" },
-  { href: "/photos", label: "照片墙" },
-  { href: "/friends", label: "友链" },
-  { href: "/about", label: "关于" },
+  { href: "/", label: "首页", icon: "🏠" },
+  { href: "/archives", label: "归档", icon: "📅" },
+  { href: "/moments", label: "说说", icon: "💬" },
+  { href: "/photos", label: "照片墙", icon: "📷" },
+  { href: "/friends", label: "友链", icon: "🔗" },
+  { href: "/about", label: "关于", icon: "💡" },
 ];
 
 // 全站顶部导航:玻璃质感,常驻吸顶;小屏时导航条可横向滑动。头像跟随外观设置
@@ -36,6 +36,7 @@ export default async function SiteHeader() {
               href={item.href}
               className="whitespace-nowrap rounded-full px-2.5 py-1.5 transition-colors hover:bg-foreground/10"
             >
+              <span className="mr-1">{item.icon}</span>
               {item.label}
             </Link>
           ))}

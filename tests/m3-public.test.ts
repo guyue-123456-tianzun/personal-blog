@@ -94,3 +94,31 @@ describe("站点统计 getSiteStats / 浏览计数", () => {
     expect(site.days).toBeGreaterThanOrEqual(0);
   });
 });
+
+describe("沉浸式壁纸外观键", () => {
+  it("未设置壁纸时跟随 Hero 图;设置后独立生效", async () => {
+    const before = await settings.getAppearance();
+    expect(before.wallImage).toBe(before.heroImage); // 默认跟随
+    await settings.setSetting("wall_image_url", "/images/cover-1.svg");
+    const after = await settings.getAppearance();
+    expect(after.wallImage).toBe("/images/cover-1.svg");
+    expect(after.heroImage).toBe(before.heroImage); // Hero 不受影响
+  });
+
+  it("壁纸虚化越界值被夹回 0~30", async () => {
+    await settings.setSetting("wall_blur", "99");
+    expect((await settings.getAppearance()).wallBlur).toBe(30);
+    await settings.clearSetting("wall_blur");
+    expect((await settings.getAppearance()).wallBlur).toBe(18); // 默认
+  });
+});
+
+describe("在线访客心跳", () => {
+  it("记录心跳后窗口内计数正确", async () => {
+    const before = stats.getOnlineCount();
+    stats.recordHeartbeat("hb-1");
+    stats.recordHeartbeat("hb-2");
+    const after = stats.getOnlineCount();
+    expect(after).toBeGreaterThanOrEqual(before + 2);
+  });
+});

@@ -12,7 +12,8 @@ import TypewriterBanner from "@/components/home/TypewriterBanner";
 import CalendarWidget from "@/components/home/CalendarWidget";
 import ArticleCard from "@/components/home/ArticleCard";
 
-// 首页 = 全屏 Hero(大图+签名+搜索,外观后台可调) + 小部件区 + 文章封面卡流
+// 首页 = 全屏 Hero + 三栏浮层(参考站构图):
+//   左栏 资料卡+音乐 | 中栏 文章卡流 | 右栏 站点数据+日历,整体压在 Hero 下沿上
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
@@ -110,67 +111,61 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* 小部件浮上 Hero 底边:参考站的标志构图;入场动画逐个错峰 */}
-      <main className="mx-auto w-full max-w-5xl px-4 pb-10 sm:px-6">
-          <div className="relative z-20 -mt-24 grid gap-4 md:grid-cols-3">
-            <div className="fade-up" style={{ animationDelay: "0ms" }}>
-              <ProfileCard stats={stats} appearance={appearance} />
-            </div>
-            <div className="fade-up" style={{ animationDelay: "120ms" }}>
-              <StatsCard stats={stats} />
-            </div>
-            <div className="fade-up" style={{ animationDelay: "240ms" }}>
-              <MusicPlayer playlist={appearance.music} />
-            </div>
-          </div>
-
-        <div className="mt-6 space-y-6">
+      {/* ===== 三栏浮层:压在 Hero 下沿(参考站构图) ===== */}
+      <main className="mx-auto w-full max-w-6xl px-4 pb-10 sm:px-6">
+        <div className="relative z-20 -mt-24">
           <TypewriterBanner />
 
-          {/* 文章流 + 右侧日历 */}
-          <div className="grid gap-6 lg:grid-cols-[1fr_270px]">
-            <section>
-              <h2 className="mb-4 text-xl font-bold">最新文章</h2>
+          <div className="mt-4 grid items-start gap-4 lg:grid-cols-[250px_1fr_260px]">
+            {/* 左栏:资料 + 音乐 */}
+            <div className="fade-up space-y-4" style={{ animationDelay: "0ms" }}>
+              <ProfileCard stats={stats} appearance={appearance} />
+              <MusicPlayer playlist={appearance.music} />
+            </div>
+
+            {/* 中栏:文章卡流 */}
+            <div className="fade-up glass rounded-2xl p-5" style={{ animationDelay: "120ms" }}>
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-bold">最新文章</h2>
+                <span className="text-xs opacity-50">共 {posts.length} 篇</span>
+              </div>
               {posts.length === 0 ? (
-                <p className="glass rounded-2xl p-6 text-sm opacity-60">
+                <p className="mt-4 text-sm opacity-60">
                   还没有文章。站长登录后写一篇,发布到这里。
                 </p>
               ) : (
-                <div className="grid gap-4 sm:grid-cols-2">
+                <div className="mt-4 grid gap-4 sm:grid-cols-2">
                   {posts.map((post, index) => (
                     <div
                       key={post.slug}
                       className="fade-up"
-                      style={{ animationDelay: `${300 + index * 100}ms` }}
+                      style={{ animationDelay: `${200 + index * 100}ms` }}
                     >
                       <ArticleCard post={post} />
                     </div>
                   ))}
                 </div>
               )}
-            </section>
-            <aside className="space-y-4">
-              <CalendarWidget />
               {tags.length > 0 && (
-                <section className="glass rounded-2xl p-5">
-                  <h3 className="mb-3 flex items-center gap-2 font-semibold">
-                    <span className="inline-block h-4 w-1 rounded-full bg-accent" />
-                    标签云
-                  </h3>
-                  <div className="flex flex-wrap gap-2">
-                    {tags.map((tag) => (
-                      <Link
-                        key={tag.name}
-                        href={`/tags/${tag.name}`}
-                        className="rounded-full border border-border px-2.5 py-1 text-xs transition-colors hover:bg-foreground/10"
-                      >
-                        {tag.name} · {tag.count}
-                      </Link>
-                    ))}
-                  </div>
-                </section>
+                <div className="mt-5 flex flex-wrap gap-2 border-t border-border pt-4">
+                  {tags.map((tag) => (
+                    <Link
+                      key={tag.name}
+                      href={`/tags/${tag.name}`}
+                      className="rounded-full border border-border px-2.5 py-1 text-xs transition-colors hover:bg-foreground/10"
+                    >
+                      {tag.name} · {tag.count}
+                    </Link>
+                  ))}
+                </div>
               )}
-            </aside>
+            </div>
+
+            {/* 右栏:站点数据 + 日历 */}
+            <div className="fade-up space-y-4" style={{ animationDelay: "240ms" }}>
+              <StatsCard stats={stats} />
+              <CalendarWidget />
+            </div>
           </div>
         </div>
       </main>

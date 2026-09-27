@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { siteConfig } from "@/lib/site-config";
 
 // 打字机横幅:公告句子轮播——打出来,停一下,擦掉,换下一句
-export default function TypewriterBanner() {
+export default function TypewriterBanner({ className = "" }: { className?: string }) {
   const phrases = siteConfig.announcements;
   const [text, setText] = useState("");
   const [phraseIndex, setPhraseIndex] = useState(0);
@@ -33,7 +33,7 @@ export default function TypewriterBanner() {
   }, [text, phase, phraseIndex, phrases]);
 
   return (
-    <div className="glass rounded-2xl px-6 py-4 text-center">
+    <div className={`glass rounded-2xl px-6 py-4 text-center ${className}`}>
       <p className="font-mono text-sm tracking-wider sm:text-base">
         {text}
         <span className="animate-pulse text-accent">|</span>

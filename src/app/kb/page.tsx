@@ -1,17 +1,16 @@
 import Link from "next/link";
 
 import { listKbNotes, kbStats } from "@/lib/kb-content";
-import { getSessionUsername } from "@/lib/session";
+import { getSessionUser } from "@/lib/session";
 
 // 私有区仪表盘:数据概览 + 最近笔记 + 快捷入口
 export const dynamic = "force-dynamic";
 
 export default async function KbDashboard() {
-  const [username, stats, recent] = await Promise.all([
-    getSessionUsername(),
-    kbStats(),
-    listKbNotes(),
-  ]);
+  const sessionUser = await getSessionUser();
+  if (!sessionUser) return null; // middleware 已守卫,此处为兜底
+  const stats = await kbStats(sessionUser);
+  const recent = await listKbNotes("note", sessionUser);
 
   const cards = [
     { label: "私有笔记", value: stats.notes, href: "/kb/notes" },
@@ -23,7 +22,7 @@ export default async function KbDashboard() {
 
   return (
     <main className="mx-auto max-w-5xl px-6 py-8">
-      <h1 className="text-2xl font-bold">你好,{username}</h1>
+      <h1 className="text-2xl font-bold">你好,{sessionUser.nickname ?? sessionUser.username}</h1>
       <p className="mt-1 text-sm opacity-60">
         这里只有你能看到。写作、整理、回顾,都在这一区完成。
       </p>

@@ -9,9 +9,11 @@ import { useEffect, useState } from "react";
 export default function LoginModal() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [mode, setMode] = useState<"login" | "register">("login");
   const [next, setNext] = useState("/kb");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [nickname, setNickname] = useState("");
   const [remember, setRemember] = useState(true);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -34,14 +36,19 @@ export default function LoginModal() {
     setBusy(true);
     setError("");
     try {
-      const res = await fetch("/api/auth/login", {
+      const endpoint = mode === "register" ? "/api/auth/register" : "/api/auth/login";
+      const payload =
+        mode === "register"
+          ? { username, password, nickname }
+          : { username, password, remember };
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password, remember }),
+        body: JSON.stringify(payload),
       });
       const data = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) {
-        setError(data.error ?? "登录失败,请重试");
+        setError(data.error ?? "操作失败,请重试");
         return;
       }
       setOpen(false);
@@ -80,10 +87,14 @@ export default function LoginModal() {
           <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-accent to-accent-2 text-lg text-white shadow-lg">
             ✦
           </span>
-          <h1 className="text-xl font-bold">欢迎回来</h1>
+          <h1 className="text-xl font-bold">
+            {mode === "register" ? "加入我们" : "欢迎回来"}
+          </h1>
         </div>
         <p className="mt-2 text-sm opacity-60">
-          进入后台,继续书写你的{siteNameHint()}。
+          {mode === "register"
+            ? "注册一个账号,发动态、交朋友。"
+            : "进入后台,继续书写你的个人站。"}
         </p>
 
         <form onSubmit={submit} className="mt-5 space-y-3.5">
@@ -97,36 +108,81 @@ export default function LoginModal() {
               className={inputClass}
             />
           </div>
+          {mode === "register" && (
+            <div>
+              <label className="mb-1 block text-xs opacity-70">昵称(可空,默认同用户名)</label>
+              <input
+                value={nickname}
+                onChange={(e) => setNickname(e.target.value)}
+                maxLength={20}
+                className={inputClass}
+              />
+            </div>
+          )}
           <div>
             <label className="mb-1 block text-xs opacity-70">密码</label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              autoComplete="current-password"
+              autoComplete={mode === "register" ? "new-password" : "current-password"}
               required
               className={inputClass}
             />
           </div>
           {error && <p className="text-sm text-red-500">{error}</p>}
 
-          <label className="flex cursor-pointer items-center gap-2 text-xs opacity-70">
-            <input
-              type="checkbox"
-              checked={remember}
-              onChange={(e) => setRemember(e.target.checked)}
-              className="accent-[var(--accent)]"
-            />
-            下次自动登录(30 天)
-          </label>
+          {mode === "login" && (
+            <label className="flex cursor-pointer items-center gap-2 text-xs opacity-70">
+              <input
+                type="checkbox"
+                checked={remember}
+                onChange={(e) => setRemember(e.target.checked)}
+                className="accent-[var(--accent)]"
+              />
+              下次自动登录(30 天)
+            </label>
+          )}
 
           <button
             type="submit"
             disabled={busy}
             className="w-full rounded-lg bg-gradient-to-r from-accent to-accent-2 py-2.5 text-sm font-medium text-white shadow-lg transition-all hover:opacity-90 disabled:opacity-50"
           >
-            {busy ? "登录中…" : "登录后台"}
+            {busy ? "处理中…" : mode === "register" ? "注册并登录" : "登录后台"}
           </button>
+
+          <p className="text-center text-xs opacity-60">
+            {mode === "login" ? (
+              <>
+                还没有账号?{" "}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode("register");
+                    setError("");
+                  }}
+                  className="text-accent hover:underline"
+                >
+                  注册一个
+                </button>
+              </>
+            ) : (
+              <>
+                已有账号?{" "}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode("login");
+                    setError("");
+                  }}
+                  className="text-accent hover:underline"
+                >
+                  去登录
+                </button>
+              </>
+            )}
+          </p>
         </form>
       </div>
     </div>

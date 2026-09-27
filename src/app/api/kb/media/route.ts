@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 
-import { getSessionUsername } from "@/lib/session";
+import { getSessionUser } from "@/lib/session";
 import { createMedia } from "@/lib/media";
 
 // 新增书影音记录
 export async function POST(request: Request) {
-  const username = await getSessionUsername();
-  if (!username) {
+  const user = await getSessionUser();
+  if (!user) {
     return NextResponse.json({ error: "未登录" }, { status: 401 });
   }
 
@@ -22,13 +22,16 @@ export async function POST(request: Request) {
   }
 
   try {
-    const row = await createMedia({
-      type: body.type,
+    const row = await createMedia(
+      {
+        type: body.type,
       title: body.title,
       status: body.status,
       rating: body.rating,
       comment: body.comment,
-    });
+      },
+      user.id,
+    );
     return NextResponse.json({ ok: true, item: row });
   } catch (error) {
     return NextResponse.json(

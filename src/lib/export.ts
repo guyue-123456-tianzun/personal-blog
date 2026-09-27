@@ -8,6 +8,7 @@ import { db } from "@/lib/db";
 import { attachments } from "@/db/schema";
 import { listAllForExport } from "@/lib/kb-content";
 import { resolveStored } from "@/lib/attachments";
+import type { SiteUser } from "@/lib/users";
 
 function frontmatter(note: {
   title: string;
@@ -44,9 +45,10 @@ const FOLDER_BY_TYPE: Record<string, string> = {
   diary: "diaries",
 };
 
-export async function buildExportZip(): Promise<Uint8Array> {
+// 导出该用户自己的全部内容(多用户:各导各的)
+export async function buildExportZip(user: SiteUser): Promise<Uint8Array> {
   const zip = new JSZip();
-  const allNotes = await listAllForExport();
+  const allNotes = await listAllForExport(user);
 
   for (const note of allNotes) {
     const folder = FOLDER_BY_TYPE[note.type] ?? note.type;

@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import RollbackButton from "@/components/kb/RollbackButton";
 import { Markdown } from "@/components/Markdown";
 import { getKbNote } from "@/lib/kb-content";
+import { getSessionUser } from "@/lib/session";
 import { getVersion, listVersions } from "@/lib/notes";
 
 // 历史版本(C7):列表 + 点开看某一份 + 回滚。保留最近 20 份
@@ -17,7 +18,9 @@ type Props = {
 export default async function VersionsPage({ params, searchParams }: Props) {
   const { id } = await params;
   const { v } = await searchParams;
-  const note = await getKbNote(Number(id));
+  const sessionUser = await getSessionUser();
+  if (!sessionUser) return null;
+  const note = await getKbNote(Number(id), sessionUser);
   if (!note) notFound();
 
   const versions = await listVersions(note.id);

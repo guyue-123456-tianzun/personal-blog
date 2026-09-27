@@ -8,6 +8,7 @@ const LINKS = [
   { href: "/kb/notes", label: "笔记" },
   { href: "/kb/moments", label: "说说" },
   { href: "/kb/media", label: "书影音" },
+  { href: "/kb/friends", label: "好友" },
   { href: "/kb/appearance", label: "外观" },
   { href: "/kb/ai", label: "AI 助手" },
   { href: "/kb/trash", label: "回收站" },

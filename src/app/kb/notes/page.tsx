@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { listKbNotes } from "@/lib/kb-content";
 import { searchNotes } from "@/lib/search";
+import { getSessionUser } from "@/lib/session";
 
 // 笔记列表 + 全文搜索。搜索走 URL 参数(?q=),这样刷新/分享链接都保留搜索词
 export const dynamic = "force-dynamic";
@@ -12,8 +13,10 @@ export default async function KbNotesPage({ searchParams }: Props) {
   const { q } = await searchParams;
   const query = (q ?? "").trim();
 
+  const sessionUser = await getSessionUser();
+  if (!sessionUser) return null;
   const [notes, hits] = await Promise.all([
-    listKbNotes(),
+    listKbNotes("note", sessionUser),
     query ? searchNotes(query) : Promise.resolve([]),
   ]);
   const searching = query.length > 0;

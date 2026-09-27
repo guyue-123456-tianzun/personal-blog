@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 
-import { getSessionUsername } from "@/lib/session";
+import { getSessionUser } from "@/lib/session";
 import { createNote } from "@/lib/notes";
 
 // 新建笔记。type 缺省为 'note'(私有笔记);博客文章是 'post',由发布流程传入
 export async function POST(request: Request) {
-  const username = await getSessionUsername();
-  if (!username) {
+  const user = await getSessionUser();
+  if (!user) {
     return NextResponse.json({ error: "未登录" }, { status: 401 });
   }
 
@@ -26,8 +26,9 @@ export async function POST(request: Request) {
   }
 
   try {
-    const row = await createNote({
-      type: body.type,
+    const row = await createNote(
+      {
+        type: body.type,
       title: body.title,
       content: body.content,
       slug: body.slug,
@@ -36,7 +37,9 @@ export async function POST(request: Request) {
       tags: body.tags,
       isPublic: body.isPublic,
       publishedAt: body.publishedAt,
-    });
+      },
+      user.id,
+    );
     return NextResponse.json({ ok: true, note: row });
   } catch (error) {
     return NextResponse.json(

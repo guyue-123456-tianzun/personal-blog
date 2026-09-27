@@ -5,6 +5,7 @@ import AttachmentsPanel from "@/components/kb/AttachmentsPanel";
 import NoteEditor from "@/components/kb/NoteEditor";
 import { listByNote } from "@/lib/attachments";
 import { getKbNote } from "@/lib/kb-content";
+import { getSessionUser } from "@/lib/session";
 
 // 编辑一篇已有笔记:编辑器 + 附件面板 + 历史版本入口 + 删除
 export const dynamic = "force-dynamic";
@@ -13,7 +14,9 @@ type Props = { params: Promise<{ id: string }> };
 
 export default async function EditNotePage({ params }: Props) {
   const { id } = await params;
-  const note = await getKbNote(Number(id));
+  const sessionUser = await getSessionUser();
+  if (!sessionUser) return null;
+  const note = await getKbNote(Number(id), sessionUser);
   if (!note) notFound();
   const files = await listByNote(note.id);
 

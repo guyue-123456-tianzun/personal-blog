@@ -1,9 +1,10 @@
 // 书影音记录(C1)读写:想读/在看/看完 + 评分 + 短评。
-// 校验集中在 createMedia/updateMedia,页面与 API 只做转发。
+// 多用户归属:每个用户管理自己的记录;校验集中在 createMedia/updateMedia。
 import { desc, eq } from "drizzle-orm";
 
 import { db } from "@/lib/db";
 import { mediaItems } from "@/db/schema";
+import { isOwner, type SiteUser } from "@/lib/users";
 
 export type MediaItem = typeof mediaItems.$inferSelect;
 export type MediaInput = {
@@ -44,6 +45,7 @@ function validate(input: MediaInput) {
   }
 }
 
+/** 公共书影音页:全站用户的记录 */
 export async function listMedia(type?: string): Promise<MediaItem[]> {
   const query = db.select().from(mediaItems);
   const rows = type
@@ -52,7 +54,23 @@ export async function listMedia(type?: string): Promise<MediaItem[]> {
   return rows;
 }
 
-export async function createMedia(input: MediaInput): Promise<MediaItem> {
+/** 我自己的书影音(KB 后台) */
+export async function listMyMedia(
+  type: string | undefined,
+  user: SiteUser,
+): Promise<MediaItem[]> {
+  const rows = await db
+    .select()
+    .from(mediaItems)
+    .orderBy(desc(mediaItems.updatedAt));
+  const mine = rows.filter((row) => isOwner(row.userId, user));
+  return type ? mine.filter((row) => row.type === type) : mine;
+}
+
+export async function createMedia(
+  input: MediaInput,
+  userId: number | null,
+): Promise<MediaItem> {
   validate(input);
   const [row] = await db
     .insert(mediaItems)
@@ -63,16 +81,29 @@ export async function createMedia(input: MediaInput): Promise<MediaItem> {
       rating: input.rating ?? null,
       comment: input.comment?.slice(0, 300) ?? null,
       coverUrl: input.coverUrl ?? null,
+      userId,
     })
     .returning();
   return row;
 }
 
+function canManage(rowUserId: number | null, user: SiteUser) {
+  return isOwner(rowUserId, user);
+}
+
 export async function updateMedia(
   id: number,
   input: Partial<MediaInput>,
+  user: SiteUser,
 ): Promise<MediaItem | null> {
-  const merged = { ...(await getMedia(id) ?? {}), ...input } as MediaInput;
+  const [existing] = await db
+    .select()
+    .from(mediaItems)
+    .where(eq(mediaItems.id, id))
+    .limit(1);
+  if (!existing || !canManage(existing.userId, user)) return null;
+
+  const merged = { ...existing, ...input } as MediaInput;
   validate(merged);
   const [row] = await db
     .update(mediaItems)
@@ -89,19 +120,16 @@ export async function updateMedia(
   return row ?? null;
 }
 
-export async function deleteMedia(id: number) {
-  const [row] = await db
-    .delete(mediaItems)
-    .where(eq(mediaItems.id, id))
-    .returning();
-  return row ?? null;
-}
-
-async function getMedia(id: number): Promise<MediaItem | null> {
-  const [row] = await db
+export async function deleteMedia(id: number, user: SiteUser) {
+  const [existing] = await db
     .select()
     .from(mediaItems)
     .where(eq(mediaItems.id, id))
     .limit(1);
+  if (!existing || !canManage(existing.userId, user)) return null;
+  const [row] = await db
+    .delete(mediaItems)
+    .where(eq(mediaItems.id, id))
+    .returning();
   return row ?? null;
 }

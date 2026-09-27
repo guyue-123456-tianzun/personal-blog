@@ -13,6 +13,10 @@ export const users = sqliteTable("users", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   username: text("username").notNull().unique(),
   passwordHash: text("password_hash").notNull(),
+  role: text("role").notNull().default("user"), // 'admin' = 站长,'user' = 注册用户
+  nickname: text("nickname"),
+  avatarUrl: text("avatar_url"),
+  bio: text("bio"),
   createdAt: text("created_at").notNull().default(now),
 });
 
@@ -26,6 +30,7 @@ export const notes = sqliteTable("notes", {
   excerpt: text("excerpt"), // 摘要,列表页展示,可空
   content: text("content").notNull(), // Markdown 原文
   cover: text("cover"), // 封面图 URL;空 = 用渐变占位图
+  userId: integer("user_id"), // 内容归属用户;null = 站长早期的历史内容
   isPublic: integer("is_public").notNull().default(0),
   pinned: integer("pinned").notNull().default(0), // 置顶文章排最前
   publishedAt: text("published_at"),
@@ -98,8 +103,22 @@ export const mediaItems = sqliteTable("media_items", {
   rating: integer("rating"), // 0~10,可空 = 未评分
   comment: text("comment"), // 短评
   coverUrl: text("cover_url"), // 可空 = 渐变占位图
+  userId: integer("user_id"), // 归属用户;null = 站长历史内容
   createdAt: text("created_at").notNull().default(now),
   updatedAt: text("updated_at").notNull().default(now),
+});
+
+// 好友关系:双向确认制——A 发申请,B 同意后成为好友
+export const friendships = sqliteTable("friendships", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  requesterId: integer("requester_id")
+    .notNull()
+    .references(() => users.id),
+  addresseeId: integer("addressee_id")
+    .notNull()
+    .references(() => users.id),
+  status: text("status").notNull().default("pending"), // pending | accepted
+  createdAt: text("created_at").notNull().default(now),
 });
 
 // 笔记版本历史(C7):每次保存前把旧版拍快照存进来,只保留最近 20 份

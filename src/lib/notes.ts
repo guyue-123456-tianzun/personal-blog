@@ -1,9 +1,17 @@
 // 私有区写入层:新建/更新(带版本快照)/软删除/恢复/彻底删除/回滚。
-// 读写分离:这里只管"写",页面取数走 kb-content.ts。
+// 多用户归属:所有写操作带 user(站长或注册用户),只能动自己的内容;
+// null 的 userId 是站长早期历史内容,归站长所有。
 import { desc, eq, inArray, sql } from "drizzle-orm";
 
 import { db } from "@/lib/db";
-import { attachments, noteTags, noteVersions, notes, tags } from "@/db/schema";
+import {
+  attachments,
+  noteTags,
+  noteVersions,
+  notes,
+  tags,
+} from "@/db/schema";
+import { isOwner, type SiteUser } from "@/lib/users";
 
 // C7 版本历史:每篇只保留最近 20 份快照,更老的自动清理
 const VERSIONS_TO_KEEP = 20;
@@ -92,7 +100,10 @@ async function snapshotVersion(noteId: number) {
   }
 }
 
-export async function createNote(input: NoteInput) {
+export async function createNote(
+  input: NoteInput,
+  userId: number | null,
+) {
   const slug = await uniqueSlug(input.slug || input.title);
   const [row] = await db
     .insert(notes)
@@ -106,16 +117,33 @@ export async function createNote(input: NoteInput) {
       isPublic: input.isPublic ?? 0,
       pinned: input.pinned ?? 0,
       publishedAt: input.publishedAt ?? null,
+      userId,
     })
     .returning();
   if (input.tags?.length) await syncTags(row.id, input.tags);
   return row;
 }
 
+async function noteOwner(noteId: number): Promise<number | null> {
+  const [row] = await db
+    .select({ userId: notes.userId })
+    .from(notes)
+    .where(eq(notes.id, noteId))
+    .limit(1);
+  return row?.userId ?? null;
+}
+
+function canManage(rowUserId: number | null, user: SiteUser) {
+  return isOwner(rowUserId, user);
+}
+
 export async function updateNote(
   id: number,
   input: Partial<NoteInput> & { snapshot?: boolean },
+  user: SiteUser,
 ) {
+  if (!(await canManage(await noteOwner(id), user))) return null;
+
   // C7 约定:任何一次保存都会先把改动前的版本存档
   if (input.snapshot) await snapshotVersion(id);
 
@@ -147,7 +175,8 @@ export async function updateNote(
 }
 
 /** 软删除 = 进回收站(数据还在) */
-export async function softDeleteNote(id: number) {
+export async function softDeleteNote(id: number, user: SiteUser) {
+  if (!(await canManage(await noteOwner(id), user))) return null;
   const [row] = await db
     .update(notes)
     .set({ deletedAt: now })
@@ -157,7 +186,8 @@ export async function softDeleteNote(id: number) {
 }
 
 /** 从回收站还原 */
-export async function restoreNote(id: number) {
+export async function restoreNote(id: number, user: SiteUser) {
+  if (!(await canManage(await noteOwner(id), user))) return null;
   const [row] = await db
     .update(notes)
     .set({ deletedAt: null })
@@ -166,28 +196,37 @@ export async function restoreNote(id: number) {
   return row ?? null;
 }
 
-/** 彻底删除:连带版本历史与标签关联一并清掉;附件解绑(文件本体保留在磁盘,记录置空) */
-export async function purgeNote(id: number) {
+/** 彻底删除:连带版本历史与标签关联一并清掉;附件解绑(文件本体保留在磁盘) */
+export async function purgeNote(id: number, user: SiteUser) {
+  if (!(await canManage(await noteOwner(id), user))) return null;
   await db.delete(noteVersions).where(eq(noteVersions.noteId, id));
   await db.delete(noteTags).where(eq(noteTags.noteId, id));
-  await db.update(attachments).set({ noteId: null }).where(eq(attachments.noteId, id));
+  await db
+    .update(attachments)
+    .set({ noteId: null })
+    .where(eq(attachments.noteId, id));
   const [row] = await db.delete(notes).where(eq(notes.id, id)).returning();
   return row ?? null;
 }
 
 /** 回滚到某个历史版本:先把当前内容存档,再写回旧版(回滚本身也可撤销) */
-export async function rollbackToVersion(noteId: number, versionId: number) {
+export async function rollbackToVersion(
+  noteId: number,
+  versionId: number,
+  user: SiteUser,
+) {
+  if (!(await canManage(await noteOwner(noteId), user))) return null;
   const [version] = await db
     .select()
     .from(noteVersions)
     .where(eq(noteVersions.id, versionId))
     .limit(1);
   if (!version || version.noteId !== noteId) return null;
-  return updateNote(noteId, {
-    title: version.title,
-    content: version.content,
-    snapshot: true,
-  });
+  return updateNote(
+    noteId,
+    { title: version.title, content: version.content, snapshot: true },
+    user,
+  );
 }
 
 export async function listVersions(noteId: number) {

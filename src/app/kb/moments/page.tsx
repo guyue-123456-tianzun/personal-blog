@@ -4,6 +4,7 @@ import MomentComposer from "@/components/kb/MomentComposer";
 import TrashActions from "@/components/kb/TrashActions";
 import { listByNote } from "@/lib/attachments";
 import { listKbNotes } from "@/lib/kb-content";
+import { getSessionUser } from "@/lib/session";
 
 // 说说管理:发布 + 全部说说(含私密),可删除
 export const dynamic = "force-dynamic";
@@ -11,7 +12,9 @@ export const dynamic = "force-dynamic";
 export const metadata = { title: "说说管理" };
 
 export default async function KbMomentsPage() {
-  const moments = await listKbNotes("moment");
+  const sessionUser = await getSessionUser();
+  if (!sessionUser) return null;
+  const moments = await listKbNotes("moment", sessionUser);
   const withImages = await Promise.all(
     moments.map(async (moment) => ({
       ...moment,

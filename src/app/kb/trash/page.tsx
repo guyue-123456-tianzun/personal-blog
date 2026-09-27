@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import TrashActions from "@/components/kb/TrashActions";
 import { listTrash } from "@/lib/kb-content";
+import { getSessionUser } from "@/lib/session";
 
 // 回收站:软删除的内容在这里,可还原或彻底删除
 export const dynamic = "force-dynamic";
@@ -9,7 +10,9 @@ export const dynamic = "force-dynamic";
 export const metadata = { title: "回收站" };
 
 export default async function TrashPage() {
-  const items = await listTrash();
+  const sessionUser = await getSessionUser();
+  if (!sessionUser) return null;
+  const items = await listTrash(sessionUser);
 
   return (
     <main className="mx-auto max-w-5xl px-6 py-8">

@@ -13,19 +13,22 @@ process.env.BLOG_DATA_DIR = dataDir;
 const { db, closeDb } = await import("../src/lib/db");
 const { attachments } = await import("../src/db/schema");
 const { buildExportZip } = await import("../src/lib/export");
+const { registerUser } = await import("../src/lib/users");
+
+const owner = await registerUser({ username: "export-owner", password: "123456" });
 
 let postSlug: string;
 let noteSlug: string;
 
 beforeAll(async () => {
-  const { createNote } = await import("../src/lib/notes");
-  postSlug = (await opsCreate("post", "博客文章")).slug;
-  noteSlug = (await opsCreate("note", "私有笔记")).slug;
-
-  async function opsCreate(type: string, title: string) {
+  const create = async (type: string, title: string) => {
     const { createNote } = await import("../src/lib/notes");
-    return createNote({ type, title, content: `# ${title}\n\n正文`, tags: ["导出测试"] });
-  }
+    return createNote({ type, title, content: `# ${title}\n\n正文`, tags: ["导出测试"] }, owner.id);
+  };
+  postSlug = (await create("post", "博客文章")).slug;
+  noteSlug = (await create("note", "私有笔记")).slug;
+
+  // create 函数已定义在上方
 
   // 一个真实存在的附件文件 + 记录
   const rel = "uploads/2026/09/test-export.png";
@@ -51,7 +54,7 @@ afterAll(() => {
 
 describe("buildExportZip 全量导出", () => {
   it("zip 里分目录装着文章、笔记、附件和清单", async () => {
-    const zipBytes = await buildExportZip();
+    const zipBytes = await buildExportZip(owner);
     const zip = await JSZip.loadAsync(zipBytes);
     const names = Object.keys(zip.files);
 
@@ -62,7 +65,7 @@ describe("buildExportZip 全量导出", () => {
   });
 
   it("导出的 Markdown 带 frontmatter,正文完整", async () => {
-    const zipBytes = await buildExportZip();
+    const zipBytes = await buildExportZip(owner);
     const zip = await JSZip.loadAsync(zipBytes);
     const md = await zip.file(`notes/${noteSlug}.md`)!.async("string");
     expect(md.startsWith("---")).toBe(true);
@@ -71,7 +74,7 @@ describe("buildExportZip 全量导出", () => {
   });
 
   it("manifest 的数量与库中一致", async () => {
-    const zipBytes = await buildExportZip();
+    const zipBytes = await buildExportZip(owner);
     const zip = await JSZip.loadAsync(zipBytes);
     const manifest = JSON.parse(await zip.file("manifest.json")!.async("string"));
     expect(manifest.notes).toBe(2);

@@ -3,9 +3,10 @@
 import { and, count, eq } from "drizzle-orm";
 
 import { db } from "../src/lib/db";
-import { comments, mediaItems, noteTags, notes, tags } from "../src/db/schema";
+import { comments, mediaItems, noteTags, notes, tags, users } from "../src/db/schema";
 import { addComment } from "../src/lib/comments";
 import { createNote } from "../src/lib/notes";
+import { getAdminUser, registerUser } from "../src/lib/users";
 
 const demoPosts = [
   {
@@ -197,6 +198,9 @@ async function main() {
       await db.insert(noteTags).values({ noteId: row.id, tagId: tag.id });
     }
   }
+  const admin = await getAdminUser();
+  const adminId = admin?.id ?? null;
+
   // 示例说说:仅在还没有说说时写入
   const [momentCount] = await db
     .select({ c: count() })
@@ -210,7 +214,7 @@ async function main() {
       tags: ["生活"],
       isPublic: 1,
       publishedAt: "2026-09-27 19:00:00",
-    });
+    }, adminId);
     await createNote({
       type: "moment",
       title: "换星夜壁纸",
@@ -218,7 +222,7 @@ async function main() {
       tags: ["折腾"],
       isPublic: 1,
       publishedAt: "2026-09-27 20:00:00",
-    });
+    }, adminId);
     await createNote({
       type: "moment",
       title: "私密的一条",
@@ -226,7 +230,7 @@ async function main() {
       tags: ["日常"],
       isPublic: 0,
       publishedAt: "2026-09-27 21:00:00",
-    });
+    }, adminId);
     console.log("✅ 示例说说已写入(3 条)");
   }
 
@@ -241,6 +245,36 @@ async function main() {
       { type: "game", title: "塞尔达传说:王国之泪", status: "doing", rating: 9, comment: "呀哈哈收集强迫症慎入。" },
     ]);
     console.log("✅ 示例书影音已写入(5 条)");
+  }
+
+  // 示例注册用户:让朋友圈的"随机刷新/加好友"有内容可玩(密码 123456)
+  const [existingXm] = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(eq(users.username, "xiaoming"))
+    .limit(1);
+  if (!existingXm) {
+    try {
+      const xm = await registerUser({
+        username: "xiaoming",
+        password: "123456",
+        nickname: "路人小妹",
+      });
+      await createNote(
+        {
+          type: "moment",
+          title: "第一次来",
+          content: "路过看到这个站,来交个朋友!",
+          tags: ["交友"],
+          isPublic: 1,
+          publishedAt: "2026-09-27 22:00:00",
+        },
+        xm.id,
+      );
+      console.log("✅ 示例用户 xiaoming 已注册(密码 123456)并发布了动态");
+    } catch {
+      console.log("ℹ️ 示例用户已存在,跳过");
+    }
   }
 
   // 示例评论:只在还没有评论时写入,保证脚本可重复执行

@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server";
 
-import { getSessionUsername } from "@/lib/session";
+import { getSessionUser } from "@/lib/session";
 import { deleteMedia, updateMedia } from "@/lib/media";
 
 type Params = { params: Promise<{ id: string }> };
 
 // 更新书影音记录
 export async function PATCH(request: Request, { params }: Params) {
-  const username = await getSessionUsername();
-  if (!username) {
+  const user = await getSessionUser();
+  if (!user) {
     return NextResponse.json({ error: "未登录" }, { status: 401 });
   }
   const { id } = await params;
@@ -24,7 +24,7 @@ export async function PATCH(request: Request, { params }: Params) {
   }
 
   try {
-    const row = await updateMedia(Number(id), body);
+    const row = await updateMedia(Number(id), body, user);
     if (!row) {
       return NextResponse.json({ error: "记录不存在" }, { status: 404 });
     }
@@ -39,12 +39,12 @@ export async function PATCH(request: Request, { params }: Params) {
 
 // 删除书影音记录
 export async function DELETE(_request: Request, { params }: Params) {
-  const username = await getSessionUsername();
-  if (!username) {
+  const user = await getSessionUser();
+  if (!user) {
     return NextResponse.json({ error: "未登录" }, { status: 401 });
   }
   const { id } = await params;
-  const row = await deleteMedia(Number(id));
+  const row = await deleteMedia(Number(id), user);
   if (!row) {
     return NextResponse.json({ error: "记录不存在" }, { status: 404 });
   }

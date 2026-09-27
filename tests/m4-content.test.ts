@@ -12,6 +12,9 @@ const { db, closeDb } = await import("../src/lib/db");
 const { attachments, notes } = await import("../src/db/schema");
 const api = await import("../src/lib/content-api");
 const mediaLib = await import("../src/lib/media");
+const { registerUser } = await import("../src/lib/users");
+
+const author = await registerUser({ username: "moments-author", password: "123456" });
 
 let publicMomentId: number;
 
@@ -19,9 +22,9 @@ beforeAll(async () => {
   const rows = await db
     .insert(notes)
     .values([
-      { type: "moment", slug: "moment-public", title: "公开说说", content: "晚风很温柔。", isPublic: 1, publishedAt: "2026-09-27 19:00:00" },
-      { type: "moment", slug: "moment-private", title: "私密说说", content: "这条看不见。", isPublic: 0 },
-      { type: "moment", slug: "moment-deleted", title: "删掉的说说", content: "已进回收站。", isPublic: 1, deletedAt: "2026-09-27 00:00:00" },
+      { type: "moment", slug: "moment-public", title: "公开说说", content: "晚风很温柔。", isPublic: 1, publishedAt: "2026-09-27 19:00:00", userId: author.id },
+      { type: "moment", slug: "moment-private", title: "私密说说", content: "这条看不见。", isPublic: 0, userId: author.id },
+      { type: "moment", slug: "moment-deleted", title: "删掉的说说", content: "已进回收站。", isPublic: 1, deletedAt: "2026-09-27 00:00:00", userId: author.id },
     ])
     .returning({ id: notes.id, slug: notes.slug });
   publicMomentId = rows.find((r) => r.slug === "moment-public")!.id;
@@ -34,9 +37,9 @@ beforeAll(async () => {
   ]);
 
   // 书影音样例
-  await mediaLib.createMedia({ type: "book", title: "置身事外", status: "done", rating: 9 });
-  await mediaLib.createMedia({ type: "movie", title: "星际穿越", status: "done", rating: 10 });
-  await mediaLib.createMedia({ type: "game", title: "王国之泪", status: "doing", rating: 9 });
+  await mediaLib.createMedia({ type: "book", title: "置身事外", status: "done", rating: 9 }, author.id);
+  await mediaLib.createMedia({ type: "movie", title: "星际穿越", status: "done", rating: 10 }, author.id);
+  await mediaLib.createMedia({ type: "game", title: "王国之泪", status: "doing", rating: 9 }, author.id);
 });
 
 afterAll(() => {
@@ -85,11 +88,11 @@ describe("书影音 media.ts", () => {
   });
 
   it("更新与删除", async () => {
-    const created = await mediaLib.createMedia({ type: "game", title: "临时", status: "wish" });
-    const updated = await mediaLib.updateMedia(created.id, { status: "done", rating: 8 });
+    const created = await mediaLib.createMedia({ type: "game", title: "临时", status: "wish" }, author.id);
+    const updated = await mediaLib.updateMedia(created.id, { status: "done", rating: 8 }, author);
     expect(updated!.status).toBe("done");
     expect(updated!.rating).toBe(8);
-    expect(await mediaLib.deleteMedia(created.id)).not.toBeNull();
+    expect(await mediaLib.deleteMedia(created.id, author)).not.toBeNull();
     expect(await mediaLib.listMedia()).toHaveLength(3);
   });
 

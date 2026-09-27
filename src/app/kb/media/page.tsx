@@ -1,7 +1,8 @@
 import Link from "next/link";
 
 import MediaManager from "@/components/kb/MediaManager";
-import { listMedia } from "@/lib/media";
+import { listMyMedia } from "@/lib/media";
+import { getSessionUser } from "@/lib/session";
 
 // 书影音管理:添加/编辑/删除
 export const dynamic = "force-dynamic";
@@ -9,7 +10,9 @@ export const dynamic = "force-dynamic";
 export const metadata = { title: "书影音管理" };
 
 export default async function KbMediaPage() {
-  const items = await listMedia();
+  const sessionUser = await getSessionUser();
+  if (!sessionUser) return null;
+  const items = await listMyMedia(undefined, sessionUser);
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-8">

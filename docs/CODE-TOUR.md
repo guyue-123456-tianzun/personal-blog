@@ -170,6 +170,7 @@ personal-blog\
 | 文件 | 干什么 | 一句话要点 |
 |---|---|---|
 | `components\ai\PetAssistant.tsx` | 桌宠本体 | 右下角常驻的绘梨衣(呼吸浮动),点击展开聊天气泡;开关在后台 |
+| `components\LoginModal.tsx` | 弹窗式登录 | 登录不再跳独立页:未登录访问后台会被重定向到 `/?login=1&next=xxx`,整页虚化后弹出登录卡(参考站同款),支持"下次自动登录" |
 | `lib\ai.ts` | AI 配置与提示词 | OpenAI 兼容接口(智谱/DeepSeek/OpenAI/本地皆可);系统提示词自动注入站点信息与最近文章 |
 | `app\api\ai\chat\` | 问答接口(公开) | 同 IP 每小时限 20 次,保护站长额度;未配置时返回友好提示 |
 | `app\kb\ai\` | AI 设置后台 | 接口地址/Key(打码显示)/模型/人设,全部站长可改;内置智谱/DeepSeek/OpenAI 一键预设 |

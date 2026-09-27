@@ -14,6 +14,7 @@ export async function POST(request: Request) {
   const body = (await request.json().catch(() => null)) as {
     username?: string;
     password?: string;
+    remember?: boolean;
   } | null;
   if (!body?.username || !body?.password) {
     return NextResponse.json({ error: "请输入用户名和密码" }, { status: 400 });
@@ -37,7 +38,8 @@ export async function POST(request: Request) {
     // M5 配好 HTTPS 后改为 true;当前用 IP + HTTP 访问,secure Cookie 不会被浏览器发送
     secure: false,
     path: "/",
-    maxAge: SESSION_MAX_AGE_SECONDS,
+    // 勾选"下次自动登录"记住 30 天,否则只保留 1 天
+    maxAge: body.remember === false ? 86_400 : SESSION_MAX_AGE_SECONDS,
   });
   return response;
 }

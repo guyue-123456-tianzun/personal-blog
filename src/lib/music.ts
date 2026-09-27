@@ -1,4 +1,4 @@
-// 音乐相关的纯函数:网易云链接解析、音频/嵌入分类。
+// 音乐相关的纯函数:网易云解析(歌曲/歌单)、音频/嵌入分类。
 // 不依赖数据库,方便单测。
 
 export type Song = { title: string; artist: string; url: string };
@@ -13,12 +13,26 @@ export function parseNeteaseId(input: string): string | null {
   return match ? match[1] : null;
 }
 
+/** 从网易云分享内容里提取歌单 ID:
+ *  支持 "https://music.163.com/playlist?id=xxxx" / "music.163.com/#/playlist/xxxx" 或纯数字 */
+export function parseNeteasePlaylistId(input: string): string | null {
+  const text = input.trim();
+  if (/^\d{6,}$/.test(text)) return text;
+  const match = text.match(/playlist\?id=(\d+)/) ?? text.match(/playlist\/(\d+)/);
+  return match ? match[1] : null;
+}
+
 export function isNeteaseSong(song: Song) {
   return song.url.startsWith("netease:");
 }
 
-export function neteaseEmbedUrl(songId: string) {
+export function neteaseSongEmbedUrl(songId: string) {
   return `https://music.163.com/outchain/player?type=2&id=${songId}&auto=0&height=86`;
+}
+
+/** 网易云歌单外链播放器(官方):type=0 = 歌单,自带歌曲列表与歌词 */
+export function neteasePlaylistEmbedUrl(playlistId: string) {
+  return `https://music.163.com/outchain/player?type=0&id=${playlistId}&auto=0&height=430`;
 }
 
 /** 直接可播(<audio>)的歌曲:排除网易云嵌入型 */

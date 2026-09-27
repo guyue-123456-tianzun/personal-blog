@@ -146,7 +146,7 @@ export default async function Home() {
           <div className="fade-up space-y-4" style={{ animationDelay: "0ms" }}>
             <ProfileCard stats={stats} appearance={appearance} />
             <TypewriterBanner />
-            <MusicPlayer playlist={appearance.music} />
+            <MusicPlayer playlist={appearance.music} neteasePlaylistId={appearance.neteasePlaylistId} />
           </div>
 
           {/* 中栏:文章区(列表/网格切换,第一篇大卡) */}

@@ -4,17 +4,18 @@ import { useEffect, useRef, useState } from "react";
 
 import {
   directAudioSongs,
-  neteaseEmbedUrl,
+  neteasePlaylistEmbedUrl,
+  neteaseSongEmbedUrl,
   neteaseSongs,
   type Song,
 } from "@/lib/music";
 
-type Props = { playlist: Song[] };
+type Props = { playlist: Song[]; neteasePlaylistId: string | null };
 
 // 音乐播放器小部件:支持两类歌曲——
 // 1. 直接可播的音频(mp3/wav,上传或外链):旋转碟片 + 进度条 + 时间
 // 2. 网易云歌曲(点歌台粘贴链接):内嵌官方外链播放器
-export default function MusicPlayer({ playlist }: Props) {
+export default function MusicPlayer({ playlist, neteasePlaylistId }: Props) {
   const audioSongs = directAudioSongs(playlist);
   const embeds = neteaseSongs(playlist);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -140,14 +141,31 @@ export default function MusicPlayer({ playlist }: Props) {
         </>
       )}
 
+      {neteasePlaylistId && (
+        <div className={audioSongs.length > 0 ? "mt-4 border-t border-border pt-3" : ""}>
+          <p className="mb-1.5 text-xs opacity-60">
+            🎧 网易云歌单(由官方外链播放器提供,含歌词)
+          </p>
+          <iframe
+            src={`https://music.163.com/outchain/player?type=0&id=${neteasePlaylistId}&auto=0&height=330`}
+            frameBorder="no"
+            marginWidth={0}
+            marginHeight={0}
+            width="100%"
+            height="330"
+            className="rounded-lg"
+          />
+        </div>
+      )}
+
       {embeds.length > 0 && (
         <div className={audioSongs.length > 0 ? "mt-4 border-t border-border pt-3" : ""}>
           <p className="mb-1.5 text-xs opacity-60">
-            🎧 网易云({embeds.length} 首)
+            🎧 网易云单曲({embeds.length} 首)
           </p>
           <iframe
             key={embeds[embedIndex % embeds.length].url}
-            src={neteaseEmbedUrl(
+            src={neteaseSongEmbedUrl(
               embeds[embedIndex % embeds.length].url.replace("netease:", ""),
             )}
             frameBorder="no"

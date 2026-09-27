@@ -47,6 +47,11 @@ const VALIDATORS: Record<AppearanceKey, (value: string) => string> = {
   wall_carousel_enabled: (v) => (v === "0" ? "0" : "1"),
   wall_carousel_seconds: (v) =>
     String(clamp(Math.round(Number(v)) || 3, 1, 60)),
+  netease_playlist_id: (v) => {
+    const id = v.match(/(\d{6,})/);
+    if (!id) throw new Error("没解析出网易云歌单编号");
+    return id[1];
+  },
   music: (v) => {
     const parsed = JSON.parse(v) as unknown;
     if (!Array.isArray(parsed)) throw new Error("歌单格式不正确");

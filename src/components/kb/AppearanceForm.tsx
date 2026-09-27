@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import type { Appearance, Song } from "@/lib/settings";
-import { parseNeteaseId } from "@/lib/music";
+import { parseNeteaseId, parseNeteasePlaylistId } from "@/lib/music";
 
 type Props = { initial: Appearance };
 
@@ -133,6 +133,7 @@ export default function AppearanceForm({ initial }: Props) {
   const [songTitle, setSongTitle] = useState("");
   const [songUrl, setSongUrl] = useState("");
   const [neteaseInput, setNeteaseInput] = useState("");
+  const [playlistInput, setPlaylistInput] = useState(initial.neteasePlaylistId ?? "");
   const [wallpapers, setWallpapers] = useState<{ name: string; url: string }[]>([]);
   const [signature, setSignature] = useState(initial.signature);
   const [announcements, setAnnouncements] = useState(
@@ -619,6 +620,47 @@ export default function AppearanceForm({ initial }: Props) {
           >
             添加外链
           </button>
+        </div>
+
+        {/* 网易云歌单:粘贴歌单链接或编号,全站音乐卡变成完整歌单播放器 */}
+        <div className="rounded-xl border border-border p-4">
+          <p className="text-sm font-semibold">🎧 网易云歌单(推荐)</p>
+          <p className="mt-1 text-xs opacity-50">
+            在网易云创建/收藏一个公开歌单,把歌单链接或编号粘贴到这里——首页音乐卡和导航栏播放器会变成完整的歌单播放器(官方外链,含歌词)。
+          </p>
+          <div className="mt-2.5 flex flex-wrap items-center gap-2">
+            <input
+              value={playlistInput}
+              onChange={(e) => setPlaylistInput(e.target.value)}
+              placeholder="如 https://music.163.com/playlist?id=xxxx 或纯数字"
+              className="w-64 rounded-lg border border-border bg-transparent px-2.5 py-2 text-sm outline-none focus:border-accent"
+            />
+            <button
+              onClick={async () => {
+                const id = parseNeteasePlaylistId(playlistInput);
+                if (!id) {
+                  setStatus("没解析出网易云歌单编号");
+                  return;
+                }
+                const ok = await patchValues({ netease_playlist_id: id });
+                if (ok) setStatus("歌单已绑定 ✓");
+              }}
+              disabled={busy}
+              className="rounded-lg border border-border px-3 py-2 text-sm transition-opacity hover:opacity-80 disabled:opacity-50"
+            >
+              绑定歌单
+            </button>
+            <button
+              onClick={() => {
+                setPlaylistInput("");
+                patchValues({ netease_playlist_id: null });
+              }}
+              disabled={busy}
+              className="text-sm text-accent hover:underline disabled:opacity-50"
+            >
+              解绑
+            </button>
+          </div>
         </div>
 
         {/* 网易云:粘贴歌曲链接或 ID,用官方外链播放器直接播放 */}

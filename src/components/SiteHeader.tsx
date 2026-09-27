@@ -45,7 +45,7 @@ export default async function SiteHeader() {
           ))}
         </nav>
         <div className="flex shrink-0 items-center gap-1">
-          <NavMusic playlist={appearance.music} />
+          <NavMusic playlist={appearance.music} neteasePlaylistId={appearance.neteasePlaylistId} />
           <ThemeDrawer />
           <Link
             href="/search"

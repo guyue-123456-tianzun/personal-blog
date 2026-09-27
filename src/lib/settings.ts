@@ -22,6 +22,7 @@ export const APPEARANCE_KEYS = [
   "wall_blur",
   "wall_carousel_enabled",
   "wall_carousel_seconds",
+  "netease_playlist_id",
   "music",
 ] as const;
 
@@ -41,6 +42,7 @@ export type Appearance = {
   wallImageDay: string; // 白天沉浸式壁纸
   wallBlur: number; // 0~30 px(壁纸虚化,默认 18:能看清氛围又不抢内容)
   music: Song[]; // 歌单(点歌台管理,存数据库)
+  neteasePlaylistId: string | null; // 网易云歌单编号(官方外链播放器)
   wallCarouselEnabled: boolean; // 壁纸轮播开关(全站默认)
   wallCarouselSeconds: number; // 轮播间隔秒数(1~60)
   wallLibrary: string[]; // 壁纸库:public/wallpapers/ 下的全部文件
@@ -139,6 +141,7 @@ export async function getAppearance(): Promise<Appearance> {
       60,
     ),
     wallLibrary: getWallLibrary(),
+    neteasePlaylistId: map.get("netease_playlist_id") ?? null,
   };
 }
 

@@ -25,7 +25,7 @@ async function PublicShellLayout({ children }: Props) {
         <div className="fade-up space-y-4" style={{ animationDelay: "0ms" }}>
           <ProfileCard stats={stats} appearance={appearance} />
           <TypewriterBanner />
-          <MusicPlayer playlist={appearance.music} />
+          <MusicPlayer playlist={appearance.music} neteasePlaylistId={appearance.neteasePlaylistId} />
         </div>
 
         {/* 中栏:页面内容 */}

@@ -2,13 +2,14 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import type { Song } from "@/lib/settings";
+import { directAudioSongs, type Song } from "@/lib/music";
 
 type Props = { playlist: Song[] };
 
 // 浮动音乐圆盘:固定在左下角,播放时旋转,悬停显示歌名。
 // 歌单来自外观设置的"点歌台"(props 传入),与导航/首页播放器各自独立播放。
 export default function FloatingMusicButton({ playlist }: Props) {
+  const audioSongs = directAudioSongs(playlist);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [index, setIndex] = useState(0);
   const [playing, setPlaying] = useState(false);
@@ -16,12 +17,12 @@ export default function FloatingMusicButton({ playlist }: Props) {
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
-    const onEnd = () => setIndex((i) => (i + 1) % playlist.length);
+    const onEnd = () => setIndex((i) => (i + 1) % audioSongs.length);
     audio.addEventListener("ended", onEnd);
     return () => audio.removeEventListener("ended", onEnd);
-  }, [playlist.length]);
+  }, [audioSongs.length]);
 
-  if (playlist.length === 0) return null;
+  if (audioSongs.length === 0) return null;
 
   function toggle() {
     const audio = audioRef.current;
@@ -40,7 +41,7 @@ export default function FloatingMusicButton({ playlist }: Props) {
         onClick={toggle}
         aria-label={playing ? "暂停音乐" : "播放音乐"}
         className="group relative h-12 w-12 rounded-full shadow-lg ring-2 ring-white/30"
-        title={playlist[index].title}
+        title={audioSongs[index].title}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -55,9 +56,9 @@ export default function FloatingMusicButton({ playlist }: Props) {
       <span
         className={`glass rounded-full px-3 py-1 text-xs opacity-0 transition-opacity group-hover:opacity-0 ${playing ? "opacity-80" : ""}`}
       >
-        {playlist[index].title}
+        {audioSongs[index].title}
       </span>
-      <audio ref={audioRef} src={playlist[index].url} />
+      <audio ref={audioRef} src={audioSongs[index].url} />
     </div>
   );
 }

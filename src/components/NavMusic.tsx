@@ -2,13 +2,14 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import type { Song } from "@/lib/settings";
+import { directAudioSongs, type Song } from "@/lib/music";
 
 type Props = { playlist: Song[] };
 
 // 导航栏迷你播放器(参考站同款):碟片 + 曲名 + 播放/下一首,中屏以上显示。
-// 歌单来自外观设置的"点歌台"(props 传入)。
+// 只播直接音频;网易云嵌入型歌曲只在首页音乐卡里出现。歌单来自"点歌台"。
 export default function NavMusic({ playlist }: Props) {
+  const audioSongs = directAudioSongs(playlist);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [index, setIndex] = useState(0);
   const [playing, setPlaying] = useState(false);
@@ -16,12 +17,12 @@ export default function NavMusic({ playlist }: Props) {
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
-    const onEnd = () => setIndex((i) => (i + 1) % playlist.length);
+    const onEnd = () => setIndex((i) => (i + 1) % audioSongs.length);
     audio.addEventListener("ended", onEnd);
     return () => audio.removeEventListener("ended", onEnd);
-  }, [playlist.length]);
+  }, [audioSongs.length]);
 
-  if (playlist.length === 0) return null;
+  if (audioSongs.length === 0) return null;
 
   function toggle() {
     const audio = audioRef.current;
@@ -32,7 +33,7 @@ export default function NavMusic({ playlist }: Props) {
   }
 
   function next() {
-    setIndex((i) => (i + 1) % playlist.length);
+    setIndex((i) => (i + 1) % audioSongs.length);
     setPlaying(true);
   }
 
@@ -44,8 +45,8 @@ export default function NavMusic({ playlist }: Props) {
       >
         💿
       </span>
-      <span className="max-w-28 truncate opacity-80" title={playlist[index].title}>
-        {playlist[index].title}
+      <span className="max-w-28 truncate opacity-80" title={audioSongs[index].title}>
+        {audioSongs[index].title}
       </span>
       <button
         onClick={toggle}
@@ -57,7 +58,7 @@ export default function NavMusic({ playlist }: Props) {
       <button onClick={next} aria-label="下一首" className="transition-opacity hover:opacity-70">
         ⏭
       </button>
-      <audio ref={audioRef} src={playlist[index].url} />
+      <audio ref={audioRef} src={audioSongs[index].url} />
     </div>
   );
 }

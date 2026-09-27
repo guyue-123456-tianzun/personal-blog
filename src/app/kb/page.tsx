@@ -41,11 +41,16 @@ export default async function KbDashboard() {
         ))}
       </div>
 
-      <div className="mt-8 flex items-center justify-between">
+      <div className="mt-6 flex items-center justify-between">
         <h2 className="text-lg font-semibold">最近笔记</h2>
-        <Link href="/kb/notes/new" className="text-sm text-accent hover:underline">
-          + 写新笔记
-        </Link>
+        <div className="flex gap-4 text-sm">
+          <Link href="/kb/appearance" className="text-accent hover:underline">
+            🎨 外观设置
+          </Link>
+          <Link href="/kb/notes/new" className="text-accent hover:underline">
+            + 写新笔记
+          </Link>
+        </div>
       </div>
       {recent.length === 0 ? (
         <p className="mt-3 opacity-60">还没有笔记。点右上角「写新笔记」记下第一条。</p>

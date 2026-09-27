@@ -35,20 +35,39 @@ export default async function Home() {
         style={{ minHeight: `${appearance.heroHeightVh}vh` }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={appearance.heroImage}
-          alt=""
-          className="absolute inset-0 h-full w-full object-cover"
-          style={{
-            filter: `blur(${appearance.heroBlur}px)`,
-            transform: "scale(1.08)", // 放大一点点,把模糊产生的毛边藏进画框外
-            // 下边缘渐隐:清晰的 Hero 图渐隐进虚化壁纸,消除生硬分界线
-            WebkitMaskImage:
-              "linear-gradient(to bottom, black 0%, black 58%, transparent 100%)",
-            maskImage:
-              "linear-gradient(to bottom, black 0%, black 58%, transparent 100%)",
-          }}
-        />
+        {/\.(mp4|webm)$/i.test(appearance.heroImage) ? (
+          <video
+            autoPlay
+            muted
+            loop
+            playsInline
+            className="absolute inset-0 h-full w-full object-cover"
+            style={{
+              filter: `blur(${appearance.heroBlur}px)`,
+              transform: "scale(1.08)",
+              WebkitMaskImage:
+                "linear-gradient(to bottom, black 0%, black 58%, transparent 100%)",
+              maskImage:
+                "linear-gradient(to bottom, black 0%, black 58%, transparent 100%)",
+            }}
+          >
+            <source src={appearance.heroImage} />
+          </video>
+        ) : (
+          <img
+            src={appearance.heroImage}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover"
+            style={{
+              filter: `blur(${appearance.heroBlur}px)`,
+              transform: "scale(1.08)",
+              WebkitMaskImage:
+                "linear-gradient(to bottom, black 0%, black 58%, transparent 100%)",
+              maskImage:
+                "linear-gradient(to bottom, black 0%, black 58%, transparent 100%)",
+            }}
+          />
+        )}
         <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/10 to-transparent" />
         {/* 漂浮粒子:玻璃质感的小点缀 */}
         {[

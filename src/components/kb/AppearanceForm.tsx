@@ -1,9 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import type { Appearance, Song } from "@/lib/settings";
+import { parseNeteaseId } from "@/lib/music";
 
 type Props = { initial: Appearance };
 
@@ -29,6 +30,8 @@ export default function AppearanceForm({ initial }: Props) {
   const [songs, setSongs] = useState<Song[]>(initial.music);
   const [songTitle, setSongTitle] = useState("");
   const [songUrl, setSongUrl] = useState("");
+  const [neteaseInput, setNeteaseInput] = useState("");
+  const [wallpapers, setWallpapers] = useState<{ name: string; url: string }[]>([]);
   const [signature, setSignature] = useState(initial.signature);
   const [announcements, setAnnouncements] = useState(
     initial.announcements.join("\n"),
@@ -62,6 +65,16 @@ export default function AppearanceForm({ initial }: Props) {
       setBusy(false);
     }
   }
+
+  // 壁纸库:public/wallpapers/ 目录下的图片与视频(Wallpaper Engine 的 mp4 可直接丢进来)
+  useEffect(() => {
+    fetch("/api/kb/wallpapers")
+      .then((res) => res.json())
+      .then((data: { wallpapers?: { name: string; url: string }[] }) => {
+        setWallpapers(data.wallpapers ?? []);
+      })
+      .catch(() => {});
+  }, []);
 
   type UploadKind = "hero_image_url" | "avatar_url" | "wall_image_url";
 
@@ -271,7 +284,7 @@ export default function AppearanceForm({ initial }: Props) {
           <input
             ref={heroInputRef}
             type="file"
-            accept="image/png,image/jpeg,image/webp"
+            accept="image/png,image/jpeg,image/webp,video/mp4,video/webm"
             className="hidden"
             onChange={(e) => {
               const file = e.target.files?.[0];
@@ -322,6 +335,35 @@ export default function AppearanceForm({ initial }: Props) {
         <p className="mt-1 text-xs opacity-50">
           整站所有玻璃卡片都会浮在这张虚化后的图上;默认跟随 Hero 背景图,也可以单独指定。
         </p>
+        {/* 壁纸库:public/wallpapers/ 目录,支持 Wallpaper Engine 的 mp4 视频壁纸 */}
+        {wallpapers.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {wallpapers.map((wall) => (
+              <button
+                key={wall.url}
+                onClick={() => patchValues({ wall_image_url: wall.url })}
+                disabled={busy}
+                className={`overflow-hidden rounded-lg border-2 transition-all hover:-translate-y-0.5 disabled:opacity-50 ${
+                  wallImage === wall.url ? "border-accent" : "border-transparent"
+                }`}
+                title={wall.name}
+              >
+                {/\.(mp4|webm)$/i.test(wall.url) ? (
+                  <span className="flex h-12 w-20 items-center justify-center bg-foreground/10 text-xs">
+                    🎬 视频
+                  </span>
+                ) : (
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img src={wall.url} alt="" className="h-12 w-20 object-cover" />
+                )}
+              </button>
+            ))}
+          </div>
+        )}
+        <p className="mt-2 text-xs opacity-40">
+          把 Wallpaper Engine 的视频壁纸(mp4)或任何图片复制到 项目\public\wallpapers\ 文件夹,就会出现在这里。
+        </p>
+
         <div className="mt-3 flex flex-wrap items-center gap-3">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={wallImage} alt="" className="h-12 w-20 rounded-lg object-cover" />
@@ -342,7 +384,7 @@ export default function AppearanceForm({ initial }: Props) {
           <input
             ref={wallInputRef}
             type="file"
-            accept="image/png,image/jpeg,image/webp"
+            accept="image/png,image/jpeg,image/webp,video/mp4,video/webm"
             className="hidden"
             onChange={(e) => {
               const file = e.target.files?.[0];
@@ -414,7 +456,7 @@ export default function AppearanceForm({ initial }: Props) {
               className="flex items-center justify-between gap-3 text-sm"
             >
               <span className="min-w-0 truncate">
-                🎵 {song.title}
+                {song.url.startsWith("netease:") ? "🎧" : "🎵"} {song.title}
                 <span className="ml-2 opacity-50">{song.artist}</span>
               </span>
               <button
@@ -469,6 +511,39 @@ export default function AppearanceForm({ initial }: Props) {
             className="rounded-lg border border-border px-3 py-2 text-sm transition-opacity hover:opacity-80 disabled:opacity-50"
           >
             添加外链
+          </button>
+        </div>
+
+        {/* 网易云:粘贴歌曲链接或 ID,用官方外链播放器直接播放 */}
+        <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border pt-3">
+          <span className="text-xs opacity-40">🎧</span>
+          <input
+            value={neteaseInput}
+            onChange={(e) => setNeteaseInput(e.target.value)}
+            placeholder="粘贴网易云歌曲链接或纯数字 ID"
+            className="w-56 rounded-lg border border-border bg-transparent px-2.5 py-2 text-sm outline-none focus:border-accent"
+          />
+          <button
+            onClick={async () => {
+              const id = parseNeteaseId(neteaseInput);
+              if (!id) {
+                setStatus("没解析出网易云歌曲 ID,请粘贴 song 链接或纯数字");
+                return;
+              }
+              const next: Song[] = [
+                ...songs,
+                { title: `网易云 ${id}`, artist: "网易云音乐", url: `netease:${id}` },
+              ];
+              const ok = await patchValues({ music: JSON.stringify(next) });
+              if (ok) {
+                setSongs(next);
+                setNeteaseInput("");
+              }
+            }}
+            disabled={busy}
+            className="rounded-lg border border-border px-3 py-2 text-sm transition-opacity hover:opacity-80 disabled:opacity-50"
+          >
+            加网易云
           </button>
         </div>
       </div>

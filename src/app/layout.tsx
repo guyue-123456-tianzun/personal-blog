@@ -34,35 +34,68 @@ export default async function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body className="flex min-h-screen flex-col antialiased">
-        {/* 沉浸式壁纸:图片或视频(壁纸库 mp4)皆可;虚化 + 主题色遮罩保证前景可读 */}
+        {/* 沉浸式壁纸:夜间/白天各一层,跟随主题切换;虚化 + 主题色遮罩保证前景可读 */}
         <div className="fixed inset-0 -z-10" aria-hidden>
-          {/\.(mp4|webm)$/i.test(appearance.wallImage) ? (
-            <video
-              autoPlay
-              muted
-              loop
-              playsInline
-              className="h-full w-full object-cover"
-              style={{
-                filter: `blur(${appearance.wallBlur}px)`,
-                transform: "scale(1.1)",
-              }}
-            >
-              <source src={appearance.wallImage} />
-            </video>
-          ) : (
-            /* eslint-disable-next-line @next/next/no-img-element */
-            <img
-              src={appearance.wallImage}
-              alt=""
-              className="h-full w-full object-cover"
-              style={{
-                filter: `blur(${appearance.wallBlur}px)`,
-                transform: "scale(1.1)",
-              }}
-            />
-          )}
-          <div className="absolute inset-0 bg-background/70 dark:bg-[#07070f]/75" />
+          {/* 白天壁纸层:阳光模式 */}
+          <div className="absolute inset-0 dark:hidden">
+            {/\.(mp4|webm)$/i.test(appearance.wallImageDay) ? (
+              <video
+                autoPlay
+                muted
+                loop
+                playsInline
+                className="h-full w-full object-cover"
+                style={{
+                  filter: `blur(${appearance.wallBlur}px)`,
+                  transform: "scale(1.1)",
+                }}
+              >
+                <source src={appearance.wallImageDay} />
+              </video>
+            ) : (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img
+                src={appearance.wallImageDay}
+                alt=""
+                className="h-full w-full object-cover"
+                style={{
+                  filter: `blur(${appearance.wallBlur}px)`,
+                  transform: "scale(1.1)",
+                }}
+              />
+            )}
+            <div className="absolute inset-0 bg-background/60" />
+          </div>
+          {/* 夜间壁纸层:紫色光感模式 */}
+          <div className="absolute inset-0 hidden dark:block">
+            {/\.(mp4|webm)$/i.test(appearance.wallImage) ? (
+              <video
+                autoPlay
+                muted
+                loop
+                playsInline
+                className="h-full w-full object-cover"
+                style={{
+                  filter: `blur(${appearance.wallBlur}px)`,
+                  transform: "scale(1.1)",
+                }}
+              >
+                <source src={appearance.wallImage} />
+              </video>
+            ) : (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img
+                src={appearance.wallImage}
+                alt=""
+                className="h-full w-full object-cover"
+                style={{
+                  filter: `blur(${appearance.wallBlur}px)`,
+                  transform: "scale(1.1)",
+                }}
+              />
+            )}
+            <div className="absolute inset-0 bg-[#07070f]/75" />
+          </div>
         </div>
 
         <SiteHeader />

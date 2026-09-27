@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="daySky" x1="0" y1="0" x2="0.3" y2="1">
+      <stop offset="0" stop-color="#7cc7f0"/>
+      <stop offset="0.45" stop-color="#aee0f8"/>
+      <stop offset="0.75" stop-color="#fdeec9"/>
+      <stop offset="1" stop-color="#fcd9a0"/>
+    </linearGradient>
+    <radialGradient id="sunGlow" cx="0.76" cy="0.2" r="0.45">
+      <stop offset="0" stop-color="#fffbe8" stop-opacity="1"/>
+      <stop offset="0.2" stop-color="#ffe9a8" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#ffe9a8" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="warmHaze" cx="0.25" cy="0.5" r="0.55">
+      <stop offset="0" stop-color="#fff3d6" stop-opacity="0.5"/>
+      <stop offset="1" stop-color="#fff3d6" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="hillA" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#a3e635"/><stop offset="1" stop-color="#65a30d"/>
+    </linearGradient>
+    <linearGradient id="hillB" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4ade80"/><stop offset="1" stop-color="#15803d"/>
+    </linearGradient>
+    <linearGradient id="hillC" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#22c55e"/><stop offset="1" stop-color="#166534"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1600" height="900" fill="url(#daySky)"/>
+  <rect width="1600" height="900" fill="url(#warmHaze)"/>
+
+  <!-- 太阳与光晕 -->
+  <circle cx="1210" cy="180" r="150" fill="url(#sunGlow)"/>
+  <circle cx="1210" cy="180" r="74" fill="#fffbe8"/>
+  <circle cx="1210" cy="180" r="108" fill="none" stroke="#fff3c4" stroke-opacity="0.5" stroke-width="2"/>
+
+  <!-- 光线 -->
+  <g stroke="#fff3c4" stroke-opacity="0.35" stroke-width="3">
+    <line x1="1210" y1="40" x2="1210" y2="96"/>
+    <line x1="1105" y1="70" x2="1140" y2="112"/>
+    <line x1="1315" y1="70" x2="1280" y2="112"/>
+  </g>
+
+  <!-- 云朵:三朵,柔和多层 -->
+  <g fill="#ffffff" opacity="0.9">
+    <ellipse cx="330" cy="170" rx="120" ry="34"/>
+    <ellipse cx="420" cy="150" rx="90" ry="28"/>
+    <ellipse cx="250" cy="150" rx="70" ry="22"/>
+  </g>
+  <g fill="#ffffff" opacity="0.75">
+    <ellipse cx="880" cy="250" rx="140" ry="30"/>
+    <ellipse cx="980" cy="230" rx="90" ry="24"/>
+  </g>
+  <g fill="#ffffff" opacity="0.6">
+    <ellipse cx="1420" cy="360" rx="160" ry="26"/>
+    <ellipse cx="1520" cy="340" rx="100" ry="20"/>
+  </g>
+
+  <!-- 飞鸟 -->
+  <g stroke="#475569" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.6">
+    <path d="M520 300 q 14 -14 28 0 M548 300 q 14 -14 28 0"/>
+    <path d="M600 330 q 11 -11 22 0 M622 330 q 11 -11 22 0"/>
+  </g>
+
+  <!-- 远山(蓝绿雾感) -->
+  <path d="M0 620 C 200 540, 380 580, 540 545 C 720 505, 900 570, 1080 535 C 1260 500, 1440 560, 1600 525 L1600 900 L0 900 Z" fill="#5b9bd5" opacity="0.5"/>
+
+  <!-- 中景草地 -->
+  <path d="M0 700 C 220 640, 420 680, 640 650 C 860 620, 1080 675, 1300 645 C 1450 625, 1540 650, 1600 640 L1600 900 L0 900 Z" fill="url(#hillA)" opacity="0.9"/>
+
+  <!-- 近景草地 -->
+  <path d="M0 790 C 240 730, 460 775, 680 745 C 900 715, 1120 770, 1320 740 C 1460 720, 1540 745, 1600 735 L1600 900 L0 900 Z" fill="url(#hillB)"/>
+
+  <!-- 最近景 + 小树 + 花 -->
+  <path d="M0 860 C 300 810, 560 850, 820 825 C 1080 800, 1340 845, 1600 820 L1600 900 L0 900 Z" fill="url(#hillC)"/>
+  <g>
+    <rect x="1372" y="796" width="7" height="34" fill="#7c2d12"/>
+    <circle cx="1375" cy="780" r="34" fill="#16a34a"/>
+    <circle cx="1352" cy="795" r="22" fill="#15803d"/>
+    <circle cx="1398" cy="792" r="24" fill="#15803d"/>
+  </g>
+  <g fill="#fbbf24">
+    <circle cx="240" cy="856" r="5"/><circle cx="330" cy="872" r="4"/><circle cx="700" cy="860" r="5"/>
+    <circle cx="980" cy="872" r="4"/><circle cx="1180" cy="858" r="5"/><circle cx="1450" cy="870" r="4"/>
+  </g>
+  <g fill="#f472b6">
+    <circle cx="150" cy="876" r="4"/><circle cx="520" cy="876" r="5"/><circle cx="840" cy="856" r="4"/>
+    <circle cx="1080" cy="874" r="5"/><circle cx="1320" cy="868" r="4"/><circle cx="1540" cy="856" r="5"/>
+  </g>
+</svg>

@@ -8,12 +8,14 @@ import { siteConfig } from "./site-config";
 
 export const APPEARANCE_KEYS = [
   "hero_image_url",
+  "hero_image_url_day",
   "avatar_url",
   "hero_blur",
   "hero_height",
   "signature",
   "announcements",
   "wall_image_url",
+  "wall_image_url_day",
   "wall_blur",
   "music",
 ] as const;
@@ -23,16 +25,21 @@ export type AppearanceKey = (typeof APPEARANCE_KEYS)[number];
 export type Song = { title: string; artist: string; url: string };
 
 export type Appearance = {
-  heroImage: string;
+  heroImage: string; // 夜间 Hero
+  heroImageDay: string; // 白天 Hero
   avatar: string;
   heroBlur: number; // 0~24 px(Hero 大图的虚化)
   heroHeightVh: number; // 40~100 (vh)
   signature: string;
   announcements: string[];
-  wallImage: string; // 全站沉浸式壁纸(所有玻璃卡片垫在它上面)
+  wallImage: string; // 夜间沉浸式壁纸
+  wallImageDay: string; // 白天沉浸式壁纸
   wallBlur: number; // 0~30 px(壁纸虚化,默认 18:能看清氛围又不抢内容)
   music: Song[]; // 歌单(点歌台管理,存数据库)
 };
+
+/** 白天模式的默认 Hero:一张阳光草地的日间插画 */
+export const DAY_HERO_DEFAULT = "/images/hero-day-default.svg";
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
@@ -80,16 +87,27 @@ export async function getAppearance(): Promise<Appearance> {
 
   return {
     heroImage: map.get("hero_image_url") ?? siteConfig.heroImage,
+    // 白天 Hero:优先"白天"设置,其次跟随夜间自定义,最后落到日间默认插画
+    heroImageDay:
+      map.get("hero_image_url_day") ??
+      map.get("hero_image_url") ??
+      DAY_HERO_DEFAULT,
     avatar: map.get("avatar_url") ?? siteConfig.avatar,
     heroBlur: Number.isFinite(blur) ? clamp(blur, 0, 24) : 0,
     heroHeightVh: Number.isFinite(height) ? clamp(height, 40, 100) : 70,
     signature: map.get("signature") ?? siteConfig.signature,
     announcements: announcements.length > 0 ? announcements : ["欢迎来到我的个人站。"],
-    // 壁纸默认跟随 Hero 图:换一次 Hero 图,整站氛围跟着换
+    // 夜间壁纸默认跟随夜间 Hero 图
     wallImage:
       map.get("wall_image_url") ??
       map.get("hero_image_url") ??
       siteConfig.heroImage,
+    // 白天壁纸:优先"白天"设置,其次夜间壁纸,最后白天默认插画
+    wallImageDay:
+      map.get("wall_image_url_day") ??
+      map.get("wall_image_url") ??
+      map.get("hero_image_url") ??
+      DAY_HERO_DEFAULT,
     wallBlur: Number.isFinite(wallBlur) ? clamp(wallBlur, 0, 30) : 18,
     music,
   };

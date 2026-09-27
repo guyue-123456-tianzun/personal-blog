@@ -35,6 +35,14 @@ const VALIDATORS: Record<AppearanceKey, (value: string) => string> = {
     if (!v || v.length > 500) throw new Error("壁纸地址不合法");
     return v;
   },
+  wall_image_url_day: (v) => {
+    if (!v || v.length > 500) throw new Error("壁纸地址不合法");
+    return v;
+  },
+  hero_image_url_day: (v) => {
+    if (!v || v.length > 500) throw new Error("背景图地址不合法");
+    return v;
+  },
   wall_blur: (v) => String(clamp(Math.round(Number(v)) || 0, 0, 30)),
   music: (v) => {
     const parsed = JSON.parse(v) as unknown;

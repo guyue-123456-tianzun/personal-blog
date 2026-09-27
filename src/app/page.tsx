@@ -33,39 +33,49 @@ export default async function Home() {
         className="relative flex items-center justify-center overflow-hidden"
         style={{ minHeight: `${appearance.heroHeightVh}vh` }}
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        {/\.(mp4|webm)$/i.test(appearance.heroImage) ? (
-          <video
-            autoPlay
-            muted
-            loop
-            playsInline
-            className="absolute inset-0 h-full w-full object-cover"
-            style={{
-              filter: `blur(${appearance.heroBlur}px)`,
-              transform: "scale(1.08)",
-              WebkitMaskImage:
-                "linear-gradient(to bottom, black 0%, black 58%, transparent 100%)",
-              maskImage:
-                "linear-gradient(to bottom, black 0%, black 58%, transparent 100%)",
-            }}
-          >
-            <source src={appearance.heroImage} />
-          </video>
-        ) : (
-          <img
-            src={appearance.heroImage}
-            alt=""
-            className="absolute inset-0 h-full w-full object-cover"
-            style={{
-              filter: `blur(${appearance.heroBlur}px)`,
-              transform: "scale(1.08)",
-              WebkitMaskImage:
-                "linear-gradient(to bottom, black 0%, black 58%, transparent 100%)",
-              maskImage:
-                "linear-gradient(to bottom, black 0%, black 58%, transparent 100%)",
-            }}
-          />
+        {/* Hero 媒体:夜间/白天各一层,跟随主题切换;下边缘渐隐融进壁纸 */}
+        {[
+          { theme: "hidden dark:block", src: appearance.heroImage },
+          { theme: "dark:hidden", src: appearance.heroImageDay },
+        ].map((layer) =>
+          /\.(mp4|webm)$/i.test(layer.src) ? (
+            <div key={layer.theme} className={`absolute inset-0 ${layer.theme}`}>
+              <video
+                autoPlay
+                muted
+                loop
+                playsInline
+                className="h-full w-full object-cover"
+                style={{
+                  filter: `blur(${appearance.heroBlur}px)`,
+                  transform: "scale(1.08)",
+                  WebkitMaskImage:
+                    "linear-gradient(to bottom, black 0%, black 58%, transparent 100%)",
+                  maskImage:
+                    "linear-gradient(to bottom, black 0%, black 58%, transparent 100%)",
+                }}
+              >
+                <source src={layer.src} />
+              </video>
+            </div>
+          ) : (
+            <div key={layer.theme} className={`absolute inset-0 ${layer.theme}`}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={layer.src}
+                alt=""
+                className="h-full w-full object-cover"
+                style={{
+                  filter: `blur(${appearance.heroBlur}px)`,
+                  transform: "scale(1.08)",
+                  WebkitMaskImage:
+                    "linear-gradient(to bottom, black 0%, black 58%, transparent 100%)",
+                  maskImage:
+                    "linear-gradient(to bottom, black 0%, black 58%, transparent 100%)",
+                }}
+              />
+            </div>
+          ),
         )}
         <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/10 to-transparent" />
         {/* 漂浮粒子:玻璃质感的小点缀 */}

@@ -8,24 +8,120 @@ import { parseNeteaseId } from "@/lib/music";
 
 type Props = { initial: Appearance };
 
-// 内置壁纸预设:一键切换,不用上传
-const WALL_PRESETS = [
-  "/images/hero-default.svg",
+// 内置预设:夜间用星夜插画,白天用阳光草地插画,封面渐变两边通用
+const NIGHT_HERO = "/images/hero-default.svg";
+const DAY_HERO = "/images/hero-day-default.svg";
+const COVERS = [
   "/images/cover-1.svg",
   "/images/cover-2.svg",
   "/images/cover-3.svg",
   "/images/cover-4.svg",
 ];
+const NIGHT_PRESETS = [NIGHT_HERO, ...COVERS];
+const DAY_PRESETS = [DAY_HERO, ...COVERS];
 
-// 外观设置表单:换背景图/头像(上传即存)、虚化强度、Hero 占屏高度、签名、公告。
-// 图片上传后立即生效;其余点"保存设置"一次写入。
+// 通用图片槽位:预设一键选 + 上传 + 恢复默认(夜间/白天复用)
+function ImageSlot({
+  label,
+  hint,
+  value,
+  presets,
+  busy,
+  onPick,
+  onUpload,
+  onReset,
+  inputRef,
+  accept = "image/png,image/jpeg,image/webp",
+}: {
+  label: string;
+  hint?: string;
+  value: string;
+  presets: string[];
+  busy: boolean;
+  onPick: (preset: string) => void;
+  onUpload: (file: File) => void;
+  onReset: () => void;
+  inputRef: React.RefObject<HTMLInputElement | null>;
+  accept?: string;
+}) {
+  const isVideo = /\.(mp4|webm)$/i.test(value);
+  return (
+    <div className="rounded-xl border border-border p-4">
+      <div className="flex items-center justify-between">
+        <p className="text-sm font-semibold">{label}</p>
+        <button
+          onClick={onReset}
+          disabled={busy}
+          className="text-xs text-accent hover:underline disabled:opacity-50"
+        >
+          恢复默认
+        </button>
+      </div>
+      {hint && <p className="mt-1 text-xs opacity-50">{hint}</p>}
+
+      <div className="mt-2.5 flex flex-wrap gap-2">
+        {presets.map((preset) => (
+          <button
+            key={preset}
+            onClick={() => onPick(preset)}
+            disabled={busy}
+            className={`overflow-hidden rounded-lg border-2 transition-all hover:-translate-y-0.5 disabled:opacity-50 ${
+              value === preset ? "border-accent" : "border-transparent"
+            }`}
+            title="点击选用"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={preset} alt="" className="h-12 w-20 object-cover" />
+          </button>
+        ))}
+      </div>
+
+      <div className="mt-2.5 flex items-center gap-3">
+        {isVideo ? (
+          <span className="flex h-12 w-20 items-center justify-center rounded-lg bg-foreground/10 text-xs">
+            🎬 视频
+          </span>
+        ) : (
+          /* eslint-disable-next-line @next/next/no-img-element */
+          <img
+            src={value}
+            alt=""
+            className="h-12 w-20 rounded-lg object-cover"
+          />
+        )}
+        <button
+          onClick={() => inputRef.current?.click()}
+          disabled={busy}
+          className="rounded-lg border border-border px-4 py-2 text-sm transition-opacity hover:opacity-80 disabled:opacity-50"
+        >
+          上传新图
+        </button>
+        <input
+          ref={inputRef}
+          type="file"
+          accept={accept}
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            e.target.value = "";
+            if (file) onUpload(file);
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
+// 外观设置表单:夜间/白天双壁纸、头像、虚化、高度、签名、公告、点歌台
 export default function AppearanceForm({ initial }: Props) {
   const router = useRouter();
   const [heroImage, setHeroImage] = useState(initial.heroImage);
+  const [heroImageDay, setHeroImageDay] = useState(initial.heroImageDay);
   const [avatar, setAvatar] = useState(initial.avatar);
   const [blur, setBlur] = useState(initial.heroBlur);
   const [height, setHeight] = useState(initial.heroHeightVh);
   const [wallImage, setWallImage] = useState(initial.wallImage);
+  const [wallImageDay, setWallImageDay] = useState(initial.wallImageDay);
   const [wallBlur, setWallBlur] = useState(initial.wallBlur);
   const [songs, setSongs] = useState<Song[]>(initial.music);
   const [songTitle, setSongTitle] = useState("");
@@ -39,8 +135,10 @@ export default function AppearanceForm({ initial }: Props) {
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
   const heroInputRef = useRef<HTMLInputElement | null>(null);
+  const heroDayInputRef = useRef<HTMLInputElement | null>(null);
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
   const wallInputRef = useRef<HTMLInputElement | null>(null);
+  const wallDayInputRef = useRef<HTMLInputElement | null>(null);
   const songInputRef = useRef<HTMLInputElement | null>(null);
 
   // 通用批量保存:values 里的键走后端白名单校验,null 表示清除该项
@@ -66,56 +164,32 @@ export default function AppearanceForm({ initial }: Props) {
     }
   }
 
-  // 壁纸库:public/wallpapers/ 目录下的图片与视频(Wallpaper Engine 的 mp4 可直接丢进来)
-  useEffect(() => {
-    fetch("/api/kb/wallpapers")
-      .then((res) => res.json())
-      .then((data: { wallpapers?: { name: string; url: string }[] }) => {
-        setWallpapers(data.wallpapers ?? []);
-      })
-      .catch(() => {});
-  }, []);
-
-  type UploadKind = "hero_image_url" | "avatar_url" | "wall_image_url";
-
-  async function uploadImage(
-    kind: UploadKind,
-    file: File,
-  ) {
+  async function uploadImage(kind: string, file: File) {
     setBusy(true);
     setStatus("");
     try {
       const form = new FormData();
       form.append("file", file);
-      form.append("public", "1"); // 背景图/头像必须访客可见
-      const uploadRes = await fetch("/api/kb/attachments", {
-        method: "POST",
-        body: form,
-      });
-      const uploaded = (await uploadRes.json().catch(() => ({}))) as {
+      if (kind.startsWith("wall") || kind === "hero_image_url_day") {
+        form.append("public", "1"); // 背景图/头像必须访客可见
+      }
+      const res = await fetch("/api/kb/attachments", { method: "POST", body: form });
+      const data = (await res.json().catch(() => ({}))) as {
         error?: string;
         attachment?: { id: number };
       };
-      if (!uploadRes.ok || !uploaded.attachment) {
-        setStatus(uploaded.error ?? "上传失败");
+      if (!res.ok || !data.attachment) {
+        setStatus(data.error ?? "上传失败");
         return;
       }
-      const url = `/api/kb/attachments/${uploaded.attachment.id}`;
-      const saveRes = await fetch("/api/kb/appearance", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ values: { [kind]: url } }),
-      });
-      if (!saveRes.ok) {
-        const data = (await saveRes.json().catch(() => ({}))) as { error?: string };
-        setStatus(data.error ?? "保存失败");
-        return;
-      }
+      const url = `/api/kb/attachments/${data.attachment.id}`;
+      const ok = await patchValues({ [kind]: url });
+      if (!ok) return;
       if (kind === "hero_image_url") setHeroImage(url);
-      else if (kind === "wall_image_url") setWallImage(url);
-      else setAvatar(url);
-      setStatus("图片已更新 ✓");
-      router.refresh();
+      if (kind === "hero_image_url_day") setHeroImageDay(url);
+      if (kind === "wall_image_url") setWallImage(url);
+      if (kind === "wall_image_url_day") setWallImageDay(url);
+      if (kind === "avatar_url") setAvatar(url);
     } finally {
       setBusy(false);
     }
@@ -134,10 +208,12 @@ export default function AppearanceForm({ initial }: Props) {
       };
       if (res.ok && data.appearance) {
         setHeroImage(data.appearance.heroImage);
+        setHeroImageDay(data.appearance.heroImageDay);
         setAvatar(data.appearance.avatar);
         setBlur(data.appearance.heroBlur);
         setHeight(data.appearance.heroHeightVh);
         setWallImage(data.appearance.wallImage);
+        setWallImageDay(data.appearance.wallImageDay);
         setWallBlur(data.appearance.wallBlur);
         setSignature(data.appearance.signature);
         setAnnouncements(data.appearance.announcements.join("\n"));
@@ -215,6 +291,23 @@ export default function AppearanceForm({ initial }: Props) {
     }
   }
 
+  async function addNetease() {
+    const id = parseNeteaseId(neteaseInput);
+    if (!id) {
+      setStatus("没解析出网易云歌曲 ID,请粘贴 song 链接或纯数字");
+      return;
+    }
+    const next: Song[] = [
+      ...songs,
+      { title: `网易云 ${id}`, artist: "网易云音乐", url: `netease:${id}` },
+    ];
+    const ok = await patchValues({ music: JSON.stringify(next) });
+    if (ok) {
+      setSongs(next);
+      setNeteaseInput("");
+    }
+  }
+
   async function deleteSong(index: number) {
     const next = songs.filter((_, i) => i !== index);
     const ok = await patchValues({ music: JSON.stringify(next) });
@@ -226,18 +319,25 @@ export default function AppearanceForm({ initial }: Props) {
 
   return (
     <div className="space-y-6">
-      {/* 实时预览 */}
+      {/* 实时预览:跟随当前主题(夜/日) */}
       <div>
-        <h3 className="mb-2 font-semibold">预览</h3>
+        <h3 className="mb-2 font-semibold">预览(跟随下方深浅色模式)</h3>
         <div
           className="relative overflow-hidden rounded-2xl border border-border"
           style={{ height: Math.round((height / 100) * 320) }}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
+            src={heroImageDay}
+            alt=""
+            className="h-full w-full object-cover dark:hidden"
+            style={{ filter: `blur(${Math.round(blur * 0.5)}px)`, transform: "scale(1.08)" }}
+          />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
             src={heroImage}
             alt=""
-            className="h-full w-full object-cover"
+            className="hidden h-full w-full object-cover dark:block"
             style={{ filter: `blur(${Math.round(blur * 0.5)}px)`, transform: "scale(1.08)" }}
           />
           <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
@@ -246,53 +346,35 @@ export default function AppearanceForm({ initial }: Props) {
         </div>
       </div>
 
-      {/* 背景图 */}
-      <div className="glass rounded-2xl p-5">
+      {/* Hero 背景图:夜间/白天两个槽位 */}
+      <div className="glass space-y-4 rounded-2xl p-5">
         <h3 className="font-semibold">Hero 背景图</h3>
-        <p className="mt-1 text-xs opacity-50">横图最佳;上传即生效,访客直接可见。</p>
-        <div className="mt-3 flex flex-wrap gap-2">
-          {WALL_PRESETS.map((preset) => (
-            <button
-              key={preset}
-              onClick={() => patchValues({ hero_image_url: preset })}
-              disabled={busy}
-              className={`overflow-hidden rounded-lg border-2 transition-all hover:-translate-y-0.5 disabled:opacity-50 ${
-                heroImage === preset ? "border-accent" : "border-transparent"
-              }`}
-              title="点击选用"
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={preset} alt="" className="h-12 w-20 object-cover" />
-            </button>
-          ))}
-        </div>
-        <div className="mt-3 flex flex-wrap items-center gap-3">
-          <button
-            onClick={() => heroInputRef.current?.click()}
-            disabled={busy}
-            className="rounded-lg border border-border px-4 py-2 text-sm transition-opacity hover:opacity-80 disabled:opacity-50"
-          >
-            上传新背景图
-          </button>
-          <button
-            onClick={() => resetOne("hero_image_url")}
-            disabled={busy}
-            className="text-sm text-accent hover:underline disabled:opacity-50"
-          >
-            恢复默认
-          </button>
-          <input
-            ref={heroInputRef}
-            type="file"
-            accept="image/png,image/jpeg,image/webp,video/mp4,video/webm"
-            className="hidden"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              e.target.value = "";
-              if (file) uploadImage("hero_image_url", file);
-            }}
-          />
-        </div>
+        <ImageSlot
+          label="🌙 夜间 Hero(深色模式显示)"
+          value={heroImage}
+          presets={NIGHT_PRESETS}
+          busy={busy}
+          onPick={(preset) => patchValues({ hero_image_url: preset })}
+          onUpload={(file) => uploadImage("hero_image_url", file)}
+          onReset={() => resetOne("hero_image_url")}
+          inputRef={heroInputRef}
+          accept="image/png,image/jpeg,image/webp,video/mp4,video/webm"
+        />
+        <ImageSlot
+          label="☀️ 白天 Hero(浅色模式显示)"
+          hint="想要阳光朝气的感觉,就选或传一张暖色调的图"
+          value={heroImageDay}
+          presets={DAY_PRESETS}
+          busy={busy}
+          onPick={(preset) => patchValues({ hero_image_url_day: preset })}
+          onUpload={(file) => uploadImage("hero_image_url_day", file)}
+          onReset={() => resetOne("hero_image_url_day")}
+          inputRef={heroDayInputRef}
+          accept="image/png,image/jpeg,image/webp,video/mp4,video/webm"
+        />
+        <p className="text-xs opacity-40">
+          白天未单独设置时,会跟随夜间的自定义图;两者都支持 mp4 视频壁纸(上限 100MB)。
+        </p>
       </div>
 
       {/* 头像 */}
@@ -329,71 +411,82 @@ export default function AppearanceForm({ initial }: Props) {
         </div>
       </div>
 
-      {/* 页面壁纸(沉浸式背景):所有玻璃卡片都垫在这张图上 */}
-      <div className="glass rounded-2xl p-5">
-        <h3 className="font-semibold">页面壁纸(沉浸式背景)</h3>
-        <p className="mt-1 text-xs opacity-50">
-          整站所有玻璃卡片都会浮在这张虚化后的图上;默认跟随 Hero 背景图,也可以单独指定。
-        </p>
+      {/* 页面壁纸(沉浸式背景):夜间/白天两个槽位 */}
+      <div className="glass space-y-4 rounded-2xl p-5">
+        <div>
+          <h3 className="font-semibold">页面壁纸(沉浸式背景)</h3>
+          <p className="mt-1 text-xs opacity-50">
+            整站玻璃卡片都浮在这张虚化后的图上;下拉滚动时夜间/白天各用各的,过渡自然。
+          </p>
+        </div>
+
+        <ImageSlot
+          label="🌙 夜间壁纸"
+          value={wallImage}
+          presets={NIGHT_PRESETS}
+          busy={busy}
+          onPick={(preset) => patchValues({ wall_image_url: preset })}
+          onUpload={(file) => uploadImage("wall_image_url", file)}
+          onReset={() => resetOne("wall_image_url")}
+          inputRef={wallInputRef}
+          accept="image/png,image/jpeg,image/webp,video/mp4,video/webm"
+        />
+
+        <ImageSlot
+          label="☀️ 白天壁纸"
+          hint="阳光、暖色、清新的图;未设置时跟随夜间壁纸"
+          value={wallImageDay}
+          presets={DAY_PRESETS}
+          busy={busy}
+          onPick={(preset) => patchValues({ wall_image_url_day: preset })}
+          onUpload={(file) => uploadImage("wall_image_url_day", file)}
+          onReset={() => resetOne("wall_image_url_day")}
+          inputRef={wallDayInputRef}
+          accept="image/png,image/jpeg,image/webp,video/mp4,video/webm"
+        />
+
         {/* 壁纸库:public/wallpapers/ 目录,支持 Wallpaper Engine 的 mp4 视频壁纸 */}
         {wallpapers.length > 0 && (
-          <div className="mt-3 flex flex-wrap gap-2">
-            {wallpapers.map((wall) => (
-              <button
-                key={wall.url}
-                onClick={() => patchValues({ wall_image_url: wall.url })}
-                disabled={busy}
-                className={`overflow-hidden rounded-lg border-2 transition-all hover:-translate-y-0.5 disabled:opacity-50 ${
-                  wallImage === wall.url ? "border-accent" : "border-transparent"
-                }`}
-                title={wall.name}
-              >
-                {/\.(mp4|webm)$/i.test(wall.url) ? (
-                  <span className="flex h-12 w-20 items-center justify-center bg-foreground/10 text-xs">
-                    🎬 视频
-                  </span>
-                ) : (
-                  /* eslint-disable-next-line @next/next/no-img-element */
-                  <img src={wall.url} alt="" className="h-12 w-20 object-cover" />
-                )}
-              </button>
-            ))}
+          <div className="rounded-xl border border-border p-4">
+            <p className="text-sm font-semibold">壁纸库(public\wallpapers\)</p>
+            <p className="mt-1 text-xs opacity-50">
+              把 Wallpaper Engine 的视频壁纸(mp4)或任何图片复制到
+              项目\public\wallpapers\ 文件夹,即可在这里一键选用(🎬 = 视频)。
+            </p>
+            <div className="mt-2.5 flex flex-wrap gap-2">
+              {wallpapers.map((wall) => (
+                <button
+                  key={wall.url}
+                  onClick={() =>
+                    patchValues(
+                      /\.(mp4|webm)$/i.test(wall.url)
+                        ? { wall_image_url_day: wall.url, wall_image_url: wall.url }
+                        : { wall_image_url_day: wall.url, wall_image_url: wall.url },
+                    )
+                  }
+                  disabled={busy}
+                  className={`overflow-hidden rounded-lg border-2 transition-all hover:-translate-y-0.5 disabled:opacity-50 ${
+                    wallImage === wall.url || wallImageDay === wall.url
+                      ? "border-accent"
+                      : "border-transparent"
+                  }`}
+                  title={wall.name}
+                >
+                  {/\.(mp4|webm)$/i.test(wall.url) ? (
+                    <span className="flex h-12 w-20 items-center justify-center bg-foreground/10 text-xs">
+                      🎬 视频
+                    </span>
+                  ) : (
+                    /* eslint-disable-next-line @next/next/no-img-element */
+                    <img src={wall.url} alt="" className="h-12 w-20 object-cover" />
+                  )}
+                </button>
+              ))}
+            </div>
           </div>
         )}
-        <p className="mt-2 text-xs opacity-40">
-          把 Wallpaper Engine 的视频壁纸(mp4)或任何图片复制到 项目\public\wallpapers\ 文件夹,就会出现在这里。
-        </p>
 
-        <div className="mt-3 flex flex-wrap items-center gap-3">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={wallImage} alt="" className="h-12 w-20 rounded-lg object-cover" />
-          <button
-            onClick={() => wallInputRef.current?.click()}
-            disabled={busy}
-            className="rounded-lg border border-border px-4 py-2 text-sm transition-opacity hover:opacity-80 disabled:opacity-50"
-          >
-            上传新壁纸
-          </button>
-          <button
-            onClick={() => resetOne("wall_image_url")}
-            disabled={busy}
-            className="text-sm text-accent hover:underline disabled:opacity-50"
-          >
-            跟随 Hero 图
-          </button>
-          <input
-            ref={wallInputRef}
-            type="file"
-            accept="image/png,image/jpeg,image/webp,video/mp4,video/webm"
-            className="hidden"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              e.target.value = "";
-              if (file) uploadImage("wall_image_url", file);
-            }}
-          />
-        </div>
-        <div className="mt-4">
+        <div>
           <div className="flex items-center justify-between text-sm">
             <span className="font-semibold">壁纸虚化强度</span>
             <span className="opacity-60">{wallBlur} px</span>
@@ -409,44 +502,11 @@ export default function AppearanceForm({ initial }: Props) {
         </div>
       </div>
 
-      {/* 虚化 + 高度滑杆 */}
-      <div className="glass space-y-5 rounded-2xl p-5">
-        <div>
-          <div className="flex items-center justify-between text-sm">
-            <span className="font-semibold">背景虚化强度</span>
-            <span className="opacity-60">{blur} px</span>
-          </div>
-          <input
-            type="range"
-            min={0}
-            max={24}
-            value={blur}
-            onChange={(e) => setBlur(Number(e.target.value))}
-            className="mt-2 w-full accent-[var(--accent)]"
-          />
-        </div>
-        <div>
-          <div className="flex items-center justify-between text-sm">
-            <span className="font-semibold">Hero 占屏高度</span>
-            <span className="opacity-60">{height} vh</span>
-          </div>
-          <input
-            type="range"
-            min={40}
-            max={100}
-            step={5}
-            value={height}
-            onChange={(e) => setHeight(Number(e.target.value))}
-            className="mt-2 w-full accent-[var(--accent)]"
-          />
-        </div>
-      </div>
-
-      {/* 点歌台:歌单存数据库,上传/外链自由加歌 */}
+      {/* 点歌台:歌单存数据库,上传/外链/网易云自由加歌 */}
       <div className="glass rounded-2xl p-5">
         <h3 className="font-semibold">点歌台(共 {songs.length} 首)</h3>
         <p className="mt-1 text-xs opacity-50">
-          上传 mp3 或贴外链自由加歌;导航栏、首页卡片、左下角圆盘用的是同一份歌单。
+          上传 mp3、贴外链、或粘贴网易云歌曲链接自由加歌;导航栏、首页卡片、左下角圆盘用的是同一份歌单。
         </p>
 
         <ul className="mt-3 space-y-2">
@@ -524,22 +584,7 @@ export default function AppearanceForm({ initial }: Props) {
             className="w-56 rounded-lg border border-border bg-transparent px-2.5 py-2 text-sm outline-none focus:border-accent"
           />
           <button
-            onClick={async () => {
-              const id = parseNeteaseId(neteaseInput);
-              if (!id) {
-                setStatus("没解析出网易云歌曲 ID,请粘贴 song 链接或纯数字");
-                return;
-              }
-              const next: Song[] = [
-                ...songs,
-                { title: `网易云 ${id}`, artist: "网易云音乐", url: `netease:${id}` },
-              ];
-              const ok = await patchValues({ music: JSON.stringify(next) });
-              if (ok) {
-                setSongs(next);
-                setNeteaseInput("");
-              }
-            }}
+            onClick={addNetease}
             disabled={busy}
             className="rounded-lg border border-border px-3 py-2 text-sm transition-opacity hover:opacity-80 disabled:opacity-50"
           >
@@ -576,7 +621,7 @@ export default function AppearanceForm({ initial }: Props) {
           disabled={busy}
           className="rounded-lg bg-accent px-5 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
         >
-          {busy ? "处理中…" : "保存设置"}
+          {busy ? "保存中…" : "保存设置"}
         </button>
       </div>
     </div>

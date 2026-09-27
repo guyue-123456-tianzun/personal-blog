@@ -44,6 +44,9 @@ const VALIDATORS: Record<AppearanceKey, (value: string) => string> = {
     return v;
   },
   wall_blur: (v) => String(clamp(Math.round(Number(v)) || 0, 0, 30)),
+  wall_carousel_enabled: (v) => (v === "0" ? "0" : "1"),
+  wall_carousel_seconds: (v) =>
+    String(clamp(Math.round(Number(v)) || 3, 1, 60)),
   music: (v) => {
     const parsed = JSON.parse(v) as unknown;
     if (!Array.isArray(parsed)) throw new Error("歌单格式不正确");

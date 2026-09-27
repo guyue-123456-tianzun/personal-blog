@@ -5,7 +5,8 @@ import "./globals.css";
 import SiteHeader from "@/components/SiteHeader";
 import FloatingMusicButton from "@/components/home/FloatingMusicButton";
 import Heartbeat from "@/components/Heartbeat";
-import { getAppearance } from "@/lib/settings";
+import WallpaperBackground from "@/components/WallpaperBackground";
+import { getAppearance, getWallLibrary } from "@/lib/settings";
 import { siteConfig } from "@/lib/site-config";
 
 export const metadata: Metadata = {
@@ -28,75 +29,25 @@ export default async function RootLayout({
 }>) {
   const appearance = await getAppearance();
 
+  // 轮播列表:当前设置的夜间/白天壁纸 + 壁纸库(public\wallpapers\)里的全部文件,去重
+  const library = getWallLibrary();
+  const nightList = [...new Set([appearance.wallImage, ...library])];
+  const dayList = [...new Set([appearance.wallImageDay, ...library])];
+
   return (
     <html lang="zh-CN" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body className="flex min-h-screen flex-col antialiased">
-        {/* 沉浸式壁纸:夜间/白天各一层,跟随主题切换;虚化 + 主题色遮罩保证前景可读 */}
-        <div className="fixed inset-0 -z-10" aria-hidden>
-          {/* 白天壁纸层:阳光模式 */}
-          <div className="absolute inset-0 dark:hidden">
-            {/\.(mp4|webm)$/i.test(appearance.wallImageDay) ? (
-              <video
-                autoPlay
-                muted
-                loop
-                playsInline
-                className="h-full w-full object-cover"
-                style={{
-                  filter: `blur(${appearance.wallBlur}px)`,
-                  transform: "scale(1.1)",
-                }}
-              >
-                <source src={appearance.wallImageDay} />
-              </video>
-            ) : (
-              /* eslint-disable-next-line @next/next/no-img-element */
-              <img
-                src={appearance.wallImageDay}
-                alt=""
-                className="h-full w-full object-cover"
-                style={{
-                  filter: `blur(${appearance.wallBlur}px)`,
-                  transform: "scale(1.1)",
-                }}
-              />
-            )}
-            <div className="absolute inset-0 bg-background/60" />
-          </div>
-          {/* 夜间壁纸层:紫色光感模式 */}
-          <div className="absolute inset-0 hidden dark:block">
-            {/\.(mp4|webm)$/i.test(appearance.wallImage) ? (
-              <video
-                autoPlay
-                muted
-                loop
-                playsInline
-                className="h-full w-full object-cover"
-                style={{
-                  filter: `blur(${appearance.wallBlur}px)`,
-                  transform: "scale(1.1)",
-                }}
-              >
-                <source src={appearance.wallImage} />
-              </video>
-            ) : (
-              /* eslint-disable-next-line @next/next/no-img-element */
-              <img
-                src={appearance.wallImage}
-                alt=""
-                className="h-full w-full object-cover"
-                style={{
-                  filter: `blur(${appearance.wallBlur}px)`,
-                  transform: "scale(1.1)",
-                }}
-              />
-            )}
-            <div className="absolute inset-0 bg-[#07070f]/75" />
-          </div>
-        </div>
+        {/* 沉浸式壁纸:夜间/白天各一层 + 轮播(站长定默认,访客在导航栏 🖼️ 调自己的) */}
+        <WallpaperBackground
+          nightList={nightList}
+          dayList={dayList}
+          blur={appearance.wallBlur}
+          siteEnabled={appearance.wallCarouselEnabled}
+          siteSeconds={appearance.wallCarouselSeconds}
+        />
 
         <SiteHeader />
         <div className="flex-1">{children}</div>

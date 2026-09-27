@@ -1,5 +1,8 @@
 // 站点外观设置:存数据库(site_settings 表),后台"外观设置"页写入,前台即时生效。
 // site-config.ts 里的静态值充当默认值——删掉某项设置就回落到默认,永远不会无图可用。
+import fs from "node:fs";
+import path from "node:path";
+
 import { eq } from "drizzle-orm";
 
 import { db } from "@/lib/db";
@@ -17,6 +20,8 @@ export const APPEARANCE_KEYS = [
   "wall_image_url",
   "wall_image_url_day",
   "wall_blur",
+  "wall_carousel_enabled",
+  "wall_carousel_seconds",
   "music",
 ] as const;
 
@@ -36,7 +41,21 @@ export type Appearance = {
   wallImageDay: string; // 白天沉浸式壁纸
   wallBlur: number; // 0~30 px(壁纸虚化,默认 18:能看清氛围又不抢内容)
   music: Song[]; // 歌单(点歌台管理,存数据库)
+  wallCarouselEnabled: boolean; // 壁纸轮播开关(全站默认)
+  wallCarouselSeconds: number; // 轮播间隔秒数(1~60)
+  wallLibrary: string[]; // 壁纸库:public/wallpapers/ 下的全部文件
 };
+
+/** 壁纸库:public/wallpapers/ 下的图片与视频文件(Wallpaper Engine 的 mp4 可直接丢进来) */
+export function getWallLibrary(): string[] {
+  const dir = path.join(process.cwd(), "public", "wallpapers");
+  if (!fs.existsSync(dir)) return [];
+  return fs
+    .readdirSync(dir)
+    .filter((name) => /\.(mp4|webm|png|jpe?g|webp)$/i.test(name))
+    .sort()
+    .map((name) => `/wallpapers/${name}`);
+}
 
 /** 白天模式的默认 Hero:一张阳光草地的日间插画 */
 export const DAY_HERO_DEFAULT = "/images/hero-day-default.svg";
@@ -110,6 +129,16 @@ export async function getAppearance(): Promise<Appearance> {
       DAY_HERO_DEFAULT,
     wallBlur: Number.isFinite(wallBlur) ? clamp(wallBlur, 0, 30) : 18,
     music,
+    // 壁纸轮播:站长可关;默认开启,间隔默认 3 秒(示例值,范围 1~60)
+    wallCarouselEnabled: map.get("wall_carousel_enabled") !== "0",
+    wallCarouselSeconds: clamp(
+      Number.isFinite(Number(map.get("wall_carousel_seconds")))
+        ? Math.round(Number(map.get("wall_carousel_seconds")))
+        : 3,
+      1,
+      60,
+    ),
+    wallLibrary: getWallLibrary(),
   };
 }
 

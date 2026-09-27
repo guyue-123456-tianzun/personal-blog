@@ -123,6 +123,12 @@ export default function AppearanceForm({ initial }: Props) {
   const [wallImage, setWallImage] = useState(initial.wallImage);
   const [wallImageDay, setWallImageDay] = useState(initial.wallImageDay);
   const [wallBlur, setWallBlur] = useState(initial.wallBlur);
+  const [carouselEnabled, setCarouselEnabled] = useState(
+    initial.wallCarouselEnabled,
+  );
+  const [carouselSeconds, setCarouselSeconds] = useState(
+    initial.wallCarouselSeconds,
+  );
   const [songs, setSongs] = useState<Song[]>(initial.music);
   const [songTitle, setSongTitle] = useState("");
   const [songUrl, setSongUrl] = useState("");
@@ -215,6 +221,8 @@ export default function AppearanceForm({ initial }: Props) {
         setWallImage(data.appearance.wallImage);
         setWallImageDay(data.appearance.wallImageDay);
         setWallBlur(data.appearance.wallBlur);
+        setCarouselEnabled(data.appearance.wallCarouselEnabled);
+        setCarouselSeconds(data.appearance.wallCarouselSeconds);
         setSignature(data.appearance.signature);
         setAnnouncements(data.appearance.announcements.join("\n"));
         setStatus("已恢复默认");
@@ -230,6 +238,8 @@ export default function AppearanceForm({ initial }: Props) {
       hero_blur: String(blur),
       hero_height: String(height),
       wall_blur: String(wallBlur),
+      wall_carousel_enabled: carouselEnabled ? "1" : "0",
+      wall_carousel_seconds: String(carouselSeconds),
       signature,
       announcements: JSON.stringify(
         announcements.split("\n").map((line) => line.trim()).filter(Boolean),
@@ -499,6 +509,43 @@ export default function AppearanceForm({ initial }: Props) {
             onChange={(e) => setWallBlur(Number(e.target.value))}
             className="mt-2 w-full accent-[var(--accent)]"
           />
+        </div>
+
+        {/* 壁纸轮播:全站默认;访客可在导航栏 🖼️ 面板设置只属于自己的偏好 */}
+        <div className="rounded-xl border border-border p-4">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-semibold">🖼️ 壁纸轮播(全站默认)</span>
+            <button
+              onClick={() =>
+                patchValues({
+                  wall_carousel_enabled: carouselEnabled ? "0" : "1",
+                })
+              }
+              disabled={busy}
+              className={`rounded-full px-3 py-1 text-xs transition-colors disabled:opacity-50 ${
+                carouselEnabled ? "bg-accent text-white" : "border border-border opacity-70"
+              }`}
+            >
+              {carouselEnabled ? "轮播中" : "已关闭"}
+            </button>
+          </div>
+          <div className="mt-2.5">
+            <div className="flex items-center justify-between text-xs opacity-70">
+              <span>切换间隔</span>
+              <span>{carouselSeconds} 秒</span>
+            </div>
+            <input
+              type="range"
+              min={1}
+              max={60}
+              value={carouselSeconds}
+              onChange={(e) => setCarouselSeconds(Number(e.target.value))}
+              className="mt-1.5 w-full accent-[var(--accent)]"
+            />
+          </div>
+          <p className="mt-1.5 text-[10px] opacity-40">
+            轮播范围 = 夜间/白天壁纸 + 壁纸库全部文件;访客可在导航栏 🖼️ 里设置只属于自己的节奏。
+          </p>
         </div>
       </div>
 

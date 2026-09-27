@@ -10,6 +10,7 @@ const NAV = [
   { href: "/archives", label: "归档", icon: "📅" },
   { href: "/moments", label: "说说", icon: "💬" },
   { href: "/photos", label: "照片墙", icon: "📷" },
+  { href: "/media", label: "书影音", icon: "📚" },
   { href: "/friends", label: "友链", icon: "🔗" },
   { href: "/about", label: "关于", icon: "💡" },
 ];

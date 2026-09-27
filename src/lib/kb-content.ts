@@ -13,6 +13,7 @@ export type KbListItem = {
   slug: string;
   title: string;
   excerpt: string | null;
+  content: string;
   isPublic: number;
   pinned: number;
   publishedAt: string | null;
@@ -46,6 +47,7 @@ export async function listKbNotes(type = "note"): Promise<KbListItem[]> {
       slug: notes.slug,
       title: notes.title,
       excerpt: notes.excerpt,
+      content: notes.content,
       isPublic: notes.isPublic,
       pinned: notes.pinned,
       publishedAt: notes.publishedAt,
@@ -66,6 +68,7 @@ export async function listTrash(): Promise<KbListItem[]> {
       slug: notes.slug,
       title: notes.title,
       excerpt: notes.excerpt,
+      content: notes.content,
       isPublic: notes.isPublic,
       pinned: notes.pinned,
       publishedAt: notes.publishedAt,

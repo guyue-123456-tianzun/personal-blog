@@ -1,10 +1,11 @@
 // 写入示例文章(幂等,按 slug 覆盖更新):用于 M1 里程碑验收。
 // 正式发布界面在 M2 落地;届时站长从私有区后台写文章,不再依赖本脚本。
-import { and, eq } from "drizzle-orm";
+import { and, count, eq } from "drizzle-orm";
 
 import { db } from "../src/lib/db";
-import { comments, noteTags, notes, tags } from "../src/db/schema";
+import { comments, mediaItems, noteTags, notes, tags } from "../src/db/schema";
 import { addComment } from "../src/lib/comments";
+import { createNote } from "../src/lib/notes";
 
 const demoPosts = [
   {
@@ -196,7 +197,51 @@ async function main() {
       await db.insert(noteTags).values({ noteId: row.id, tagId: tag.id });
     }
   }
-  console.log(`✅ 示例文章已写入(${demoPosts.length} 篇)`);
+  // 示例说说:仅在还没有说说时写入
+  const [momentCount] = await db
+    .select({ c: count() })
+    .from(notes)
+    .where(eq(notes.type, "moment"));
+  if (momentCount.c === 0) {
+    await createNote({
+      type: "moment",
+      title: "晚风很温柔",
+      content: "晚饭后沿河走了五公里,晚风很温柔。",
+      tags: ["生活"],
+      isPublic: 1,
+      publishedAt: "2026-09-27 19:00:00",
+    });
+    await createNote({
+      type: "moment",
+      title: "换星夜壁纸",
+      content: "把站点背景换成星夜了,顺便调了下虚化,舒服。",
+      tags: ["折腾"],
+      isPublic: 1,
+      publishedAt: "2026-09-27 20:00:00",
+    });
+    await createNote({
+      type: "moment",
+      title: "私密的一条",
+      content: "这条是私密说说,只有我自己能看到。",
+      tags: ["日常"],
+      isPublic: 0,
+      publishedAt: "2026-09-27 21:00:00",
+    });
+    console.log("✅ 示例说说已写入(3 条)");
+  }
+
+  // 示例书影音:仅在为空时写入
+  const [mediaCount] = await db.select({ c: count() }).from(mediaItems);
+  if (mediaCount.c === 0) {
+    await db.insert(mediaItems).values([
+      { type: "book", title: "置身事外", status: "done", rating: 9, comment: "把中国经济讲得明明白白。" },
+      { type: "book", title: "漫长的季节", status: "doing", rating: 8 },
+      { type: "movie", title: "星际穿越", status: "done", rating: 10, comment: "第五遍重看,还是会哭。" },
+      { type: "movie", title: "沙丘 3", status: "wish" },
+      { type: "game", title: "塞尔达传说:王国之泪", status: "doing", rating: 9, comment: "呀哈哈收集强迫症慎入。" },
+    ]);
+    console.log("✅ 示例书影音已写入(5 条)");
+  }
 
   // 示例评论:只在还没有评论时写入,保证脚本可重复执行
   const [existing] = await db

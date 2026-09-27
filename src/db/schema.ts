@@ -89,6 +89,19 @@ export const siteViews = sqliteTable("site_views", {
   views: integer("views").notNull().default(0),
 });
 
+// 书影音记录(C1):想读/在看/看完 + 评分 + 短评
+export const mediaItems = sqliteTable("media_items", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  type: text("type").notNull(), // book | movie | game
+  title: text("title").notNull(),
+  status: text("status").notNull().default("wish"), // wish | doing | done
+  rating: integer("rating"), // 0~10,可空 = 未评分
+  comment: text("comment"), // 短评
+  coverUrl: text("cover_url"), // 可空 = 渐变占位图
+  createdAt: text("created_at").notNull().default(now),
+  updatedAt: text("updated_at").notNull().default(now),
+});
+
 // 笔记版本历史(C7):每次保存前把旧版拍快照存进来,只保留最近 20 份
 export const noteVersions = sqliteTable("note_versions", {
   id: integer("id").primaryKey({ autoIncrement: true }),

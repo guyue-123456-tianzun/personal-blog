@@ -11,7 +11,6 @@ import MusicPlayer from "@/components/home/MusicPlayer";
 import TypewriterBanner from "@/components/home/TypewriterBanner";
 import CalendarWidget from "@/components/home/CalendarWidget";
 import ArticleCard from "@/components/home/ArticleCard";
-import FloatingMusicButton from "@/components/home/FloatingMusicButton";
 
 // 首页 = 全屏 Hero(大图+签名+搜索,外观后台可调) + 小部件区 + 文章封面卡流
 export const dynamic = "force-dynamic";

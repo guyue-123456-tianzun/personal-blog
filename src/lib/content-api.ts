@@ -1,9 +1,9 @@
 // 内容读取统一出口:公开区页面(以及二期 AI)一律从这里取数据,不得绕过本文件直查表
 // 隐私红线:这里的查询条件天然只返回「公开 + 未删除」的内容,私有数据不会经此泄漏
-import { and, desc, eq, isNull, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull, sql } from "drizzle-orm";
 
 import { db } from "@/lib/db";
-import { noteTags, notes, postViews, tags } from "@/db/schema";
+import { attachments, noteTags, notes, postViews, tags } from "@/db/schema";
 import { escapeLike, makeSnippet } from "./search";
 
 export type PostListItem = {
@@ -157,4 +157,88 @@ export async function getArchives(): Promise<
   return [...byYear.entries()]
     .sort((a, b) => b[0].localeCompare(a[0]))
     .map(([year, posts]) => ({ year, posts }));
+}
+
+// ===== 说说流(B4)与照片墙(C6)的公开读取 =====
+
+export type MomentItem = {
+  id: number;
+  content: string;
+  createdAt: string;
+  tags: string[];
+  images: { id: number; url: string }[];
+};
+
+/** 公开说说流:按时间倒序,带标签与配图(仅公开图片附件) */
+export async function listPublicMoments(
+  limit = 10,
+  offset = 0,
+): Promise<MomentItem[]> {
+  const rows = await db
+    .select({ id: notes.id, content: notes.content, createdAt: notes.createdAt })
+    .from(notes)
+    .where(
+      and(eq(notes.type, "moment"), eq(notes.isPublic, 1), isNull(notes.deletedAt)),
+    )
+    .orderBy(desc(notes.createdAt))
+    .limit(limit)
+    .offset(offset);
+  if (rows.length === 0) return [];
+
+  const ids = rows.map((r) => r.id);
+  const tagRows = await db
+    .select({ noteId: noteTags.noteId, name: tags.name })
+    .from(noteTags)
+    .innerJoin(tags, eq(noteTags.tagId, tags.id))
+    .where(inArray(noteTags.noteId, ids));
+  const imageRows = await db
+    .select({ id: attachments.id, noteId: attachments.noteId })
+    .from(attachments)
+    .where(
+      and(
+        inArray(attachments.noteId, ids),
+        eq(attachments.isPublic, 1),
+        sql`${attachments.mime} like 'image/%'`,
+      ),
+    );
+
+  const tagsBy = new Map<number, string[]>();
+  for (const row of tagRows) {
+    const list = tagsBy.get(row.noteId) ?? [];
+    list.push(row.name);
+    tagsBy.set(row.noteId, list);
+  }
+  const imagesBy = new Map<number, { id: number; url: string }[]>();
+  for (const row of imageRows) {
+    if (row.noteId === null) continue; // 散件(未挂到说说上)不进说说流
+    const list = imagesBy.get(row.noteId) ?? [];
+    list.push({ id: row.id, url: `/api/kb/attachments/${row.id}` });
+    imagesBy.set(row.noteId, list);
+  }
+
+  return rows.map((row) => ({
+    id: row.id,
+    content: row.content,
+    createdAt: row.createdAt,
+    tags: tagsBy.get(row.id) ?? [],
+    images: imagesBy.get(row.id) ?? [],
+  }));
+}
+
+/** 照片墙:全部公开图片附件 */
+export async function listPublicImages(
+  limit = 120,
+): Promise<{ id: number; filename: string; createdAt: string }[]> {
+  return db
+    .select({
+      id: attachments.id,
+      filename: attachments.filename,
+      createdAt: attachments.createdAt,
+    })
+    .from(attachments)
+    .where(
+      and(eq(attachments.isPublic, 1), sql`${attachments.mime} like 'image/%'`),
+    )
+    .orderBy(desc(attachments.id))
+    .limit(limit);
 }

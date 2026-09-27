@@ -5,7 +5,9 @@ import "./globals.css";
 import SiteHeader from "@/components/SiteHeader";
 import FloatingMusicButton from "@/components/home/FloatingMusicButton";
 import Heartbeat from "@/components/Heartbeat";
+import PetAssistant from "@/components/ai/PetAssistant";
 import WallpaperBackground from "@/components/WallpaperBackground";
+import { getAiConfig } from "@/lib/ai";
 import { getAppearance, getWallLibrary } from "@/lib/settings";
 import { siteConfig } from "@/lib/site-config";
 
@@ -28,6 +30,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const appearance = await getAppearance();
+  const aiConfig = await getAiConfig();
 
   // 轮播列表:当前设置的夜间/白天壁纸 + 壁纸库(public\wallpapers\)里的全部文件,去重
   const library = getWallLibrary();
@@ -53,6 +56,7 @@ export default async function RootLayout({
         <div className="flex-1">{children}</div>
         <FloatingMusicButton playlist={appearance.music} />
         <Heartbeat />
+        <PetAssistant enabled={aiConfig.enabled} />
         <footer className="glass mt-10 py-5 text-center text-xs opacity-80">
           © {new Date().getFullYear()} {siteConfig.siteName} ·{" "}
           <Link href="/feed.xml" className="underline hover:opacity-100">

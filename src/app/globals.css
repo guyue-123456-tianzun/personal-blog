@@ -83,6 +83,20 @@ body {
   opacity: 0.28;
 }
 
+/* 桌宠绘梨衣:轻轻呼吸浮动 */
+.pet-bob {
+  animation: pet-bob 3s ease-in-out infinite;
+}
+@keyframes pet-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
 /* Hero 漂浮粒子:从底部缓缓上浮的透明小圆点 */
 .hero-particle {
   position: absolute;

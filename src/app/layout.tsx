@@ -38,7 +38,10 @@ export default function RootLayout({
         </header>
         {children}
         <footer className="border-t border-border py-6 text-center text-xs opacity-50">
-          个人站 · 公开博客 + 私人知识库
+          个人站 · 公开博客 + 私人知识库 ·{" "}
+          <Link href="/login" className="underline hover:opacity-100">
+            站长入口
+          </Link>
         </footer>
       </body>
     </html>

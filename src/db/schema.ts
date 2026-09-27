@@ -52,5 +52,29 @@ export const noteTags = sqliteTable(
   (t) => [primaryKey({ columns: [t.noteId, t.tagId] })],
 );
 
+// 附件(C6 照片墙 / B4 配图 / B6 文档都在这张表上):文件本体存磁盘 data/uploads/ 下,表里只记元信息
+export const attachments = sqliteTable("attachments", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  noteId: integer("note_id"), // 可空 = 尚未关联到任何笔记的散件
+  filename: text("filename").notNull(), // 用户上传时的原始文件名
+  storedPath: text("stored_path").notNull(), // 相对 data\ 目录的磁盘路径,如 uploads\2026\09\x.png
+  mime: text("mime").notNull(),
+  size: integer("size").notNull(), // 字节
+  createdAt: text("created_at").notNull().default(now),
+});
+
+// 笔记版本历史(C7):每次保存前把旧版拍快照存进来,只保留最近 20 份
+export const noteVersions = sqliteTable("note_versions", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  noteId: integer("note_id")
+    .notNull()
+    .references(() => notes.id),
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  savedAt: text("saved_at").notNull().default(now),
+});
+
 export type Note = typeof notes.$inferSelect;
 export type Tag = typeof tags.$inferSelect;
+export type Attachment = typeof attachments.$inferSelect;
+export type NoteVersion = typeof noteVersions.$inferSelect;

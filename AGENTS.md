@@ -23,7 +23,10 @@
 - 所有内容(博客文章、笔记、日记、动态…)统一存 `notes` 主表,按 `type` 区分;公开博客 = `is_public=true` 的内容
 - 全文搜索一期用 SQLite `LIKE`,二期换 FTS5/Meilisearch,搜索逻辑集中在 `src/lib/search.ts` 一处
 - 认证:自实现单管理员会话(bcrypt 哈希 + HttpOnly 签名 Cookie),不要引入 Auth.js/NextAuth
-- AI 预留:任何读取内容的新功能一律经过 `src/lib/content-api.ts`,不得绕过直查表(二期 RAG 在此挂向量检索)
+- AI 预留:内容读取分两个出口——公开区 `src/lib/content-api.ts`(只出公开内容),私有区 `src/lib/kb-content.ts`(站长全权,含回收站);二期 RAG 挂 kb-content 侧。任何读内容的新功能不得绕过这两个出口直查表
+- 全量导出的类型→文件夹映射在 `src/lib/export.ts` 的 FOLDER_BY_TYPE,**新增内容类型必须同步登记**
+- 全文搜索逻辑只在 `src/lib/search.ts` 一处(一期 LIKE,二期 FTS5/Meilisearch 只改这里)
+- M3 起视觉方向为二次元玻璃拟态(见 DEVELOPMENT.md D6):改样式前先看 docs/design/ 里的设计定稿(如存在)
 - 隐私红线:私有内容(日记/笔记等)绝不进入公开 API、RSS、sitemap、构建产物
 
 ## 常用命令
@@ -50,12 +53,13 @@ docker compose -f deploy/docker-compose.yml up -d   # 生产部署(服务器上)
 - [x] 规划完成(DEVELOPMENT.md v1.1,C1~C10 全部纳入一期)
 - [x] M0 立项与骨架(2026-09-27:Next.js 15.5 骨架 + SQLite/Drizzle 迁移 + 站长登录 + 私有区守卫,五项登录流程验收通过,本地 git 已提交)
 - [x] M1 博客公开区(2026-09-27:首页列表/详情/标签/归档/关于 + Markdown 渲染与代码高亮 + 2 篇示例文章;八项验收通过;13 个自动化测试全绿;代码已推送 GitHub)
-- [ ] M2 知识库地基
-- [ ] M3 记录模块
-- [ ] M4 服务器上线
-- [ ] M5 域名+HTTPS
-- [ ] M6 CI/CD
-- [ ] M7 运维加固
+- [x] M2 知识库地基(2026-09-27:双栏 Markdown 编辑器/全文搜索/附件上传/回收站/C7 版本历史/C8 全量导出/登出;12 步全流程验收通过;27 个自动化测试全绿)
+- [ ] M3 界面改版(二次元玻璃拟态,设计定稿见 DEVELOPMENT.md D6;素材待站长提供,先用占位)
+- [ ] M4 记录模块
+- [ ] M5 服务器上线
+- [ ] M6 域名+HTTPS
+- [ ] M7 CI/CD
+- [ ] M8 运维加固
 
 ## 工作约定
 

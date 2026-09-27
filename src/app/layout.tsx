@@ -51,7 +51,7 @@ export default async function RootLayout({
 
         <SiteHeader />
         <div className="flex-1">{children}</div>
-        <FloatingMusicButton />
+        <FloatingMusicButton playlist={appearance.music} />
         <Heartbeat />
         <footer className="glass mt-10 py-5 text-center text-xs opacity-80">
           © {new Date().getFullYear()} {siteConfig.siteName} ·{" "}

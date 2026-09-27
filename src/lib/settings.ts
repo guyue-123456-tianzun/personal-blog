@@ -15,9 +15,12 @@ export const APPEARANCE_KEYS = [
   "announcements",
   "wall_image_url",
   "wall_blur",
+  "music",
 ] as const;
 
 export type AppearanceKey = (typeof APPEARANCE_KEYS)[number];
+
+export type Song = { title: string; artist: string; url: string };
 
 export type Appearance = {
   heroImage: string;
@@ -28,6 +31,7 @@ export type Appearance = {
   announcements: string[];
   wallImage: string; // 全站沉浸式壁纸(所有玻璃卡片垫在它上面)
   wallBlur: number; // 0~30 px(壁纸虚化,默认 18:能看清氛围又不抢内容)
+  music: Song[]; // 歌单(点歌台管理,存数据库)
 };
 
 function clamp(value: number, min: number, max: number) {
@@ -52,6 +56,28 @@ export async function getAppearance(): Promise<Appearance> {
     // 存的值坏了就回落默认,页面不能因为配置挂掉
   }
 
+  let music: Song[] = siteConfig.music as unknown as Song[];
+  try {
+    const stored = map.get("music");
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      if (Array.isArray(parsed)) {
+        music = parsed
+          .filter(
+            (song): song is Song =>
+              !!song && typeof song.title === "string" && typeof song.url === "string",
+          )
+          .map((song) => ({
+            title: String(song.title).slice(0, 100),
+            artist: String(song.artist ?? "").slice(0, 100),
+            url: String(song.url).slice(0, 500),
+          }));
+      }
+    }
+  } catch {
+    // 同上:坏数据回落默认歌单
+  }
+
   return {
     heroImage: map.get("hero_image_url") ?? siteConfig.heroImage,
     avatar: map.get("avatar_url") ?? siteConfig.avatar,
@@ -65,6 +91,7 @@ export async function getAppearance(): Promise<Appearance> {
       map.get("hero_image_url") ??
       siteConfig.heroImage,
     wallBlur: Number.isFinite(wallBlur) ? clamp(wallBlur, 0, 30) : 18,
+    music,
   };
 }
 

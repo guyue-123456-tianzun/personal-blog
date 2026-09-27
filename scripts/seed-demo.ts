@@ -87,6 +87,76 @@ print([fib(i) for i in range(10)])
 \`\`\`
 `,
   },
+  {
+    slug: "aliyun-deploy-notes",
+    title: "阿里云部署备忘",
+    excerpt: "安全组、Docker、Nginx 三件套的部署清单,照着做就不会漏。",
+    tags: ["部署"],
+    publishedAt: "2026-09-26 20:00:00",
+    cover: "/images/cover-3.svg",
+    content: `## 部署清单
+
+- 安全组只放行 22 / 80 / 443
+- Docker Compose 一键拉起应用与 Nginx
+- certbot 自动续期 HTTPS 证书
+
+\`\`\`bash
+docker compose pull && docker compose up -d
+\`\`\`
+
+> 备份先行,部署随后。
+`,
+  },
+  {
+    slug: "weekly-reading-01",
+    title: "本周读到的三篇好文章",
+    excerpt: "关于写作、关于工具、关于长期主义,各推荐一篇。",
+    tags: ["阅读"],
+    publishedAt: "2026-09-25 09:00:00",
+    cover: "/images/cover-4.svg",
+    content: `## 本周书签
+
+1. 《写作是一门手艺》——先完成,再完美
+2. 一篇讲 SQLite 适用场景的长文,写得非常透彻
+3. 长期主义:把时间当作朋友
+
+每周固定整理一次阅读收获,积少成多。
+`,
+  },
+  {
+    slug: "my-dev-setup",
+    title: "我的开发环境清单",
+    excerpt: "新机器半小时到位:编辑器、终端、字体、必装工具一次配齐。",
+    tags: ["工具"],
+    publishedAt: "2026-09-24 21:00:00",
+    cover: "/images/cover-1.svg",
+    content: `## 必装清单
+
+- VS Code + 同步插件
+- Windows Terminal + PowerShell
+- Git 全局配置与 SSH 密钥
+
+\`\`\`bash
+winget install Git.Git
+\`\`\`
+
+工具趁手,效率翻倍。
+`,
+  },
+  {
+    slug: "night-walk",
+    title: "夜跑五公里",
+    excerpt: "晚风、路灯和播客,是跑步最好的搭档。",
+    tags: ["生活"],
+    publishedAt: "2026-09-23 22:00:00",
+    cover: "/images/cover-2.svg",
+    content: `今晚沿着河边跑了五公里。
+
+跑到第三公里的时候腿开始沉,但耳机里的歌刚好切到副歌,就又撑了下去。
+
+**坚持这种事,从来靠的不是热血,是习惯。**
+`,
+  },
 ];
 
 async function main() {
@@ -126,7 +196,7 @@ async function main() {
       await db.insert(noteTags).values({ noteId: row.id, tagId: tag.id });
     }
   }
-  console.log("✅ 示例文章已写入(2 篇)");
+  console.log(`✅ 示例文章已写入(${demoPosts.length} 篇)`);
 
   // 示例评论:只在还没有评论时写入,保证脚本可重复执行
   const [existing] = await db

@@ -146,7 +146,7 @@ personal-blog\
 | `lib\site-stats.ts` | 站点统计 | 文章数/字数/浏览量/运行天数;浏览计数也在它里面 |
 | `components\home\*` | 首页小部件家族 | 资料卡/站点数据(含精确到秒的运行计时+年度进度条)/音乐播放器(旋转碟片)/日历/打字机横幅/标题压图的文章封面卡/NavMusic 导航迷你播放器/FloatingMusicButton 浮动圆盘 |
 | `components\ThemeToggle.tsx` | 深浅色切换 | 手动切换并记住选择;初始状态按"上次选择→系统偏好" |
-| `app\kb\appearance\` | 外观设置后台 | 换背景图/头像(上传即生效)、虚化滑杆、Hero 占屏高度滑杆、签名、公告 |
+| `app\kb\appearance\` | 外观设置后台 | Hero 背景图/页面壁纸(预设一键选或上传)、头像、虚化滑杆、Hero 占屏高度、签名、公告、点歌台(上传 mp3/外链加歌/删除),全部即时生效 |
 | `app\search\` | 公开搜索页 | Hero 搜索框的目的地;只搜公开文章 |
 | `app\friends\` `/moments\` `/photos\` | 友链页 + 两个占位页 | 说说/照片墙 M4 上线 |
 | `lib\comments.ts` + `app\api\comments\` | 文章评论 | 访客填昵称即可留言;限流(同 IP 每分钟 5 条)/长度校验/归属校验全在写入口;站长可隐藏/删除 |

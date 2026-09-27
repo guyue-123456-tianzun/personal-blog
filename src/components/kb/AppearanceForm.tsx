@@ -3,9 +3,18 @@
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 
-import type { Appearance } from "@/lib/settings";
+import type { Appearance, Song } from "@/lib/settings";
 
 type Props = { initial: Appearance };
+
+// 内置壁纸预设:一键切换,不用上传
+const WALL_PRESETS = [
+  "/images/hero-default.svg",
+  "/images/cover-1.svg",
+  "/images/cover-2.svg",
+  "/images/cover-3.svg",
+  "/images/cover-4.svg",
+];
 
 // 外观设置表单:换背景图/头像(上传即存)、虚化强度、Hero 占屏高度、签名、公告。
 // 图片上传后立即生效;其余点"保存设置"一次写入。
@@ -17,6 +26,9 @@ export default function AppearanceForm({ initial }: Props) {
   const [height, setHeight] = useState(initial.heroHeightVh);
   const [wallImage, setWallImage] = useState(initial.wallImage);
   const [wallBlur, setWallBlur] = useState(initial.wallBlur);
+  const [songs, setSongs] = useState<Song[]>(initial.music);
+  const [songTitle, setSongTitle] = useState("");
+  const [songUrl, setSongUrl] = useState("");
   const [signature, setSignature] = useState(initial.signature);
   const [announcements, setAnnouncements] = useState(
     initial.announcements.join("\n"),
@@ -26,6 +38,30 @@ export default function AppearanceForm({ initial }: Props) {
   const heroInputRef = useRef<HTMLInputElement | null>(null);
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
   const wallInputRef = useRef<HTMLInputElement | null>(null);
+  const songInputRef = useRef<HTMLInputElement | null>(null);
+
+  // 通用批量保存:values 里的键走后端白名单校验,null 表示清除该项
+  async function patchValues(values: Record<string, string | null>): Promise<boolean> {
+    setBusy(true);
+    setStatus("");
+    try {
+      const res = await fetch("/api/kb/appearance", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ values }),
+      });
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        setStatus(data.error ?? "保存失败");
+        return false;
+      }
+      setStatus("已保存 ✓");
+      router.refresh();
+      return true;
+    } finally {
+      setBusy(false);
+    }
+  }
 
   type UploadKind = "hero_image_url" | "avatar_url" | "wall_image_url";
 
@@ -101,30 +137,75 @@ export default function AppearanceForm({ initial }: Props) {
   }
 
   async function save() {
+    await patchValues({
+      hero_blur: String(blur),
+      hero_height: String(height),
+      wall_blur: String(wallBlur),
+      signature,
+      announcements: JSON.stringify(
+        announcements.split("\n").map((line) => line.trim()).filter(Boolean),
+      ),
+    });
+  }
+
+  /** 点歌台:上传 mp3 到公开附件,自动登记进歌单 */
+  async function uploadSong(file: File) {
     setBusy(true);
     setStatus("");
     try {
-      const res = await fetch("/api/kb/appearance", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          values: {
-            hero_blur: String(blur),
-            hero_height: String(height),
-            wall_blur: String(wallBlur),
-            signature,
-            announcements: JSON.stringify(
-              announcements.split("\n").map((line) => line.trim()).filter(Boolean),
-            ),
-          },
-        }),
-      });
-      const data = (await res.json().catch(() => ({}))) as { error?: string };
-      setStatus(res.ok ? "已保存 ✓" : (data.error ?? "保存失败"));
-      if (res.ok) router.refresh();
+      const form = new FormData();
+      form.append("file", file);
+      form.append("public", "1");
+      const res = await fetch("/api/kb/attachments", { method: "POST", body: form });
+      const data = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        attachment?: { id: number };
+      };
+      if (!res.ok || !data.attachment) {
+        setStatus(data.error ?? "上传失败");
+        return;
+      }
+      const next: Song[] = [
+        ...songs,
+        {
+          title: file.name.replace(/\.[^.]+$/, ""),
+          artist: "未知歌手",
+          url: `/api/kb/attachments/${data.attachment.id}`,
+        },
+      ];
+      setBusy(false);
+      const ok = await patchValues({ music: JSON.stringify(next) });
+      if (ok) setSongs(next);
     } finally {
       setBusy(false);
     }
+  }
+
+  async function addSongByUrl() {
+    if (!songTitle.trim()) {
+      setStatus("请填写歌名");
+      return;
+    }
+    if (!/^https?:\/\/|^\//.test(songUrl.trim())) {
+      setStatus("歌曲地址要以 http(s):// 或 / 开头");
+      return;
+    }
+    const next: Song[] = [
+      ...songs,
+      { title: songTitle.trim(), artist: "未知歌手", url: songUrl.trim() },
+    ];
+    const ok = await patchValues({ music: JSON.stringify(next) });
+    if (ok) {
+      setSongs(next);
+      setSongTitle("");
+      setSongUrl("");
+    }
+  }
+
+  async function deleteSong(index: number) {
+    const next = songs.filter((_, i) => i !== index);
+    const ok = await patchValues({ music: JSON.stringify(next) });
+    if (ok) setSongs(next);
   }
 
   const inputClass =
@@ -156,6 +237,22 @@ export default function AppearanceForm({ initial }: Props) {
       <div className="glass rounded-2xl p-5">
         <h3 className="font-semibold">Hero 背景图</h3>
         <p className="mt-1 text-xs opacity-50">横图最佳;上传即生效,访客直接可见。</p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {WALL_PRESETS.map((preset) => (
+            <button
+              key={preset}
+              onClick={() => patchValues({ hero_image_url: preset })}
+              disabled={busy}
+              className={`overflow-hidden rounded-lg border-2 transition-all hover:-translate-y-0.5 disabled:opacity-50 ${
+                heroImage === preset ? "border-accent" : "border-transparent"
+              }`}
+              title="点击选用"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={preset} alt="" className="h-12 w-20 object-cover" />
+            </button>
+          ))}
+        </div>
         <div className="mt-3 flex flex-wrap items-center gap-3">
           <button
             onClick={() => heroInputRef.current?.click()}
@@ -300,6 +397,79 @@ export default function AppearanceForm({ initial }: Props) {
             onChange={(e) => setHeight(Number(e.target.value))}
             className="mt-2 w-full accent-[var(--accent)]"
           />
+        </div>
+      </div>
+
+      {/* 点歌台:歌单存数据库,上传/外链自由加歌 */}
+      <div className="glass rounded-2xl p-5">
+        <h3 className="font-semibold">点歌台(共 {songs.length} 首)</h3>
+        <p className="mt-1 text-xs opacity-50">
+          上传 mp3 或贴外链自由加歌;导航栏、首页卡片、左下角圆盘用的是同一份歌单。
+        </p>
+
+        <ul className="mt-3 space-y-2">
+          {songs.map((song, index) => (
+            <li
+              key={`${song.url}-${index}`}
+              className="flex items-center justify-between gap-3 text-sm"
+            >
+              <span className="min-w-0 truncate">
+                🎵 {song.title}
+                <span className="ml-2 opacity-50">{song.artist}</span>
+              </span>
+              <button
+                onClick={() => deleteSong(index)}
+                disabled={busy}
+                className="shrink-0 text-red-500 hover:underline disabled:opacity-50"
+              >
+                删除
+              </button>
+            </li>
+          ))}
+          {songs.length === 0 && (
+            <li className="text-sm opacity-50">歌单是空的。</li>
+          )}
+        </ul>
+
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          <button
+            onClick={() => songInputRef.current?.click()}
+            disabled={busy}
+            className="rounded-lg border border-border px-4 py-2 text-sm transition-opacity hover:opacity-80 disabled:opacity-50"
+          >
+            ⬆ 上传歌曲(mp3)
+          </button>
+          <input
+            ref={songInputRef}
+            type="file"
+            accept="audio/mpeg,audio/wav"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              e.target.value = "";
+              if (file) uploadSong(file);
+            }}
+          />
+          <span className="text-xs opacity-40">或</span>
+          <input
+            value={songTitle}
+            onChange={(e) => setSongTitle(e.target.value)}
+            placeholder="歌名"
+            className="w-28 rounded-lg border border-border bg-transparent px-2.5 py-2 text-sm outline-none focus:border-accent"
+          />
+          <input
+            value={songUrl}
+            onChange={(e) => setSongUrl(e.target.value)}
+            placeholder="歌曲外链地址"
+            className="w-44 rounded-lg border border-border bg-transparent px-2.5 py-2 text-sm outline-none focus:border-accent"
+          />
+          <button
+            onClick={addSongByUrl}
+            disabled={busy}
+            className="rounded-lg border border-border px-3 py-2 text-sm transition-opacity hover:opacity-80 disabled:opacity-50"
+          >
+            添加外链
+          </button>
         </div>
       </div>
 

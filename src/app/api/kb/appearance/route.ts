@@ -36,6 +36,24 @@ const VALIDATORS: Record<AppearanceKey, (value: string) => string> = {
     return v;
   },
   wall_blur: (v) => String(clamp(Math.round(Number(v)) || 0, 0, 30)),
+  music: (v) => {
+    const parsed = JSON.parse(v) as unknown;
+    if (!Array.isArray(parsed)) throw new Error("歌单格式不正确");
+    if (parsed.length > 50) throw new Error("歌单最多 50 首");
+    const songs = parsed
+      .filter(
+        (song): song is { title: string; artist?: string; url: string } =>
+          !!song &&
+          typeof (song as { title?: unknown }).title === "string" &&
+          typeof (song as { url?: unknown }).url === "string",
+      )
+      .map((song) => ({
+        title: song.title.slice(0, 100),
+        artist: String(song.artist ?? "").slice(0, 100),
+        url: song.url.slice(0, 500),
+      }));
+    return JSON.stringify(songs);
+  },
 };
 
 export async function GET() {

@@ -2,12 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import { siteConfig } from "@/lib/site-config";
+import type { Song } from "@/lib/settings";
+
+type Props = { playlist: Song[] };
 
 // 导航栏迷你播放器(参考站同款):碟片 + 曲名 + 播放/下一首,中屏以上显示。
-// 与首页小部件、左下角圆盘共用歌单,各自独立播放。
-export default function NavMusic() {
-  const playlist = siteConfig.music;
+// 歌单来自外观设置的"点歌台"(props 传入)。
+export default function NavMusic({ playlist }: Props) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [index, setIndex] = useState(0);
   const [playing, setPlaying] = useState(false);

@@ -43,7 +43,7 @@ export default async function SiteHeader() {
           ))}
         </nav>
         <div className="flex shrink-0 items-center gap-1">
-          <NavMusic />
+          <NavMusic playlist={appearance.music} />
           <Link
             href="/search"
             aria-label="搜索"

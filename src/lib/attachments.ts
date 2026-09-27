@@ -19,6 +19,9 @@ export const ALLOWED_MIME = new Set([
   "text/plain",
   "text/markdown",
   "application/zip",
+  "audio/mpeg",
+  "audio/wav",
+  "audio/x-wav",
   "application/msword",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   "application/vnd.ms-excel",
@@ -56,6 +59,9 @@ export function extensionFor(mime: string, originalName: string): string {
     "text/plain": ".txt",
     "text/markdown": ".md",
     "application/zip": ".zip",
+    "audio/mpeg": ".mp3",
+    "audio/wav": ".wav",
+    "audio/x-wav": ".wav",
   };
   return table[mime] ?? "";
 }

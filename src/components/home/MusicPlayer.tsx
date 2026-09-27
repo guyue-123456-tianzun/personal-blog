@@ -2,11 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import { siteConfig } from "@/lib/site-config";
+import type { Song } from "@/lib/settings";
 
-// 音乐播放器小部件:旋转碟片 + 进度条 + 时间,歌单在 src/lib/site-config.ts 配置。
-export default function MusicPlayer() {
-  const playlist = siteConfig.music;
+type Props = { playlist: Song[] };
+
+// 音乐播放器小部件:旋转碟片 + 进度条 + 时间。歌单来自外观设置的"点歌台"(存数据库)。
+export default function MusicPlayer({ playlist }: Props) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [index, setIndex] = useState(0);
   const [playing, setPlaying] = useState(false);

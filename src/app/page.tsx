@@ -42,9 +42,14 @@ export default async function Home() {
           style={{
             filter: `blur(${appearance.heroBlur}px)`,
             transform: "scale(1.08)", // 放大一点点,把模糊产生的毛边藏进画框外
+            // 下边缘渐隐:清晰的 Hero 图渐隐进虚化壁纸,消除生硬分界线
+            WebkitMaskImage:
+              "linear-gradient(to bottom, black 0%, black 58%, transparent 100%)",
+            maskImage:
+              "linear-gradient(to bottom, black 0%, black 58%, transparent 100%)",
           }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/15 to-[var(--background)]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/10 to-transparent" />
         {/* 漂浮粒子:玻璃质感的小点缀 */}
         {[
           { left: "12%", delay: "0s", size: 9 },
@@ -108,17 +113,17 @@ export default async function Home() {
 
       {/* 小部件浮上 Hero 底边:参考站的标志构图;入场动画逐个错峰 */}
       <main className="mx-auto w-full max-w-5xl px-4 pb-10 sm:px-6">
-        <div className="relative z-20 -mt-24 grid gap-4 md:grid-cols-3">
-          <div className="fade-up" style={{ animationDelay: "0ms" }}>
-            <ProfileCard stats={stats} appearance={appearance} />
+          <div className="relative z-20 -mt-24 grid gap-4 md:grid-cols-3">
+            <div className="fade-up" style={{ animationDelay: "0ms" }}>
+              <ProfileCard stats={stats} appearance={appearance} />
+            </div>
+            <div className="fade-up" style={{ animationDelay: "120ms" }}>
+              <StatsCard stats={stats} />
+            </div>
+            <div className="fade-up" style={{ animationDelay: "240ms" }}>
+              <MusicPlayer playlist={appearance.music} />
+            </div>
           </div>
-          <div className="fade-up" style={{ animationDelay: "120ms" }}>
-            <StatsCard stats={stats} />
-          </div>
-          <div className="fade-up" style={{ animationDelay: "240ms" }}>
-            <MusicPlayer />
-          </div>
-        </div>
 
         <div className="mt-6 space-y-6">
           <TypewriterBanner />

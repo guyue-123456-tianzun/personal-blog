@@ -2,12 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import { siteConfig } from "@/lib/site-config";
+import type { Song } from "@/lib/settings";
+
+type Props = { playlist: Song[] };
 
 // 浮动音乐圆盘:固定在左下角,播放时旋转,悬停显示歌名。
-// 和首页"音乐"小部件共用同一份歌单(各自独立播放,互不影响)。
-export default function FloatingMusicButton() {
-  const playlist = siteConfig.music;
+// 歌单来自外观设置的"点歌台"(props 传入),与导航/首页播放器各自独立播放。
+export default function FloatingMusicButton({ playlist }: Props) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [index, setIndex] = useState(0);
   const [playing, setPlaying] = useState(false);

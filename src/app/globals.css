@@ -7,12 +7,13 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
+  --accent-h: 250; /* 访客可在主题面板调 hue,存浏览器 */
   --background: #f4f3fb;
   --foreground: #1c1c28;
   --card: rgba(255, 255, 255, 0.78);
   --border: rgba(28, 28, 40, 0.1);
-  --accent: #6d5ef2;
-  --accent-2: #e879f9;
+  --accent: hsl(var(--accent-h) 84% 62%);
+  --accent-2: hsl(calc(var(--accent-h) + 60) 85% 68%);
 }
 
 .dark {
@@ -20,8 +21,8 @@
   --foreground: #ecebf5;
   --card: rgba(22, 22, 38, 0.66);
   --border: rgba(236, 235, 245, 0.12);
-  --accent: #8b7bff;
-  --accent-2: #f0abfc;
+  --accent: hsl(var(--accent-h) 90% 72%);
+  --accent-2: hsl(calc(var(--accent-h) + 60) 88% 76%);
 }
 
 @theme inline {
@@ -39,6 +40,38 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
     "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
   min-height: 100vh;
+}
+
+/* 访客关闭 Hero 漂浮粒子:主题面板的开关通过根节点类控制 */
+body.no-particles .hero-particle {
+  display: none;
+}
+
+/* 樱花飘落特效(访客可开关) */
+.sakura-petal {
+  position: fixed;
+  top: -4vh;
+  z-index: 5;
+  pointer-events: none;
+  width: 14px;
+  height: 14px;
+  background: linear-gradient(135deg, #fbcfe8, #f9a8d4);
+  border-radius: 80% 0 80% 0;
+  opacity: 0.85;
+  animation: sakura-fall linear infinite;
+}
+@keyframes sakura-fall {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.85;
+  }
+  100% {
+    transform: translateY(106vh) rotate(340deg);
+    opacity: 0;
+  }
 }
 
 /* 玻璃卡片:半透明底 + 背景模糊 + 细边框(设计系统核心零件) */

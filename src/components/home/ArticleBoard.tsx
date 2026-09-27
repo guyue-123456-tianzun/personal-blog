@@ -1,20 +1,38 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-import { fallbackCover } from "@/lib/site-config";
 import type { PostListItem } from "@/lib/content-api";
+import { fallbackCover } from "@/lib/site-config";
+import {
+  readThemePrefs,
+  saveThemePrefs,
+  THEME_PREFS_EVENT,
+} from "@/lib/theme-prefs";
 
 type Props = {
   posts: PostListItem[];
   tags: { name: string; count: number }[];
 };
 
-// 文章区:参考站同款"列表/网格"切换;第一篇做大卡(视觉锚点),其余两列网格
+// 文章区:参考站同款"列表/网格"切换(偏好存访客浏览器,与主题面板联动);
+// 第一篇做大卡(视觉锚点),其余两列网格
 export default function ArticleBoard({ posts, tags }: Props) {
   const [mode, setMode] = useState<"grid" | "list">("grid");
   const [featured, ...rest] = posts;
+
+  useEffect(() => {
+    const sync = () => setMode(readThemePrefs().articleMode);
+    sync();
+    window.addEventListener(THEME_PREFS_EVENT, sync);
+    return () => window.removeEventListener(THEME_PREFS_EVENT, sync);
+  }, []);
+
+  function switchMode(next: "grid" | "list") {
+    setMode(next);
+    saveThemePrefs({ articleMode: next });
+  }
 
   return (
     <div className="glass rounded-2xl p-5">
@@ -26,7 +44,7 @@ export default function ArticleBoard({ posts, tags }: Props) {
         </h2>
         <div className="flex items-center gap-1 rounded-full border border-border p-1 text-xs">
           <button
-            onClick={() => setMode("grid")}
+            onClick={() => switchMode("grid")}
             aria-label="网格视图"
             className={`rounded-full px-2.5 py-1 transition-colors ${
               mode === "grid" ? "bg-accent text-white" : "opacity-60 hover:opacity-100"
@@ -35,7 +53,7 @@ export default function ArticleBoard({ posts, tags }: Props) {
             ▦ 网格
           </button>
           <button
-            onClick={() => setMode("list")}
+            onClick={() => switchMode("list")}
             aria-label="列表视图"
             className={`rounded-full px-2.5 py-1 transition-colors ${
               mode === "list" ? "bg-accent text-white" : "opacity-60 hover:opacity-100"
@@ -46,7 +64,7 @@ export default function ArticleBoard({ posts, tags }: Props) {
         </div>
       </div>
 
-      {/* 分类标签胶囊:点一下筛选对应文章?——M4b 再接筛选,现在纯展示 */}
+      {/* 分类标签胶囊 */}
       {tags.length > 0 && (
         <div className="mt-3 flex flex-wrap gap-1.5">
           {tags.slice(0, 8).map((tag) => (

@@ -1,4 +1,4 @@
-import { desc, eq, isNull } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 
 import PublicShell from "@/components/public/PublicShell";
 import { db } from "@/lib/db";

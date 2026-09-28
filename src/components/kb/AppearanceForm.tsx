@@ -157,6 +157,23 @@ export default function AppearanceForm({ initial }: Props) {
   const wallDayInputRef = useRef<HTMLInputElement | null>(null);
   const songInputRef = useRef<HTMLInputElement | null>(null);
 
+  // 拉一次壁纸库(public/wallpapers/ 下的图与视频),供下面"一键选用"用。
+  // 以前这段 UI 写好了却没有请求,列表永远是空的,等于功能不可见
+  useEffect(() => {
+    let alive = true;
+    fetch("/api/kb/wallpapers")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: { wallpapers?: { name: string; url: string }[] } | null) => {
+        if (alive && data?.wallpapers) setWallpapers(data.wallpapers);
+      })
+      .catch(() => {
+        // 拿不到就不显示壁纸库,不影响其它设置项
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
   // 通用批量保存:values 里的键走后端白名单校验,null 表示清除该项
   async function patchValues(values: Record<string, string | null>): Promise<boolean> {
     setBusy(true);

@@ -17,7 +17,7 @@ export default async function KbNotesPage({ searchParams }: Props) {
   if (!sessionUser) return null;
   const [notes, hits] = await Promise.all([
     listKbNotes("note", sessionUser),
-    query ? searchNotes(query) : Promise.resolve([]),
+    query ? searchNotes(query, sessionUser) : Promise.resolve([]),
   ]);
   const searching = query.length > 0;
 

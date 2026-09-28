@@ -113,6 +113,21 @@ export default function MomentComposer() {
         placeholder="标签,逗号隔开,如:日常, 咖啡"
         className={inputClass}
       />
+      {/* 配图入口:onFiles 之前写好了却没人调用,导致"最多 4 张配图"实际传不了图 */}
+      <label
+        className={`inline-flex w-fit cursor-pointer items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-sm transition-opacity hover:opacity-80 ${
+          files.length >= 4 ? "pointer-events-none opacity-40" : ""
+        }`}
+      >
+        📷 配图({files.length}/4)
+        <input
+          type="file"
+          accept="image/*"
+          multiple
+          onChange={onFiles}
+          className="hidden"
+        />
+      </label>
       <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
         <label className="flex cursor-pointer items-center gap-2">
           <input
@@ -134,7 +149,7 @@ export default function MomentComposer() {
           </button>
         </div>
       </div>
-      <p className="text-xs opacity-40">配图可选,最多 4 张。</p>
+      <p className="text-xs opacity-40">配图可选,最多 4 张,发布时随说说一起上传。</p>
     </div>
   );
 }

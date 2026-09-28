@@ -11,7 +11,7 @@ process.env.BLOG_DATA_DIR = path.join(tmpDir, "data");
 const { db, closeDb } = await import("../src/lib/db");
 const { notes } = await import("../src/db/schema");
 const settings = await import("../src/lib/settings");
-const api = await import("../src/lib/content-api");
+const search = await import("../src/lib/search");
 const stats = await import("../src/lib/site-stats");
 
 beforeAll(async () => {
@@ -60,17 +60,17 @@ describe("外观设置 settings.ts", () => {
 
 describe("公开搜索 searchPublishedPosts", () => {
   it("只搜得到公开文章,私有笔记/未公开草稿绝不出现", async () => {
-    const hits = await api.searchPublishedPosts("部署");
+    const hits = await search.searchPublishedPosts("部署");
     expect(hits.map((h) => h.slug)).toEqual(["public-1"]);
   });
 
   it("命中摘要包含关键词", async () => {
-    const [hit] = await api.searchPublishedPosts("生活");
+    const [hit] = await search.searchPublishedPosts("生活");
     expect(hit.snippet).toContain("生活");
   });
 
   it("空搜索词返回空数组", async () => {
-    expect(await api.searchPublishedPosts("")).toEqual([]);
+    expect(await search.searchPublishedPosts("")).toEqual([]);
   });
 });
 

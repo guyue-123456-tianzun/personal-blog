@@ -12,6 +12,7 @@ import {
   tags,
 } from "@/db/schema";
 import { isOwner, type SiteUser } from "@/lib/users";
+import { isNoteType } from "@/lib/content-types";
 
 // C7 版本历史:每篇只保留最近 20 份快照,更老的自动清理
 const VERSIONS_TO_KEEP = 20;
@@ -105,6 +106,11 @@ export async function createNote(
   input: NoteInput,
   userId: number | null,
 ) {
+  // 类型白名单:只放行 content-types.ts 登记过的类型。
+  // 以前 body.type 原样落库,塞个野类型进来会既没有导出目录、也没有对应视图页
+  if (input.type !== undefined && !isNoteType(input.type)) {
+    throw new Error(`不支持的内容类型:${input.type}`);
+  }
   const slug = await uniqueSlug(input.slug || input.title);
   const [row] = await db
     .insert(notes)

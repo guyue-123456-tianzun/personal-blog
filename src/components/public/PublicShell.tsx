@@ -5,7 +5,6 @@ import StatsCard from "@/components/home/StatsCard";
 import TypewriterBanner from "@/components/home/TypewriterBanner";
 import { getAppearance } from "@/lib/settings";
 import { getSiteStats, recordSiteVisit } from "@/lib/site-stats";
-import { getSessionUser } from "@/lib/session";
 
 type Props = {
   children: React.ReactNode;

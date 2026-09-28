@@ -1,10 +1,10 @@
 // 书影音记录(C1)读写:想读/在看/看完 + 评分 + 短评。
 // 多用户归属:每个用户管理自己的记录;校验集中在 createMedia/updateMedia。
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq, isNull, or } from "drizzle-orm";
 
 import { db } from "@/lib/db";
 import { mediaItems } from "@/db/schema";
-import { isOwner, type SiteUser } from "@/lib/users";
+import { getAdminUser, isOwner, type SiteUser } from "@/lib/users";
 
 export type MediaItem = typeof mediaItems.$inferSelect;
 export type MediaInput = {
@@ -53,12 +53,24 @@ function validate(input: MediaInput) {
   }
 }
 
-/** 公共书影音页:全站用户的记录 */
+/** 公共书影音页:只展示站长的记录(与"公开博客文章 = 站长的"口径一致)。
+ *  以前是全表返回,等于把注册用户的私人书影音清单也摆到了公开页上 */
 export async function listMedia(type?: string): Promise<MediaItem[]> {
-  const query = db.select().from(mediaItems);
+  const admin = await getAdminUser();
+  const ownerFilter = admin
+    ? or(eq(mediaItems.userId, admin.id), isNull(mediaItems.userId))
+    : isNull(mediaItems.userId);
   const rows = type
-    ? await query.where(eq(mediaItems.type, type)).orderBy(desc(mediaItems.updatedAt))
-    : await query.orderBy(desc(mediaItems.updatedAt));
+    ? await db
+        .select()
+        .from(mediaItems)
+        .where(and(eq(mediaItems.type, type), ownerFilter))
+        .orderBy(desc(mediaItems.updatedAt))
+    : await db
+        .select()
+        .from(mediaItems)
+        .where(ownerFilter)
+        .orderBy(desc(mediaItems.updatedAt));
   return rows;
 }
 

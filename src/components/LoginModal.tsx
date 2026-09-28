@@ -188,8 +188,3 @@ export default function LoginModal() {
     </div>
   );
 }
-
-function siteNameHint() {
-  // 站名在 site-config 里,这里避免再引一层依赖,用固定文案
-  return "个人站";
-}

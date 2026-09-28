@@ -37,9 +37,9 @@ afterAll(() => {
 
 describe("createNote / slug", () => {
   it("中文标题生成中文 slug;重名自动加 -2", async () => {
-    expect((await ops.createNote({ type: "note", title: "测试笔记", content: "x" })).slug).toBe(
-      "测试笔记-2",
-    );
+    expect(
+      (await ops.createNote({ type: "note", title: "测试笔记", content: "x" }, admin.id)).slug,
+    ).toBe("测试笔记-2");
   });
 });
 

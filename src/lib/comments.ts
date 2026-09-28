@@ -3,7 +3,8 @@
 import { and, asc, eq } from "drizzle-orm";
 
 import { db } from "@/lib/db";
-import { comments, notes } from "@/db/schema";
+import { comments } from "@/db/schema";
+import { getPostBySlug } from "./content-api";
 
 const AUTHOR_MAX = 20;
 const CONTENT_MAX = 500;
@@ -32,18 +33,11 @@ function checkRateLimit(key: string) {
   recentComments.set(key, list);
 }
 
+// 能不能评论 = 这篇文章当前是否是"已发布的公开文章"。
+// 判定复用公开区出口 content-api 的 getPostBySlug(它带 isPublic + 未删除 + 站长归属三重过滤),
+// 不在这里自己拼一套,免得两处规则走岔
 async function ensurePublicPost(postSlug: string) {
-  const [post] = await db
-    .select({ id: notes.id })
-    .from(notes)
-    .where(
-      and(
-        eq(notes.slug, postSlug),
-        eq(notes.type, "post"),
-        eq(notes.isPublic, 1),
-      ),
-    )
-    .limit(1);
+  const post = await getPostBySlug(postSlug);
   if (!post) throw new Error("文章不存在或未发布");
 }
 

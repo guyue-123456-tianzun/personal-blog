@@ -1,15 +1,10 @@
 // 站点数据统计卡的数据来源:文章数 / 标签数 / 总字数 / 运行天数 / 浏览量(总 + 今日)
-import { and, count, eq, isNull, sql, sum } from "drizzle-orm";
+import { count, eq, sql, sum } from "drizzle-orm";
 
 import { db } from "@/lib/db";
 import { notes, postViews, siteViews, tags } from "@/db/schema";
+import { publishedPostFilter } from "./content-api";
 import { siteConfig } from "./site-config";
-
-const publishedPost = and(
-  eq(notes.type, "post"),
-  eq(notes.isPublic, 1),
-  isNull(notes.deletedAt),
-);
 
 export type SiteStats = {
   posts: number;
@@ -22,6 +17,9 @@ export type SiteStats = {
 };
 
 export async function getSiteStats(): Promise<SiteStats> {
+  // 统计口径与公开博客列表保持一致:走公开区出口的过滤,不自己拼 isPublic 条件
+  const publishedPost = await publishedPostFilter();
+
   const [postCount] = await db
     .select({ c: count() })
     .from(notes)

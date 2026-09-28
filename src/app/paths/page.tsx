@@ -2,7 +2,6 @@ import Link from "next/link";
 
 import PublicShell from "@/components/public/PublicShell";
 import { listPaths } from "@/lib/collections";
-import { getSessionUser } from "@/lib/session";
 import { getAdminUser } from "@/lib/users";
 
 // 学习路线(B7):展示站长的路线与进度

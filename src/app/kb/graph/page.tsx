@@ -2,7 +2,6 @@ import Link from "next/link";
 
 import { buildGraph } from "@/lib/graph";
 import { getSessionUser } from "@/lib/session";
-import type { SiteUser } from "@/lib/users";
 
 // 知识图谱(C10):笔记间 [[双向链接]] 的可视化(圆周布局 MVP)。
 // 后续可升级力学布局(d3-force)。

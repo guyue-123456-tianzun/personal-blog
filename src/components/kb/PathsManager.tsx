@@ -15,7 +15,7 @@ type Props = { initial: PathItem[] };
 // 学习路线管理(B7):创建路线 → 添加节点 → 勾选完成(进度条实时更新)
 export default function PathsManager({ initial }: Props) {
   const router = useRouter();
-  const [paths, setPaths] = useState(initial);
+  const [paths] = useState(initial);
   const [newTitle, setNewTitle] = useState("");
   const [nodeTitle, setNodeTitle] = useState<Record<number, string>>({});
   const [busy, setBusy] = useState(false);

@@ -71,6 +71,13 @@
       "when": 1790534860581,
       "tag": "0009_dizzy_vector",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1790566667805,
+      "tag": "0010_many_madame_web",
+      "breakpoints": true
     }
   ]
 }

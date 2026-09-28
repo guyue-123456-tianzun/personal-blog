@@ -63,6 +63,9 @@ export const noteTags = sqliteTable(
 export const attachments = sqliteTable("attachments", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   noteId: integer("note_id"), // 可空 = 尚未关联到任何笔记的散件
+  // 归属用户:决定"谁能读私有附件、谁能删"。可空 = 站长早期散件/站点外观资源(背景图、头像),
+  // 这类没有归属人的老数据按站长所有处理(与 notes.user_id 的惯例一致)
+  userId: integer("user_id"),
   filename: text("filename").notNull(), // 用户上传时的原始文件名
   storedPath: text("stored_path").notNull(), // 相对 data\ 目录的磁盘路径,如 uploads\2026\09\x.png
   mime: text("mime").notNull(),

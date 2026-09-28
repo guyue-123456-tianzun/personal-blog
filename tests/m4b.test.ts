@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, describe, expect, it } from "vitest";
 
 // M4b 集合模块功能测试:书签/路线/习惯/记账/时间线/导航链接 + 周报
 const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "blog-test-"));

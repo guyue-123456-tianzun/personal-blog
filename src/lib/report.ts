@@ -1,9 +1,11 @@
 // 周报(C5):自动汇总最近 7 天的记录(笔记/说说/日记/打卡/收支/收到的评论)。
 // 只读汇总,不做新表。
-import { and, count, desc, eq, gte, isNull } from "drizzle-orm";
+// 内容读取走私有区出口 kb-content(带归属过滤);打卡与记账是各自的表,归集合模块管。
+import { and, count, eq, gte } from "drizzle-orm";
 
 import { db } from "@/lib/db";
-import { comments, financeRecords, habitChecks, habits, notes } from "@/db/schema";
+import { comments, financeRecords, habitChecks, habits } from "@/db/schema";
+import { listOwnNotesSince, listOwnSlugsByType } from "./kb-content";
 import type { SiteUser } from "./users";
 
 export type WeeklyReport = {
@@ -27,23 +29,7 @@ export async function buildWeeklyReport(user: SiteUser): Promise<WeeklyReport> {
   weekStartDate.setHours(0, 0, 0, 0);
   const weekStart = weekStartDate.toISOString().slice(0, 10);
 
-  const rows = await db
-    .select({
-      id: notes.id,
-      type: notes.type,
-      title: notes.title,
-      content: notes.content,
-      createdAt: notes.createdAt,
-    })
-    .from(notes)
-    .where(
-      and(
-        eq(notes.userId, user.id),
-        isNull(notes.deletedAt),
-        gte(notes.createdAt, weekStart),
-      ),
-    )
-    .orderBy(desc(notes.createdAt));
+  const rows = await listOwnNotesSince(user, weekStart);
 
   const [checkRow] = await db
     .select({ c: count() })
@@ -58,11 +44,8 @@ export async function buildWeeklyReport(user: SiteUser): Promise<WeeklyReport> {
       and(eq(financeRecords.userId, user.id), gte(financeRecords.date, weekStart)),
     );
 
-  // 收到的评论数(评论挂在站长文章的 slug 上)
-  const myPosts = await db
-    .select({ slug: notes.slug })
-    .from(notes)
-    .where(and(eq(notes.userId, user.id), eq(notes.type, "post")));
+  // 收到的评论数(评论挂在文章 slug 上)
+  const myPosts = await listOwnSlugsByType(user, "post");
   let commentCount = 0;
   for (const post of myPosts) {
     const rowsC = await db

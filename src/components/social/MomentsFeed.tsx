@@ -68,7 +68,6 @@ export default function MomentsFeed({ moments, sessionUsername, relations }: Pro
       {list.map((moment) => {
         const isSelf = moment.author.username === sessionUsername;
         const relation = relations[moment.author.username]?.status ?? "none";
-        const requestId = relations[moment.author.username]?.requestId ?? null;
         const avatar = moment.author.avatarUrl || "/images/avatar-default.svg";
         return (
           <article key={moment.id} className="glass rounded-2xl p-5">

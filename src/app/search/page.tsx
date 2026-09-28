@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { searchPublishedPosts } from "@/lib/content-api";
+import { searchPublishedPosts } from "@/lib/search";
 
 // 公开搜索结果页:Hero 搜索框和这里的表单都指向 ?q=
 export const dynamic = "force-dynamic";

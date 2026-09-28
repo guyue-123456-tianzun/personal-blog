@@ -14,7 +14,7 @@ const commentsLib = await import("../src/lib/comments");
 const stats = await import("../src/lib/site-stats");
 const { buildRssXml } = await import("../src/lib/rss");
 
-let publicSlug = "rss-post";
+const publicSlug = "rss-post";
 
 beforeAll(async () => {
   await db.insert(notes).values([

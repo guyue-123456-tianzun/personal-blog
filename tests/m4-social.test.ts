@@ -3,20 +3,22 @@ import os from "node:os";
 import path from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
+import type { SiteUser } from "../src/lib/users";
+
 // 社交化功能测试:注册校验/好友流程(发申请→同意→删除)/朋友圈归属与作者信息
 const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "blog-test-"));
 process.env.BLOG_DB_PATH = path.join(tmpDir, "test.db");
 process.env.BLOG_DATA_DIR = path.join(tmpDir, "data");
 
 const { db, closeDb } = await import("../src/lib/db");
-const { notes, users } = await import("../src/db/schema");
+const { notes } = await import("../src/db/schema");
 const usersLib = await import("../src/lib/users");
 const friendsLib = await import("../src/lib/friends");
 const api = await import("../src/lib/content-api");
 
-let admin: usersLib.SiteUser;
-let xiaoming: usersLib.SiteUser;
-let xiaohua: usersLib.SiteUser;
+let admin: SiteUser;
+let xiaoming: SiteUser;
+let xiaohua: SiteUser;
 
 beforeAll(async () => {
   admin = await usersLib.registerUser({

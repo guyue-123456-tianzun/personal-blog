@@ -8,7 +8,8 @@ import { db } from "@/lib/db";
 import { attachments } from "@/db/schema";
 import { listAllForExport } from "@/lib/kb-content";
 import { resolveStored } from "@/lib/attachments";
-import type { SiteUser } from "@/lib/users";
+import { exportFolderFor } from "@/lib/content-types";
+import { isOwner, type SiteUser } from "@/lib/users";
 
 function frontmatter(note: {
   title: string;
@@ -36,14 +37,8 @@ function frontmatter(note: {
   return lines.join("\n");
 }
 
-// 内容类型 → 导出文件夹名。显式列出来,新类型启用时必须在这里登记,防止文件夹名漂移
-const FOLDER_BY_TYPE: Record<string, string> = {
-  post: "posts",
-  note: "notes",
-  clip: "clips",
-  moment: "moments",
-  diary: "diaries",
-};
+// 内容类型 → 导出文件夹名 的映射已挪到 src/lib/content-types.ts,
+// 和 notes 的类型白名单共用一份登记,避免两处各写一半
 
 // 导出该用户自己的全部内容(多用户:各导各的)
 export async function buildExportZip(user: SiteUser): Promise<Uint8Array> {
@@ -51,12 +46,18 @@ export async function buildExportZip(user: SiteUser): Promise<Uint8Array> {
   const allNotes = await listAllForExport(user);
 
   for (const note of allNotes) {
-    const folder = FOLDER_BY_TYPE[note.type] ?? note.type;
+    const folder = exportFolderFor(note.type);
     const body = frontmatter(note) + note.content;
     zip.file(`${folder}/${note.slug}.md`, body);
   }
 
-  const files = await db.select().from(attachments);
+  // 附件同样只导自己的。以前是全表导出,等于把别的用户的私有附件一起打包了
+  const exportedIds = new Set(allNotes.map((note) => note.id));
+  const files = (await db.select().from(attachments)).filter(
+    (file) =>
+      isOwner(file.userId, user) &&
+      (file.noteId === null || exportedIds.has(file.noteId)),
+  );
   for (const file of files) {
     try {
       const buf = fs.readFileSync(resolveStored(file.storedPath));

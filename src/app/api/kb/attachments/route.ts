@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 
-import { getSessionUsername } from "@/lib/session";
+import { getSessionUser } from "@/lib/session";
 import { saveUpload } from "@/lib/attachments";
 
 // 上传附件:multipart/form-data,字段 file(必填) + noteId(可空=散件)
 export async function POST(request: Request) {
-  const username = await getSessionUsername();
-  if (!username) {
+  const user = await getSessionUser();
+  if (!user) {
     return NextResponse.json({ error: "未登录" }, { status: 401 });
   }
 
@@ -26,7 +26,7 @@ export async function POST(request: Request) {
   const isPublic = form.get("public") === "1" ? 1 : 0;
 
   try {
-    const row = await saveUpload(file, noteId, isPublic);
+    const row = await saveUpload(file, noteId, isPublic, user.id);
     return NextResponse.json({ ok: true, attachment: row });
   } catch (error) {
     return NextResponse.json(

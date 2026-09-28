@@ -16,6 +16,7 @@ const { buildExportZip } = await import("../src/lib/export");
 const { registerUser } = await import("../src/lib/users");
 
 const owner = await registerUser({ username: "export-owner", password: "123456" });
+const outsider = await registerUser({ username: "export-outsider", password: "123456" });
 
 let postSlug: string;
 let noteSlug: string;
@@ -30,16 +31,29 @@ beforeAll(async () => {
 
   // create 函数已定义在上方
 
-  // 一个真实存在的附件文件 + 记录
+  // 一个真实存在的附件文件 + 记录(归属导出者本人)
   const rel = "uploads/2026/09/test-export.png";
   fs.mkdirSync(path.join(dataDir, "uploads/2026/09"), { recursive: true });
   fs.writeFileSync(path.join(dataDir, rel), Buffer.from("fake-png-bytes"));
   await db.insert(attachments).values({
     noteId: null,
+    userId: owner.id,
     filename: "test-export.png",
     storedPath: rel,
     mime: "image/png",
     size: 15,
+  });
+
+  // 另一个用户的私有附件:绝不该出现在导出包里
+  const otherRel = "uploads/2026/09/other-secret.png";
+  fs.writeFileSync(path.join(dataDir, otherRel), Buffer.from("other-bytes"));
+  await db.insert(attachments).values({
+    noteId: null,
+    userId: outsider.id,
+    filename: "other-secret.png",
+    storedPath: otherRel,
+    mime: "image/png",
+    size: 11,
   });
 });
 
@@ -79,5 +93,14 @@ describe("buildExportZip 全量导出", () => {
     const manifest = JSON.parse(await zip.file("manifest.json")!.async("string"));
     expect(manifest.notes).toBe(2);
     expect(manifest.attachments).toBe(1);
+  });
+
+  it("别的用户的附件不会被打进我的包里(多用户隔离)", async () => {
+    const zipBytes = await buildExportZip(owner);
+    const zip = await JSZip.loadAsync(zipBytes);
+    const names = Object.keys(zip.files);
+    expect(names.some((n) => n.includes("other-secret"))).toBe(false);
+    // 自己的还在
+    expect(names.some((n) => n.includes("test-export"))).toBe(true);
   });
 });

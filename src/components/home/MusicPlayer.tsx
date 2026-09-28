@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 
 import {
   directAudioSongs,
-  neteasePlaylistEmbedUrl,
   neteaseSongEmbedUrl,
   neteaseSongs,
   type Song,

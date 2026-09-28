@@ -74,10 +74,13 @@ describe("说说流 listPublicMoments", () => {
 describe("书影音 media.ts", () => {
   it("非法类型/越界评分被拒绝", async () => {
     await expect(
-      mediaLib.createMedia({ type: "anime", title: "x", status: "done" }),
+      mediaLib.createMedia({ type: "anime", title: "x", status: "done" }, author.id),
     ).rejects.toThrow("类型必须是");
     await expect(
-      mediaLib.createMedia({ type: "book", title: "x", status: "done", rating: 11 }),
+      mediaLib.createMedia(
+        { type: "book", title: "x", status: "done", rating: 11 },
+        author.id,
+      ),
     ).rejects.toThrow("评分要在 0~10 之间");
   });
 
@@ -100,5 +103,37 @@ describe("书影音 media.ts", () => {
     expect(mediaLib.statusLabel("book", "done")).toBe("读完");
     expect(mediaLib.statusLabel("movie", "wish")).toBe("想看");
     expect(mediaLib.statusLabel("game", "doing")).toBe("在玩");
+  });
+});
+
+// 升级成多用户之前发的动态 userId 是空的。这类内容以前会被"取作者"的内连接整个丢掉,
+// 在公开朋友圈里凭空消失——这里把这条边界钉住
+describe("说说流里的历史动态(无归属人)", () => {
+  const legacyContent = "升级成多用户之前发的动态。";
+
+  beforeAll(async () => {
+    await db.insert(notes).values({
+      type: "moment",
+      slug: "legacy-moment",
+      title: "历史动态",
+      content: legacyContent,
+      isPublic: 1,
+      userId: null,
+    });
+  });
+
+  it("userId 为空的公开动态仍然出现在公开流里,并落款到站长", async () => {
+    const moments = await api.listPublicMoments();
+    const legacy = moments.find((m) => m.content === legacyContent);
+    expect(legacy).toBeDefined();
+    expect(legacy?.author.username).toBeTruthy();
+  });
+
+  it("按站长主页筛选时,这类动态也算站长的", async () => {
+    const { getAdminUser } = await import("../src/lib/users");
+    const admin = await getAdminUser();
+    expect(admin).not.toBeNull();
+    const moments = await api.listPublicMoments(10, 0, admin!.username);
+    expect(moments.some((m) => m.content === legacyContent)).toBe(true);
   });
 });

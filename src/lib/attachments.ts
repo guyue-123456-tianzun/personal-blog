@@ -8,6 +8,7 @@ import { desc, eq } from "drizzle-orm";
 
 import { db } from "@/lib/db";
 import { attachments } from "@/db/schema";
+import { isOwner, type SiteUser } from "@/lib/users";
 
 // 类型白名单:宁缺毋滥。svg 不放行(可携带脚本),可执行文件一律拒绝。
 // 视频允许 mp4/webm——Wallpaper Engine 的视频壁纸可以直接拿来当全站背景
@@ -79,6 +80,7 @@ export async function saveUpload(
   file: File,
   noteId: number | null,
   isPublic = 0,
+  userId: number | null = null,
 ) {
   if (file.size <= 0) throw new Error("空文件");
   if (!ALLOWED_MIME.has(file.type)) {
@@ -106,6 +108,7 @@ export async function saveUpload(
     .insert(attachments)
     .values({
       noteId,
+      userId,
       filename: file.name,
       storedPath: rel,
       mime: file.type,
@@ -131,6 +134,14 @@ export async function getAttachment(id: number) {
     .where(eq(attachments.id, id))
     .limit(1);
   return row ?? null;
+}
+
+/** 附件归属判定:有归属人的只看归属人;没有归属人的(站点外观资源/早期散件)归站长 */
+export function canManageAttachment(
+  row: { userId: number | null },
+  user: SiteUser,
+) {
+  return isOwner(row.userId, user);
 }
 
 export async function deleteAttachment(id: number) {

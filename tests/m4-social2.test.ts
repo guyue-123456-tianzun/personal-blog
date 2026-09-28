@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, describe, expect, it } from "vitest";
 
 // 好友关系类型升级(铁哥们/恋爱)+ 天气代码映射 的功能测试
 const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "blog-test-"));

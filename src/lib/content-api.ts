@@ -12,7 +12,6 @@ import {
   tags,
   users,
 } from "@/db/schema";
-import { escapeLike, makeSnippet } from "./search";
 import { getAdminUser } from "./users";
 
 export type PostListItem = {
@@ -25,8 +24,9 @@ export type PostListItem = {
   tags: string[];
 };
 
-/** 博客文章 = 站长发布的(isPublic=1,未删除);注册用户的公开内容走说说流 */
-async function publishedPostFilter() {
+/** 博客文章 = 站长发布的(isPublic=1,未删除);注册用户的公开内容走说说流。
+ *  导出给 search.ts 复用,保证"公开"的定义只有这一处 */
+export async function publishedPostFilter() {
   const admin = await getAdminUser();
   return admin
     ? and(
@@ -128,34 +128,18 @@ export async function getPostsByTag(tagName: string): Promise<PostListItem[]> {
   return attachTags(rows);
 }
 
-/** 公开搜索:只搜公开文章,返回命中摘要(私有区搜索在 kb 侧,互不相通) */
-export async function searchPublishedPosts(
-  query: string,
-  limit = 30,
-): Promise<{ slug: string; title: string; snippet: string; publishedAt: string | null }[]> {
-  const q = query.trim();
-  if (!q) return [];
-  const pattern = `%${escapeLike(q)}%`;
-  const rows = await db
+/** 最近发布的公开文章标题/摘要:给 AI 桌宠拼系统提示词用(公开搜索本体在 search.ts) */
+export async function listLatestPublishedPosts(limit = 10) {
+  return db
     .select({
-      slug: notes.slug,
       title: notes.title,
-      content: notes.content,
+      excerpt: notes.excerpt,
       publishedAt: notes.publishedAt,
     })
     .from(notes)
-    .where(
-      and(
-        await publishedPostFilter(),
-        sql`(${notes.title} LIKE ${pattern} ESCAPE '\\' OR ${notes.content} LIKE ${pattern} ESCAPE '\\')`,
-      ),
-    )
+    .where(await publishedPostFilter())
     .orderBy(desc(notes.publishedAt))
     .limit(limit);
-  return rows.map(({ content, ...rest }) => ({
-    ...rest,
-    snippet: makeSnippet(content, q),
-  }));
 }
 
 /** 归档:按年分组的公开文章 */
@@ -197,14 +181,19 @@ export type MomentItem = {
 };
 
 /** 公开说说流:全站用户的公开动态,按时间倒序,带作者与配图。
- *  authorUsername 传入时只看某个用户(个人主页用) */
+ *  authorUsername 传入时只看某个用户(个人主页用)。
+ *  作者用 LEFT JOIN:站长升级成多用户之前发的动态 userId 为空,内连接会把它们整个丢掉 */
 export async function listPublicMoments(
   limit = 10,
   offset = 0,
   authorUsername?: string,
 ): Promise<MomentItem[]> {
+  // userId 为空的动态按约定算站长的,所以按站长主页筛选时要一并带上
+  const admin = await getAdminUser();
   const authorFilter = authorUsername
-    ? eq(users.username, authorUsername)
+    ? admin && authorUsername === admin.username
+      ? or(eq(users.username, authorUsername), isNull(notes.userId))
+      : eq(users.username, authorUsername)
     : undefined;
   const rows = await db
     .select({
@@ -217,7 +206,7 @@ export async function listPublicMoments(
       authorAvatar: users.avatarUrl,
     })
     .from(notes)
-    .innerJoin(users, eq(notes.userId, users.id))
+    .leftJoin(users, eq(notes.userId, users.id))
     .where(
       and(
         eq(notes.type, "moment"),
@@ -269,9 +258,15 @@ export async function listPublicMoments(
     tags: tagsBy.get(row.id) ?? [],
     images: imagesBy.get(row.id) ?? [],
     author: {
-      id: row.userId ?? 0,
-      username: row.authorUsername,
-      nickname: row.authorNickname ?? row.authorUsername,
+      // 没有作者行 = userId 为空的历史动态,按站长落款
+      id: row.userId ?? admin?.id ?? 0,
+      username: row.authorUsername ?? admin?.username ?? "unknown",
+      nickname:
+        row.authorNickname ??
+        row.authorUsername ??
+        admin?.nickname ??
+        admin?.username ??
+        "未知作者",
       avatarUrl: row.authorAvatar,
     },
   }));

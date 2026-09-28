@@ -15,11 +15,18 @@ async function main() {
   }
 
   const passwordHash = await bcrypt.hash(password, 10);
+  // role 必须是 admin:全站的归属判定(isOwner / requireSelf / kbOwnerFilter)都靠它区分
+  // "站长"和"注册用户"。以前这里没写 role,新账号只会拿到默认的 'user',
+  // 结果站长管不了自己 userId 为空的早期内容,知识库列表也会是空的。
+  // 同一个账号再跑一次这个脚本,会顺手把角色补正。
   db.insert(users)
-    .values({ username, passwordHash })
-    .onConflictDoUpdate({ target: users.username, set: { passwordHash } })
+    .values({ username, passwordHash, role: "admin" })
+    .onConflictDoUpdate({
+      target: users.username,
+      set: { passwordHash, role: "admin" },
+    })
     .run();
-  console.log(`✅ 站长账号「${username}」已创建/更新`);
+  console.log(`✅ 站长账号「${username}」已创建/更新(角色 admin)`);
 }
 
 main()

@@ -13,7 +13,7 @@ type Habit = {
 // 习惯打卡管理(C3):添加习惯、今天打卡/取消、连续天数、删除
 export default function HabitManager({ initial }: { initial: Habit[] }) {
   const router = useRouter();
-  const [habits, setHabits] = useState(initial);
+  const [habits] = useState(initial);
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
 

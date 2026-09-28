@@ -1,10 +1,9 @@
 // AI 桌宠(绘梨衣)的配置与提示词。
 // 兼容一切 OpenAI 格式的接口(智谱/DeepSeek/通义/OpenAI/本地 Ollama…):
 // 调用 = POST {base_url}/chat/completions,Bearer {api_key},{model} 生成。
-import { desc, eq, and } from "drizzle-orm";
-
 import { db } from "@/lib/db";
-import { notes, siteSettings } from "@/db/schema";
+import { siteSettings } from "@/db/schema";
+import { listLatestPublishedPosts } from "./content-api";
 import { siteConfig } from "./site-config";
 
 export const AI_KEYS = [
@@ -70,16 +69,9 @@ export async function saveAiConfig(values: Record<string, string>) {
 /** 桌宠的系统提示词:人设 + 站点信息 + 最近文章清单(让绘梨衣"知道"站里有什么) */
 export async function buildSystemPrompt(): Promise<string> {
   const config = await getAiConfig();
-  const posts = await db
-    .select({
-      title: notes.title,
-      excerpt: notes.excerpt,
-      publishedAt: notes.publishedAt,
-    })
-    .from(notes)
-    .where(and(eq(notes.type, "post"), eq(notes.isPublic, 1)))
-    .orderBy(desc(notes.publishedAt))
-    .limit(10);
+  // 文章列表走公开区出口 content-api:只会是已发布且未删除的公开文章,
+  // 不会把回收站里的东西漏给访客侧的 AI
+  const posts = await listLatestPublishedPosts(10);
 
   const postLines = posts
     .map(

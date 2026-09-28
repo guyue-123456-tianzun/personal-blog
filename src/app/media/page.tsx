@@ -24,12 +24,6 @@ export default async function MediaPage({ searchParams }: Props) {
     items = items.filter((item) => item.status === activeStatus);
   }
 
-  function stars(rating: number | null) {
-    if (rating === null) return "";
-    const full = Math.round(rating / 2);
-    return "★".repeat(full) + "☆".repeat(5 - full);
-  }
-
   return (
     <PublicShell>
       <div className="glass rounded-2xl p-5">
@@ -64,7 +58,6 @@ export default async function MediaPage({ searchParams }: Props) {
         <div className="mt-2.5 flex flex-wrap gap-2">
           {STATUS.map((key) => {
             const label = key === "" ? "全部状态" : statusLabel(activeType || "movie", key);
-            const active = activeStatus === key;
             return (
               <Link
                 key={key || "all-status"}

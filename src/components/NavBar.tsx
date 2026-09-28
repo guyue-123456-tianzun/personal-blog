@@ -11,6 +11,7 @@ const NAV = [
   { href: "/", label: "首页", icon: "🏠" },
   { href: "/archives", label: "归档", icon: "📅" },
   { href: "/moments", label: "说说", icon: "💬" },
+  { href: "/atlas", label: "知识库", icon: "🌌" },
   { href: "/photos", label: "照片墙", icon: "📷" },
   { href: "/media", label: "书影音", icon: "📚" },
 ];

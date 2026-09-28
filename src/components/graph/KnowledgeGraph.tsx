@@ -146,8 +146,13 @@ export default function KnowledgeGraph({
     const observer = new ResizeObserver(resize);
     observer.observe(wrap);
 
-    const cssColor = (name: string, fallback: string) =>
-      getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
+    // 主题色从"画布所在的容器"读,而不是从 <html> 读:
+    // 工作台把自己包在 .dark 里(深空背景),从 html 读会拿到浅色主题的值,
+    // 结果就是浅色文字配深色背景或者反过来,画出来看不清
+    const cssColor = (name: string, fallback: string) => {
+      const host = wrapRef.current ?? document.documentElement;
+      return getComputedStyle(host).getPropertyValue(name).trim() || fallback;
+    };
 
     const radiusOf = (node: SimNode) =>
       (4.5 + Math.min(node.degree, 8) * 1.7) * nodeScale;

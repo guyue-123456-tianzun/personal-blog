@@ -1,4 +1,5 @@
 import AtlasWorkspace from "@/components/atlas/AtlasWorkspace";
+import GalaxyBackground from "@/components/atlas/GalaxyBackground";
 import { getAiConfigMasked } from "@/lib/ai";
 import { buildGraph } from "@/lib/graph";
 import { listOwnNotesWithTags } from "@/lib/kb-content";
@@ -36,13 +37,20 @@ export default async function AtlasPage() {
   }));
 
   return (
-    <div className="atlas-app bg-background">
-      <AtlasWorkspace
-        notes={notes}
-        graph={graph}
-        aiEnabled={Boolean(ai.enabled && ai.baseUrl && ai.apiKey && ai.model)}
-        userName={user.nickname ?? user.username}
-      />
+    // 外层挂 dark:工作台是一块"深空控制台",不跟随站点的深浅色——
+    // 星系背景必须是暗的,挂在 .dark 上之后里面所有玻璃卡片、边框会自动用深色那套变量。
+    // 注意还必须显式写 text-foreground:变量在子树上被覆盖了,但 color 早在 body 上
+    // 就按浅色算好并继承下来了,不重新取一次的话文字会是深色、压在深空上看不见
+    <div className="dark atlas-app relative bg-[#05060f] text-foreground">
+      <GalaxyBackground />
+      <div className="relative">
+        <AtlasWorkspace
+          notes={notes}
+          graph={graph}
+          aiEnabled={Boolean(ai.enabled && ai.baseUrl && ai.apiKey && ai.model)}
+          userName={user.nickname ?? user.username}
+        />
+      </div>
     </div>
   );
 }

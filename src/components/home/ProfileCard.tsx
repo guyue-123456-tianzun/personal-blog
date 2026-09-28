@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { siteConfig } from "@/lib/site-config";
 import type { Appearance } from "@/lib/settings";
+import { getAdminUser } from "@/lib/users";
 
 type Props = { appearance: Appearance };
 
@@ -46,28 +47,37 @@ function SocialIcon({ type }: { type: string }) {
 }
 
 // 个人资料卡:头像 + 站名 + 一条签名 + 社交入口。
-// 刻意做减法:文章/标签/运行天数这些数字交给右栏"站点统计",两处不再重复;
-// 头像从"小圆头像"改成大号圆角方块,是和站长给的参考卡对齐的视觉重心所在
-export default function ProfileCard({ appearance }: Props) {
+// 刻意做减法:文章/标签/运行天数这些数字交给右栏"站点统计",两处不再重复。
+// 头像占卡片大部分宽度(对齐站长给的参考卡),并且整块可点——进站长的个人主页
+export default async function ProfileCard({ appearance }: Props) {
+  const admin = await getAdminUser();
+  const profileHref = admin ? `/u/${encodeURIComponent(admin.username)}` : "/";
+
   return (
-    <section className="glass rounded-2xl px-5 py-6 text-center">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={appearance.avatar}
-        alt="头像"
-        className="mx-auto h-28 w-28 rounded-[26px] object-cover shadow-lg ring-1 ring-white/50"
-      />
-      <h3 className="mt-4 text-lg font-bold tracking-wide">
-        {siteConfig.siteName}
-      </h3>
-      {/* 名字下的一道短横线:参考卡的固定小细节,作用是给眼睛一个落点 */}
-      <span className="mx-auto mt-2 block h-[3px] w-7 rounded-full bg-accent" />
-      <p className="mt-2.5 text-sm leading-relaxed opacity-70">
-        {appearance.signature}
-      </p>
-      {siteConfig.location && (
-        <p className="mt-2 text-xs opacity-50">📍 {siteConfig.location}</p>
-      )}
+    <section className="glass rounded-2xl px-4 py-5 text-center">
+      <Link
+        href={profileHref}
+        title="进入个人主页"
+        className="group block"
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={appearance.avatar}
+          alt="头像"
+          className="mx-auto aspect-square w-full max-w-[180px] rounded-[30px] object-cover shadow-lg ring-1 ring-white/50 transition-transform duration-300 group-hover:scale-[1.02]"
+        />
+        <h3 className="mt-4 text-lg font-bold tracking-wide group-hover:text-accent">
+          {siteConfig.siteName}
+        </h3>
+        {/* 名字下的一道短横线:参考卡的固定小细节,作用是给眼睛一个落点 */}
+        <span className="mx-auto mt-2 block h-[3px] w-7 rounded-full bg-accent" />
+        {siteConfig.location && (
+          <p className="mt-2 text-xs opacity-50">📍 {siteConfig.location}</p>
+        )}
+        <p className="mt-2.5 text-sm leading-relaxed opacity-70">
+          {appearance.signature}
+        </p>
+      </Link>
 
       {siteConfig.socials.length > 0 && (
         <div className="mt-5 flex flex-wrap justify-center gap-2">

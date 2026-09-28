@@ -12,6 +12,7 @@ type Props = {
 
 // 公开内容页统一三栏壳(参考站构图):
 // 左栏 资料卡+打字机公告+音乐 | 中栏 页面内容 | 右栏 站点数据+日历
+// 左右两栏往下滑时吸附,滚到自己内容底部就停住;中间内容继续滚
 // 文章详情等页面把内容作为 children 传入。
 async function PublicShellLayout({ children }: Props) {
   await recordSiteVisit();
@@ -21,7 +22,10 @@ async function PublicShellLayout({ children }: Props) {
     <main className="mx-auto w-full max-w-6xl px-4 pb-10 pt-8 sm:px-6">
       <div className="grid items-start gap-4 lg:grid-cols-[250px_minmax(0,1fr)_260px]">
         {/* 左栏:资料 + 打字机公告 + 音乐 */}
-        <div className="fade-up space-y-4" style={{ animationDelay: "0ms" }}>
+        <div
+          className="fade-up space-y-4 lg:sticky lg:top-[72px] lg:max-h-[calc(100vh-88px)] lg:self-start lg:overflow-y-auto"
+          style={{ animationDelay: "0ms" }}
+        >
           <ProfileCard appearance={appearance} />
           <TypewriterBanner />
           <MusicPlayer playlist={appearance.music} neteasePlaylistId={appearance.neteasePlaylistId} />
@@ -33,7 +37,10 @@ async function PublicShellLayout({ children }: Props) {
         </div>
 
         {/* 右栏:站点数据 + 日历 */}
-        <div className="fade-up space-y-4" style={{ animationDelay: "240ms" }}>
+        <div
+          className="fade-up space-y-4 lg:sticky lg:top-[72px] lg:max-h-[calc(100vh-88px)] lg:self-start lg:overflow-y-auto"
+          style={{ animationDelay: "240ms" }}
+        >
           <StatsCard stats={stats} />
           <CalendarWidget />
         </div>

@@ -30,16 +30,17 @@ export default async function UserProfilePage({ params }: Props) {
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-10 sm:px-6">
-      {/* 资料卡 */}
+      {/* 资料卡:头像与站内保持同一套视觉语言(大号圆角方块) */}
       <section className="glass rounded-2xl p-6 text-center">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={avatar}
           alt=""
-          className="mx-auto h-24 w-24 rounded-full border-2 border-white/40 object-cover shadow-lg"
+          className="mx-auto aspect-square w-36 rounded-[28px] object-cover shadow-lg ring-1 ring-white/50"
         />
-        <h1 className="mt-3 text-2xl font-bold">{displayName}</h1>
-        <p className="text-xs opacity-50">@{target.username}</p>
+        <h1 className="mt-4 text-2xl font-bold">{displayName}</h1>
+        <span className="mx-auto mt-2 block h-[3px] w-7 rounded-full bg-accent" />
+        <p className="mt-2 text-xs opacity-50">@{target.username}</p>
         {target.bio && <p className="mt-2 text-sm opacity-70">{target.bio}</p>}
         <div className="mt-3 flex items-center justify-center gap-3 text-sm">
           <span className="opacity-70">📝 公开动态 {moments.length} 条</span>

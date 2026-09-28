@@ -16,11 +16,19 @@ type Props = {
   tags: { name: string; count: number }[];
 };
 
-// 文章区:参考站同款"列表/网格"切换(偏好存访客浏览器,与主题面板联动);
-// 第一篇做大卡(视觉锚点),其余两列网格
+// 封面比例循环变化:瀑布流之所以"错落",靠的就是卡片高度不一样,
+// 全用同一个比例就退化成整齐网格了
+const COVER_RATIOS = [
+  "aspect-[4/3]",
+  "aspect-[3/4]",
+  "aspect-[16/10]",
+  "aspect-square",
+];
+
+// 文章区:瀑布流(多列纵向排布,卡片高度错落)+ 列表两种浏览方式。
+// 访客的选择存浏览器(与主题面板联动)
 export default function ArticleBoard({ posts, tags }: Props) {
   const [mode, setMode] = useState<"grid" | "list">("grid");
-  const [featured, ...rest] = posts;
 
   useEffect(() => {
     const sync = () => setMode(readThemePrefs().articleMode);
@@ -45,12 +53,12 @@ export default function ArticleBoard({ posts, tags }: Props) {
         <div className="flex items-center gap-1 rounded-full border border-border p-1 text-xs">
           <button
             onClick={() => switchMode("grid")}
-            aria-label="网格视图"
+            aria-label="瀑布流视图"
             className={`rounded-full px-2.5 py-1 transition-colors ${
               mode === "grid" ? "bg-accent text-white" : "opacity-60 hover:opacity-100"
             }`}
           >
-            ▦ 网格
+            ▦ 瀑布
           </button>
           <button
             onClick={() => switchMode("list")}
@@ -84,32 +92,11 @@ export default function ArticleBoard({ posts, tags }: Props) {
           还没有文章。站长登录后写一篇,发布到这里。
         </p>
       ) : mode === "grid" ? (
-        <div className="mt-4 space-y-4">
-          {/* 第一篇:大卡,压图标题 */}
-          <Link
-            href={`/posts/${featured.slug}`}
-            className="group relative block h-56 overflow-hidden rounded-xl"
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={featured.cover || fallbackCover(featured.slug)}
-              alt=""
-              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/15 to-transparent" />
-            <div className="absolute bottom-4 left-4 right-4 text-white">
-              <h3 className="text-xl font-bold drop-shadow">{featured.title}</h3>
-              <p className="mt-1 text-xs opacity-80">
-                📅 {featured.publishedAt?.slice(0, 10)} · 👁 {featured.views}
-                {featured.tags.length > 0 && ` · ${featured.tags.join(" / ")}`}
-              </p>
-            </div>
-          </Link>
-          <div className="grid gap-4 sm:grid-cols-2">
-            {rest.map((post) => (
-              <ArticleGridCard key={post.slug} post={post} />
-            ))}
-          </div>
+        /* 瀑布流:两列纵向排布,卡片高度各不相同(参考站那样错落下来) */
+        <div className="mt-4 columns-1 gap-4 sm:columns-2">
+          {posts.map((post, index) => (
+            <WaterfallCard key={post.slug} post={post} index={index} />
+          ))}
         </div>
       ) : (
         /* 列表模式:紧凑行 */
@@ -132,21 +119,24 @@ export default function ArticleBoard({ posts, tags }: Props) {
   );
 }
 
-function ArticleGridCard({ post }: { post: PostListItem }) {
+// 瀑布流卡片:封面压标题 + 摘要,高度按 index 循环取不同比例。
+// break-inside-avoid 是分列布局的关键——不然一张卡会被拦腰切到下一列
+function WaterfallCard({ post, index }: { post: PostListItem; index: number }) {
+  const ratio = COVER_RATIOS[index % COVER_RATIOS.length];
   return (
     <Link
       href={`/posts/${post.slug}`}
-      className="group block overflow-hidden rounded-xl"
+      className="group mb-4 block break-inside-avoid overflow-hidden rounded-xl border border-border/60 transition-shadow hover:shadow-md"
     >
-      <div className="relative h-36 overflow-hidden">
+      <div className={`relative overflow-hidden ${ratio}`}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={post.cover || fallbackCover(post.slug)}
           alt=""
           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-        <h3 className="absolute bottom-2.5 left-3.5 right-3.5 line-clamp-1 text-base font-bold text-white drop-shadow">
+        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
+        <h3 className="absolute bottom-3 left-3.5 right-3.5 line-clamp-2 text-base font-bold text-white drop-shadow">
           {post.title}
         </h3>
       </div>

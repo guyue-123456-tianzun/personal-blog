@@ -5,7 +5,6 @@ import { siteConfig } from "@/lib/site-config";
 
 import ProfileCard from "@/components/home/ProfileCard";
 import StatsCard from "@/components/home/StatsCard";
-import MusicPlayer from "@/components/home/MusicPlayer";
 import TypewriterBanner from "@/components/home/TypewriterBanner";
 import CalendarWidget from "@/components/home/CalendarWidget";
 import ArticleBoard from "@/components/home/ArticleBoard";
@@ -30,9 +29,8 @@ export default async function Home() {
 
   return (
     <>
-      {/* ===== Hero:首屏即人。图/虚化/高度都在外观设置里可调 ===== */}
-      <section
-        className="relative flex items-center justify-center overflow-hidden"
+      {/* ===== Hero:首屏即人。图/虚化/高度都在外观设置里可调 ===== */}      <section
+        className="relative -mt-14 flex items-center justify-center overflow-hidden pt-14"
         style={{ minHeight: `${appearance.heroHeightVh}vh` }}
       >
         {/* Hero 媒体:夜间/白天各一层,跟随主题切换;下边缘渐隐融进壁纸 */}
@@ -146,11 +144,19 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* ===== 错落三栏浮层:压在 Hero 下沿(参考站构图) ===== */}
+      {/* ===== 错落三栏浮层:压在 Hero 下沿(参考站构图) =====
+          左右两栏 sticky:往下滚时跟着走,滚到自己内容的底部就停住不动,
+          中间的文章列继续往下滑 */}
       <main className="mx-auto w-full max-w-6xl px-4 pb-10 sm:px-6">
         <div className="relative z-20 -mt-28 grid items-start gap-4 lg:grid-cols-[260px_minmax(0,1fr)_270px]">
-          {/* 左栏:人物 + 公告 + 恋爱 + 天气 + 音乐(高度与右栏错开) */}
-          <div className="fade-up space-y-4" style={{ animationDelay: "0ms" }}>
+          {/* 左栏:人物 + 公告 + 恋爱 + 天气。
+              音乐卡不在这里——左下角那个浮动圆盘本身就是完整播放器(播放/暂停/自动下一首,
+              每页都在),首页再摆一张纯属重复;而且侧栏要能"吸附"就必须比视口矮,
+              四张卡已经是这套栅格里装得下的上限 */}
+          <div
+            className="fade-up space-y-4 lg:sticky lg:top-[72px] lg:max-h-[calc(100vh-88px)] lg:self-start lg:overflow-y-auto"
+            style={{ animationDelay: "0ms" }}
+          >
             <ProfileCard appearance={appearance} />
             <TypewriterBanner />
             <LoveCard
@@ -164,16 +170,18 @@ export default async function Home() {
               defaultCity={appearance.weatherDefaultCity}
               cities={appearance.weatherCities}
             />
-            <MusicPlayer playlist={appearance.music} neteasePlaylistId={appearance.neteasePlaylistId} />
           </div>
 
-          {/* 中栏:文章区(列表/网格切换,第一篇大卡) */}
+          {/* 中栏:文章区(瀑布流/列表切换) */}
           <div className="fade-up" style={{ animationDelay: "120ms" }}>
             <ArticleBoard posts={posts} tags={tags} />
           </div>
 
-          {/* 右栏:站点数据 + 日历 */}
-          <div className="fade-up space-y-4" style={{ animationDelay: "240ms" }}>
+          {/* 右栏:站点数据 + 日历(同样吸附) */}
+          <div
+            className="fade-up space-y-4 lg:sticky lg:top-[72px] lg:max-h-[calc(100vh-88px)] lg:self-start lg:overflow-y-auto"
+            style={{ animationDelay: "240ms" }}
+          >
             <StatsCard stats={stats} />
             <CalendarWidget />
           </div>

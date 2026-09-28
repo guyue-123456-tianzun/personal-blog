@@ -37,12 +37,14 @@ export const NOTE_TYPE_LABEL: Record<NoteType, string> = {
   diary: "日记",
 };
 
+// 类型代表色:给"深空"里的发光节点配的一组亮色(青 / 金 / 薄荷 / 紫 / 玫)。
+// 它们同时用在图谱节点、工作台列表圆点、类型筛选与图例上,全站一份。
 export const NOTE_TYPE_COLOR: Record<NoteType, string> = {
-  post: "#7C6BE8",
-  note: "#5B8DEF",
-  clip: "#39B98C",
-  moment: "#E879A8",
-  diary: "#E0A03C",
+  post: "#F5C451",
+  note: "#4FD1E0",
+  clip: "#5EEAD4",
+  moment: "#A78BFA",
+  diary: "#F472B6",
 };
 
 export function noteTypeLabel(type: string): string {

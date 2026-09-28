@@ -258,3 +258,24 @@ body:has(.atlas-app) footer,
 body:has(.atlas-app) .site-float {
   display: none;
 }
+
+/* 图谱节点弹窗的入场:从略小、略透明"弹"出来。
+   给图谱弹窗和命令面板共用;系统开了"减少动态效果"就直接显示,不做动画 */
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.94) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.pop-in {
+  animation: pop-in 0.18s ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .pop-in {
+    animation: none;
+  }
+}

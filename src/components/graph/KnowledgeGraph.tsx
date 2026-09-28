@@ -4,6 +4,10 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { NOTE_TYPE_COLOR, noteTypeColor, noteTypeLabel } from "@/lib/content-types";
+import {
+  DEFAULT_GALAXY,
+  type GalaxySettings,
+} from "@/components/atlas/GalaxyBackground";
 import type { GraphData, GraphNode } from "@/lib/graph";
 
 // 知识图谱:Obsidian 那种关系图。
@@ -18,6 +22,12 @@ type SimNode = {
   id: number;
   x: number;
   y: number;
+  /** 深度:只为让星系有厚度(纯视觉,没有语义),倾斜+透视时才有前后感 */
+  z: number;
+  /** 水滴浮动的相位/幅度/速度:每颗星各漂各的,才不会整片一起晃 */
+  phase: number;
+  bobAmp: number;
+  bobSpeed: number;
   vx: number;
   vy: number;
   degree: number;
@@ -26,6 +36,15 @@ type SimNode = {
 
 // 节点配色与中文名来自 lib/content-types.ts(全站一份,见那里的注释)
 const TYPE_COLOR = NOTE_TYPE_COLOR;
+
+/** #RRGGBB → rgba(...):画光晕的径向渐变需要带透明度的颜色 */
+function hexToRgba(hex: string, alpha: number): string {
+  const value = hex.replace("#", "");
+  const r = parseInt(value.slice(0, 2), 16);
+  const g = parseInt(value.slice(2, 4), 16);
+  const b = parseInt(value.slice(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
 
 const REPULSION = 11000; // 节点之间的斥力
 const LINK_LENGTH = 96; // 连线的自然长度
@@ -38,11 +57,18 @@ export default function KnowledgeGraph({
   data,
   mode,
   variant = "card",
+  onOpenNode,
+  galaxy,
 }: {
   data: GraphData;
   mode: "private" | "public";
   /** card = 一张卡片(默认);fill = 撑满父容器(工作台里用) */
   variant?: "card" | "fill";
+  /** 传了就把弹窗里的"打开"做成回调(工作台用它切到阅读模式),没传就跳转到 href */
+  onOpenNode?: (id: number) => void;
+  /** 星系参数(大小/位置/立体倾斜/自转),工作台的「星系」面板在改。
+   *  不传就用内置默认值,自转开关退回到工具栏里那个勾选框 */
+  galaxy?: GalaxySettings;
 }) {
   const isFill = variant === "fill";
   const wrapRef = useRef<HTMLDivElement | null>(null);
@@ -55,11 +81,25 @@ export default function KnowledgeGraph({
   const runningRef = useRef(true);
   const hoverRef = useRef<number | null>(null);
   const needsRedrawRef = useRef(true);
+  // 自转角度(弧度):只在绘制时用,不动节点坐标
+  const spinAngleRef = useRef(0);
+  // 星系参数放 ref:面板拖滑杆时不要重建整个动画循环
+  const galaxyRef = useRef<GalaxySettings>(galaxy ?? DEFAULT_GALAXY);
+  galaxyRef.current = galaxy ?? DEFAULT_GALAXY;
+  // 是否接了星系面板(决定自转听面板的还是听工具栏那个勾选框),也放 ref,免得进依赖
+  const hasGalaxyRef = useRef(galaxy !== undefined);
+  hasGalaxyRef.current = galaxy !== undefined;
+  // 动画时钟:水滴浮动按它走,一帧一帧推进
+  const elapsedRef = useRef(0);
 
   const [selected, setSelected] = useState<GraphNode | null>(null);
   const [query, setQuery] = useState("");
   const [hideIsolated, setHideIsolated] = useState(false);
   const [showLabels, setShowLabels] = useState(true);
+  /** 自转:像星系那样缓慢旋转(默认开;拖动时会自动暂停) */
+  const [spin, setSpin] = useState(true);
+  /** 同标签关联(虚线):共用标签的笔记之间连一条,给图谱补上"内容聚类"的线索 */
+  const [showTagLinks, setShowTagLinks] = useState(true);
   const [nodeScale, setNodeScale] = useState(1);
   const [linkWidth, setLinkWidth] = useState(1);
   const [labelOpacity, setLabelOpacity] = useState(0.8);
@@ -80,19 +120,35 @@ export default function KnowledgeGraph({
       ? data.nodes.filter((n) => (degree.get(n.id) ?? 0) > 0)
       : data.nodes;
     const ids = new Set(nodes.map((n) => n.id));
-    const edges = data.edges.filter((e) => ids.has(e.from) && ids.has(e.to));
+    const edges = data.edges.filter(
+      (e) =>
+        ids.has(e.from) &&
+        ids.has(e.to) &&
+        (showTagLinks || e.kind === "wiki"),
+    );
     const q = query.trim().toLowerCase();
     // 搜索不删节点(删了整张图会跳),只标记命中、其余画暗
     const matched = q
       ? new Set(nodes.filter((n) => n.label.toLowerCase().includes(q)).map((n) => n.id))
       : null;
     return { nodes, edges, matched };
-  }, [data, degree, hideIsolated, query]);
+  }, [data, degree, hideIsolated, query, showTagLinks]);
 
   const nodeById = useMemo(
     () => new Map(view.nodes.map((n) => [n.id, n])),
     [view.nodes],
   );
+
+  // 引用(实线)与同标签(虚线)分开计数:前者是"谁引用了谁",后者只是"内容相关"
+  const counts = useMemo(() => {
+    let wiki = 0;
+    let tag = 0;
+    for (const edge of view.edges) {
+      if (edge.kind === "wiki") wiki++;
+      else tag++;
+    }
+    return { wiki, tag };
+  }, [view.edges]);
 
   // 视图变化时重建模拟(尽量沿用已有节点位置,避免整张图乱跳)
   useEffect(() => {
@@ -108,6 +164,13 @@ export default function KnowledgeGraph({
         id: node.id,
         x: old?.x ?? w / 2 + radius * Math.cos(angle),
         y: old?.y ?? h / 2 + radius * Math.sin(angle),
+        // 深度取一个由 id 决定的稳定伪随机值:同一篇笔记每次都在同一层,
+        // 不会刷新一下就换前后关系
+        z: old?.z ?? (((node.id * 2654435761) % 1000) / 1000 - 0.5) * 90,
+        // 水滴浮动的参数:同一颗星每次进来都漂同一个节奏,不会刷新一下就换拍子
+        phase: old?.phase ?? Math.random() * Math.PI * 2,
+        bobAmp: old?.bobAmp ?? 1.6 + Math.random() * 2.4,
+        bobSpeed: old?.bobSpeed ?? 0.7 + Math.random() * 0.9,
         vx: 0,
         vy: 0,
         degree: degree.get(node.id) ?? 0,
@@ -153,6 +216,8 @@ export default function KnowledgeGraph({
       const host = wrapRef.current ?? document.documentElement;
       return getComputedStyle(host).getPropertyValue(name).trim() || fallback;
     };
+    // 深空模式(工作台):节点画成发光点、连线画成细光丝;浅色页面上就老老实实画实心圆
+    const spaceMode = Boolean(wrap.closest(".dark"));
 
     const radiusOf = (node: SimNode) =>
       (4.5 + Math.min(node.degree, 8) * 1.7) * nodeScale;
@@ -212,7 +277,7 @@ export default function KnowledgeGraph({
 
     const draw = () => {
       const { nodes, pan } = simRef.current;
-      const byId = new Map(nodes.map((n) => [n.id, n]));
+      const g = galaxyRef.current;
       const focusId = selected?.id ?? hoverRef.current;
       // 聚焦节点的邻居,用来高亮
       const neighbors = new Set<number>();
@@ -225,73 +290,169 @@ export default function KnowledgeGraph({
       }
       const focused = neighbors.size > 0;
 
-      ctx.clearRect(0, 0, width, height);
-      ctx.save();
-      ctx.translate(pan.x, pan.y);
+      // ==== 立体投影 ====
+      // 节点坐标 → 绕 Z 自转(星系自转)→ 绕 X 倾斜(立体感)→ 弱透视。
+      // 关键点:**先算出每个节点的屏幕坐标存下来**,连线、节点、文字都用这份坐标画。
+      // 这样文字不必跟着图形一起转 —— 星系在转,标题始终是水平的,才扫得清每个知识点
+      const cx = width / 2 + pan.x + g.offsetX * width;
+      const cy = height / 2 + pan.y + g.offsetY * height;
+      const cosR = Math.cos(spinAngleRef.current);
+      const sinR = Math.sin(spinAngleRef.current);
+      const cosT = Math.cos(g.tilt);
+      const sinT = Math.sin(g.tilt);
+      const screen = new Map<number, { x: number; y: number; depth: number }>();
+      for (const node of nodes) {
+        const bx = (node.x - width / 2) * g.scale;
+        const by = (node.y - height / 2) * g.scale;
+        const bz = node.z * g.scale;
+        const rx = bx * cosR - by * sinR;
+        const ry = bx * sinR + by * cosR;
+        const ty = ry * cosT - bz * sinT; // 倾斜把纵向压扁 → 圆盘看起来是斜的
+        const tz = ry * sinT + bz * cosT; // 由此产生的深度
+        const p = 1 / (1 - tz / 2200); // 弱透视:靠前的略大一点
+        // 水滴浮动:上下左右各有相位,漂起来像水滴,图谱才不会定住
+        const bobX =
+          Math.sin(elapsedRef.current * 0.00034 * node.bobSpeed + node.phase) *
+          node.bobAmp;
+        const bobY =
+          Math.cos(elapsedRef.current * 0.00026 * node.bobSpeed + node.phase * 1.7) *
+          node.bobAmp *
+          0.75;
+        screen.set(node.id, { x: cx + rx * p + bobX, y: cy + ty * p + bobY, depth: tz });
+      }
+      // 远的先画、近的后画,近的才会叠在上面
+      const drawOrder = [...nodes].sort(
+        (a, b) => (screen.get(a.id)?.depth ?? 0) - (screen.get(b.id)?.depth ?? 0),
+      );
 
-      // 连线
-      ctx.lineWidth = linkWidth;
-      ctx.strokeStyle = cssColor("--border", "rgba(120,120,140,0.35)");
+      ctx.clearRect(0, 0, width, height);
+
+      // 连线:深空里画成细光丝,浅色页面上还是普通细线。
+      // 同标签关联画成虚线——它是"内容相关",不是"这篇引用了那篇",视觉上要能区分
+      ctx.lineWidth = spaceMode ? Math.max(linkWidth * 0.7, 0.5) : linkWidth;
       for (const edge of view.edges) {
-        const a = byId.get(edge.from);
-        const b = byId.get(edge.to);
+        const a = screen.get(edge.from);
+        const b = screen.get(edge.to);
         if (!a || !b) continue;
-        const dim = focused && !(neighbors.has(a.id) && neighbors.has(b.id));
-        ctx.globalAlpha = dim ? 0.2 : 0.7;
+        const isTag = edge.kind === "tag";
+        const dim = focused && !(neighbors.has(edge.from) && neighbors.has(edge.to));
+        ctx.setLineDash(isTag ? [3, 4] : []);
+        ctx.strokeStyle = isTag
+          ? spaceMode
+            ? "rgba(190,180,255,0.38)"
+            : "rgba(140,130,180,0.32)"
+          : spaceMode
+            ? "rgba(150,200,255,0.55)"
+            : cssColor("--border", "rgba(120,120,140,0.35)");
+        ctx.globalAlpha = dim ? 0.12 : isTag ? 0.7 : spaceMode ? 0.32 : 0.7;
         ctx.beginPath();
         ctx.moveTo(a.x, a.y);
         ctx.lineTo(b.x, b.y);
         ctx.stroke();
       }
+      ctx.setLineDash([]);
       ctx.globalAlpha = 1;
 
-      // 节点
-      for (const node of nodes) {
+      // 节点:深空里画成发光点(外光晕 + 实心核 + 中心高光),浅色页面上画实心圆。
+      // 浮动参数已经并进投影坐标里了,连线、节点、标题跟着同一份坐标走,不会各漂各的
+      for (const node of drawOrder) {
         const meta = nodeById.get(node.id);
+        const pos = screen.get(node.id)!;
+        const color = noteTypeColor(meta?.type ?? "");
+        const radius = radiusOf(node);
         const dim = (focused && !neighbors.has(node.id)) ||
           (view.matched ? !view.matched.has(node.id) : false);
-        ctx.globalAlpha = dim ? 0.2 : 1;
-        ctx.beginPath();
-        ctx.arc(node.x, node.y, radiusOf(node), 0, Math.PI * 2);
-        ctx.fillStyle = noteTypeColor(meta?.type ?? "");
-        ctx.fill();
+        ctx.globalAlpha = dim ? 0.18 : 1;
+
+        if (spaceMode) {
+          const glow = ctx.createRadialGradient(
+            pos.x,
+            pos.y,
+            radius * 0.3,
+            pos.x,
+            pos.y,
+            radius * 3.6,
+          );
+          glow.addColorStop(0, hexToRgba(color, 0.75));
+          glow.addColorStop(0.35, hexToRgba(color, 0.28));
+          glow.addColorStop(1, hexToRgba(color, 0));
+          ctx.fillStyle = glow;
+          ctx.beginPath();
+          ctx.arc(pos.x, pos.y, radius * 3.6, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.fillStyle = color;
+          ctx.beginPath();
+          ctx.arc(pos.x, pos.y, radius * 0.78, 0, Math.PI * 2);
+          ctx.fill();
+
+          // 中心高光:让它看起来是"自己在发光",而不是被照亮的圆点
+          ctx.fillStyle = "rgba(255,255,255,0.92)";
+          ctx.beginPath();
+          ctx.arc(pos.x, pos.y, radius * 0.3, 0, Math.PI * 2);
+          ctx.fill();
+        } else {
+          ctx.beginPath();
+          ctx.arc(pos.x, pos.y, radius, 0, Math.PI * 2);
+          ctx.fillStyle = color;
+          ctx.fill();
+        }
+
         if (node.id === focusId) {
-          ctx.lineWidth = 2;
-          ctx.strokeStyle = cssColor("--foreground", "#1c1c28");
+          ctx.lineWidth = spaceMode ? 1.2 : 2;
+          ctx.strokeStyle = spaceMode ? "#ffffff" : cssColor("--foreground", "#1c1c28");
+          ctx.beginPath();
+          ctx.arc(pos.x, pos.y, radius * (spaceMode ? 2.4 : 1), 0, Math.PI * 2);
           ctx.stroke();
         }
       }
 
-      // 标签
+      // 标签:画在投影后的坐标上,不跟图形一起转 —— 星系在转,标题始终水平,扫得清
       if (showLabels) {
         ctx.textAlign = "center";
         ctx.textBaseline = "top";
         ctx.font =
           "12px -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif";
-        ctx.fillStyle = cssColor("--foreground", "#1c1c28");
-        for (const node of nodes) {
+        ctx.fillStyle = spaceMode
+          ? "rgba(234,240,255,0.95)"
+          : cssColor("--foreground", "#1c1c28");
+        if (spaceMode) {
+          ctx.shadowColor = "rgba(0,0,0,0.9)";
+          ctx.shadowBlur = 6;
+        }
+        for (const node of drawOrder) {
           const meta = nodeById.get(node.id);
           if (!meta) continue;
+          const pos = screen.get(node.id)!;
           const dim = (focused && !neighbors.has(node.id)) ||
             (view.matched ? !view.matched.has(node.id) : false);
           ctx.globalAlpha = dim ? labelOpacity * 0.25 : labelOpacity;
-          ctx.fillText(meta.label.slice(0, 12), node.x, node.y + radiusOf(node) + 4);
+          ctx.fillText(meta.label.slice(0, 12), pos.x, pos.y + radiusOf(node) * 2 + 3);
         }
+        ctx.shadowBlur = 0;
       }
       ctx.globalAlpha = 1;
-      ctx.restore();
     };
 
-    const loop = () => {
+    // 自转速度按"每毫秒多少弧度"算,所以要先知道这一帧过了多久
+    let lastFrame = performance.now();
+    const loop = (now: number) => {
+      const gap = Math.min(now - lastFrame, 48);
+      lastFrame = now;
+      elapsedRef.current += gap;
       const state = simRef.current;
       const dragging = state.nodes.some((n) => n.dragging);
+      const g = galaxyRef.current;
+      // 接了星系面板就归面板管;没接就退回工具栏里那个勾选框(公开的 /network 用)
+      const autoSpin = hasGalaxyRef.current ? g.autoSpin : spin;
+      const spinning = autoSpin && !dragging && state.nodes.length > 1;
+      if (spinning) {
+        spinAngleRef.current += 0.000042 * g.spinSpeed * gap;
+      }
       const active = runningRef.current && state.alpha > ALPHA_FLOOR;
       if (active) state.alpha = step(state.alpha);
-      // 只在"还在动 / 正在拖 / 有变化"时重绘,静下来就不烧 CPU
-      if (active || dragging || needsRedrawRef.current) {
-        draw();
-        needsRedrawRef.current = false;
-      }
+      // 每帧都画:水滴浮动是连续的(物理只在还没冷却时才跑)
+      draw();
       frame = window.requestAnimationFrame(loop);
     };
     frame = window.requestAnimationFrame(loop);
@@ -300,9 +461,19 @@ export default function KnowledgeGraph({
       observer.disconnect();
       window.cancelAnimationFrame(frame);
     };
-  }, [view, nodeById, nodeScale, linkWidth, labelOpacity, showLabels, selected]);
+  }, [view, nodeById, nodeScale, linkWidth, labelOpacity, showLabels, selected, spin]);
 
-  // 指针交互:拖节点 / 平移画布 / 点节点看摘要
+  // 弹窗开着时按 Esc 关掉
+  useEffect(() => {
+    if (!selected) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setSelected(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [selected]);
+
+  // 指针交互:拖节点 / 平移画布 / 点节点看内容
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -313,11 +484,34 @@ export default function KnowledgeGraph({
 
     const toWorld = (event: PointerEvent) => {
       const rect = canvas.getBoundingClientRect();
+      const g = galaxyRef.current;
       const pan = simRef.current.pan;
-      return {
-        x: event.clientX - rect.left - pan.x,
-        y: event.clientY - rect.top - pan.y,
-      };
+      // 屏幕 → 世界:把投影反着做一遍。
+      // 透视(靠前的节点略大)会让"看到的坐标"和"真实坐标"差出几个像素,
+      // 比节点命中半径还大,所以要用两三轮迭代把它还回去,不然点了跟没点一样
+      const cw = canvas.clientWidth;
+      const ch = canvas.clientHeight;
+      const cx = cw / 2 + pan.x + g.offsetX * cw;
+      const cy = ch / 2 + pan.y + g.offsetY * ch;
+      const dx = event.clientX - rect.left - cx;
+      const dy = event.clientY - rect.top - cy;
+      const cosT = Math.cos(g.tilt);
+      const sinT = Math.sin(g.tilt);
+      const angle = spinAngleRef.current;
+      let ry = dy / cosT;
+      let p = 1;
+      for (let i = 0; i < 3; i++) {
+        const tz = ry * sinT;
+        p = 1 / (1 - tz / 2200);
+        ry = dy / (cosT * p);
+      }
+      const rx = dx / p;
+      const cosA = Math.cos(angle);
+      const sinA = Math.sin(angle);
+      // 再反着转一下,还原自转
+      const bx = rx * cosA + ry * sinA;
+      const by = -rx * sinA + ry * cosA;
+      return { x: cw / 2 + bx / g.scale, y: ch / 2 + by / g.scale };
     };
 
     const hitTest = (x: number, y: number) => {
@@ -454,6 +648,33 @@ export default function KnowledgeGraph({
           />
           显示标题
         </label>
+        {/* 自转开关只在"独立使用(没接星系面板)"时显示——接了面板就归面板管 */}
+        {!galaxy && (
+          <label
+            className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5"
+            title="整张图像星系一样缓慢旋转(拖动节点时会自动暂停)"
+          >
+            <input
+              type="checkbox"
+              checked={spin}
+              onChange={(e) => setSpin(e.target.checked)}
+              className="accent-[var(--accent)]"
+            />
+            自转
+          </label>
+        )}
+        <label
+          className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5"
+          title="共用同一个标签的笔记之间连虚线,表示内容相关(不是互相引用)"
+        >
+          <input
+            type="checkbox"
+            checked={showTagLinks}
+            onChange={(e) => setShowTagLinks(e.target.checked)}
+            className="accent-[var(--accent)]"
+          />
+          同标签关联
+        </label>
         <button
           onClick={relayout}
           className="rounded-lg border border-border px-2.5 py-1.5 transition-colors hover:bg-foreground/5"
@@ -461,7 +682,8 @@ export default function KnowledgeGraph({
           ↻ 重新布局
         </button>
         <span className="ml-auto opacity-50">
-          {view.nodes.length} 个节点 · {view.edges.length} 条连线
+          {view.nodes.length} 个节点 · {counts.wiki} 条引用
+          {showTagLinks ? ` · ${counts.tag} 条同标签` : ""}
         </span>
       </div>
 
@@ -516,14 +738,14 @@ export default function KnowledgeGraph({
         </span>
       </div>
 
-      {/* 有节点但一条线都没有:多半是还没写过 [[链接]],直接告诉站长怎么连 */}
-      {view.nodes.length > 0 && view.edges.length === 0 && (
+      {/* 一条引用线都还没有:直接告诉站长怎么连(同标签的虚线不算引用) */}
+      {view.nodes.length > 0 && counts.wiki === 0 && (
         <p className="mt-3 rounded-lg border border-border px-3 py-2 text-xs leading-relaxed opacity-70">
-          现在只有孤立的点、还没有连线。在任意一篇正文里写{" "}
+          还没有互相引用。在任意一篇正文里写{" "}
           <code className="rounded bg-foreground/10 px-1 py-0.5">
             [[另一篇的标题]]
           </code>
-          ,保存后回到这里,两篇之间就会连上一条线。
+          ,两篇之间就会连上实线;共用标签的笔记之间现在连的是虚线,只表示内容相关。
         </p>
       )}
 
@@ -542,35 +764,78 @@ export default function KnowledgeGraph({
           </p>
         )}
 
-        {/* 点开节点后的摘要浮层(Obsidian 也是这种浮卡) */}
+        {/* 点开节点:一个独立的小窗口展示这篇内容 */}
         {selected && (
-          <div className="glass absolute bottom-3 left-3 right-3 sm:right-auto sm:max-w-sm rounded-xl p-3.5 text-sm">
-            <div className="flex items-start justify-between gap-2">
-              <div className="min-w-0">
-                <p className="truncate font-semibold">{selected.label}</p>
-                <p className="mt-0.5 text-xs opacity-50">
-                  {noteTypeLabel(selected.type)}
-                </p>
-              </div>
-              <button
-                onClick={() => setSelected(null)}
-                aria-label="关闭"
-                className="shrink-0 rounded-md px-1.5 text-xs opacity-50 hover:opacity-100"
-              >
-                ✕
-              </button>
-            </div>
-            {selected.excerpt && (
-              <p className="mt-2 line-clamp-4 text-xs leading-relaxed opacity-70">
-                {selected.excerpt}
-              </p>
-            )}
-            <Link
-              href={selected.href}
-              className="mt-2.5 inline-block text-xs text-accent hover:underline"
+          <div
+            className="absolute inset-0 z-20 flex items-center justify-center p-4"
+            onClick={() => setSelected(null)}
+          >
+            <div
+              onClick={(event) => event.stopPropagation()}
+              className="pop-in w-full max-w-md overflow-hidden rounded-2xl border border-border bg-card/95 shadow-2xl backdrop-blur-2xl"
             >
-              {mode === "public" ? "阅读这篇 →" : "打开原文 →"}
-            </Link>
+              {/* 标题栏:类型发光点 + 类型名 + 关闭 */}
+              <div className="flex items-center gap-2 border-b border-border px-4 py-2.5">
+                <span
+                  className="h-2.5 w-2.5 rounded-full"
+                  style={{
+                    background: noteTypeColor(selected.type),
+                    boxShadow: `0 0 10px ${noteTypeColor(selected.type)}`,
+                  }}
+                />
+                <span className="text-xs opacity-60">
+                  {noteTypeLabel(selected.type)}
+                </span>
+                <button
+                  onClick={() => setSelected(null)}
+                  aria-label="关闭"
+                  className="ml-auto rounded-md px-1.5 py-0.5 text-xs opacity-50 transition-colors hover:bg-foreground/10 hover:opacity-100"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* 内容 */}
+              <div className="px-4 py-4">
+                <h3 className="text-base font-semibold leading-snug">
+                  {selected.label}
+                </h3>
+                {selected.excerpt ? (
+                  <p className="mt-2.5 max-h-60 overflow-y-auto whitespace-pre-wrap text-[13px] leading-relaxed opacity-75">
+                    {selected.excerpt}
+                  </p>
+                ) : (
+                  <p className="mt-2.5 text-[13px] opacity-50">
+                    这篇还没有正文内容。
+                  </p>
+                )}
+              </div>
+
+              {/* 底部操作 */}
+              <div className="flex items-center gap-3 border-t border-border px-4 py-2.5">
+                {onOpenNode ? (
+                  <button
+                    onClick={() => {
+                      onOpenNode(selected.id);
+                      setSelected(null);
+                    }}
+                    className="rounded-lg bg-accent px-3 py-1.5 text-xs text-white transition-opacity hover:opacity-90"
+                  >
+                    打开全文 →
+                  </button>
+                ) : (
+                  <Link
+                    href={selected.href}
+                    className="rounded-lg bg-accent px-3 py-1.5 text-xs text-white transition-opacity hover:opacity-90"
+                  >
+                    {mode === "public" ? "阅读这篇 →" : "打开原文 →"}
+                  </Link>
+                )}
+                <span className="ml-auto text-[11px] opacity-40">
+                  点空白处或 Esc 关闭
+                </span>
+              </div>
+            </div>
           </div>
         )}
       </div>

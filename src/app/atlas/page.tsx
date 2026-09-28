@@ -1,5 +1,4 @@
 import AtlasWorkspace from "@/components/atlas/AtlasWorkspace";
-import GalaxyBackground from "@/components/atlas/GalaxyBackground";
 import { getAiConfigMasked } from "@/lib/ai";
 import { buildGraph } from "@/lib/graph";
 import { listOwnNotesWithTags } from "@/lib/kb-content";
@@ -42,7 +41,6 @@ export default async function AtlasPage() {
     // 注意还必须显式写 text-foreground:变量在子树上被覆盖了,但 color 早在 body 上
     // 就按浅色算好并继承下来了,不重新取一次的话文字会是深色、压在深空上看不见
     <div className="dark atlas-app relative bg-[#05060f] text-foreground">
-      <GalaxyBackground />
       <div className="relative">
         <AtlasWorkspace
           notes={notes}

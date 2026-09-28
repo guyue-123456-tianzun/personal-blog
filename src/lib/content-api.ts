@@ -142,9 +142,9 @@ export async function listLatestPublishedPosts(limit = 10) {
     .limit(limit);
 }
 
-/** 已发布文章的正文(公开知识网络:只在这些文章之间连 [[链接]]) */
+/** 已发布文章的正文 + 标签(公开知识网络:只在这些文章之间连 [[链接]] 与同标签关联) */
 export async function listPublishedPostBodies() {
-  return db
+  const rows = await db
     .select({
       id: notes.id,
       title: notes.title,
@@ -154,6 +154,7 @@ export async function listPublishedPostBodies() {
     })
     .from(notes)
     .where(await publishedPostFilter());
+  return attachTags(rows);
 }
 
 /** 归档:按年分组的公开文章 */

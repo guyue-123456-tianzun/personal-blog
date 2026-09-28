@@ -4,6 +4,10 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import AskPanel, { type AtlasNote } from "@/components/atlas/AskPanel";
+import GalaxyBackground, {
+  DEFAULT_GALAXY,
+  type GalaxySettings,
+} from "@/components/atlas/GalaxyBackground";
 import KnowledgeGraph from "@/components/graph/KnowledgeGraph";
 import { Markdown } from "@/components/Markdown";
 import { NOTE_TYPES, noteTypeColor, noteTypeLabel } from "@/lib/content-types";
@@ -16,6 +20,9 @@ type Props = {
   userName: string;
 };
 
+// 工作台里星系的默认姿态:带一点倾斜(24°),一进来就有"斜着看星盘"的立体感
+const ATLAS_GALAXY: GalaxySettings = { ...DEFAULT_GALAXY, tilt: 0.42 };
+
 // 知识库工作台:一整页的应用式界面(左 列表 / 中 图谱或阅读 / 右 属性与问答)。
 // 和其它后台页的区别是它"自己即应用":三栏各自滚动、有快捷键、有状态栏,
 // 不像管理页那样一条一条往下堆。
@@ -26,23 +33,31 @@ export default function AtlasWorkspace({ notes, graph, aiEnabled, userName }: Pr
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [paletteQuery, setPaletteQuery] = useState("");
+  // 星系参数:大小/位置/立体倾斜/自转,星空与图谱共用同一份,是一个整体
+  const [galaxy, setGalaxy] = useState<GalaxySettings>(ATLAS_GALAXY);
+  const [galaxyPanelOpen, setGalaxyPanelOpen] = useState(false);
 
   const noteById = useMemo(() => new Map(notes.map((n) => [n.id, n])), [notes]);
   const selected = selectedId !== null ? noteById.get(selectedId) ?? null : null;
 
-  // 双向链接:直接由图谱数据推导——指向它的边就是反向链接,从它出发的边就是出链
+  // 双向链接:只算"正文里写的 [[引用]]"(kind=wiki)。
+  // 同标签的虚线是"内容相关",不算互相引用——否则这块会把两个概念混在一起
   const links = useMemo(() => {
-    if (selectedId === null) return { backlinks: [], outgoing: [] };
+    if (selectedId === null) return { backlinks: [], outgoing: [], related: [] };
     const toNotes = (ids: number[]) =>
       [...new Set(ids)]
         .map((id) => noteById.get(id))
         .filter((note): note is AtlasNote => Boolean(note));
+    const wiki = graph.edges.filter((e) => e.kind === "wiki");
     return {
-      backlinks: toNotes(
-        graph.edges.filter((e) => e.to === selectedId).map((e) => e.from),
-      ),
-      outgoing: toNotes(
-        graph.edges.filter((e) => e.from === selectedId).map((e) => e.to),
+      backlinks: toNotes(wiki.filter((e) => e.to === selectedId).map((e) => e.from)),
+      outgoing: toNotes(wiki.filter((e) => e.from === selectedId).map((e) => e.to)),
+      // 同标签关联的邻居(虚线那一层),单独列出来
+      related: toNotes(
+        graph.edges
+          .filter((e) => e.kind === "tag")
+          .filter((e) => e.from === selectedId || e.to === selectedId)
+          .map((e) => (e.from === selectedId ? e.to : e.from)),
       ),
     };
   }, [graph.edges, selectedId, noteById]);
@@ -105,7 +120,9 @@ export default function AtlasWorkspace({ notes, graph, aiEnabled, userName }: Pr
   );
 
   return (
-    <div className="flex flex-col lg:h-[calc(100vh-3.5rem)]">
+    <div className="relative flex flex-col lg:h-[calc(100vh-3.5rem)]">
+      {/* 星系背景:跟工作台共用同一份参数,下面那个「🌌 星系」面板改的就是它 */}
+      <GalaxyBackground settings={galaxy} />
       {/* ===== 顶部工具条 ===== */}
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-border px-4 py-2">
         <Link
@@ -229,8 +246,98 @@ export default function AtlasWorkspace({ notes, graph, aiEnabled, userName }: Pr
         {/* 中:图谱 / 阅读 */}
         <section className="flex min-h-0 flex-col">
           {mode === "graph" ? (
-            <div className="min-h-0 flex-1 p-3">
-              <KnowledgeGraph data={graph} mode="private" variant="fill" />
+            <div className="relative min-h-0 flex-1">
+              <KnowledgeGraph
+                data={graph}
+                mode="private"
+                variant="fill"
+                onOpenNode={openNote}
+                galaxy={galaxy}
+              />
+
+              {/* 星系控制:星星与节点共用同一份参数 */}
+              <div className="absolute bottom-3 right-3">
+                <button
+                  onClick={() => setGalaxyPanelOpen((open) => !open)}
+                  aria-expanded={galaxyPanelOpen}
+                  className="glass rounded-full px-3.5 py-1.5 text-xs shadow-lg transition-colors hover:bg-foreground/5"
+                >
+                  🌌 星系
+                </button>
+                {galaxyPanelOpen && (
+                  <div className="pop-in absolute bottom-10 right-0 w-64 rounded-2xl border border-border bg-card/95 p-4 shadow-2xl backdrop-blur-xl">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-semibold">星系</p>
+                      <button
+                        onClick={() => setGalaxy(ATLAS_GALAXY)}
+                        className="rounded-md px-1.5 py-0.5 text-xs opacity-50 transition-opacity hover:opacity-100"
+                      >
+                        重置
+                      </button>
+                    </div>
+                    <GalaxySlider
+                      label="大小"
+                      value={galaxy.scale}
+                      min={0.5}
+                      max={1.8}
+                      step={0.05}
+                      format={(v) => `${Math.round(v * 100)}%`}
+                      onChange={(v) => setGalaxy((s) => ({ ...s, scale: v }))}
+                    />
+                    <GalaxySlider
+                      label="位置 X"
+                      value={galaxy.offsetX}
+                      min={-0.4}
+                      max={0.4}
+                      step={0.01}
+                      format={(v) => `${v > 0 ? "+" : ""}${Math.round(v * 100)}%`}
+                      onChange={(v) => setGalaxy((s) => ({ ...s, offsetX: v }))}
+                    />
+                    <GalaxySlider
+                      label="位置 Y"
+                      value={galaxy.offsetY}
+                      min={-0.4}
+                      max={0.4}
+                      step={0.01}
+                      format={(v) => `${v > 0 ? "+" : ""}${Math.round(v * 100)}%`}
+                      onChange={(v) => setGalaxy((s) => ({ ...s, offsetY: v }))}
+                    />
+                    <GalaxySlider
+                      label="立体倾斜"
+                      value={galaxy.tilt}
+                      min={0}
+                      max={1.25}
+                      step={0.02}
+                      format={(v) => `${Math.round((v * 180) / Math.PI)}°`}
+                      onChange={(v) => setGalaxy((s) => ({ ...s, tilt: v }))}
+                    />
+                    <GalaxySlider
+                      label="自转速度"
+                      value={galaxy.spinSpeed}
+                      min={0}
+                      max={3}
+                      step={0.1}
+                      format={(v) => `${v.toFixed(1)}×`}
+                      onChange={(v) => setGalaxy((s) => ({ ...s, spinSpeed: v }))}
+                    />
+                    <label className="mt-2 flex cursor-pointer items-center gap-2 text-xs">
+                      <input
+                        type="checkbox"
+                        checked={galaxy.autoSpin}
+                        onChange={(e) =>
+                          setGalaxy((s) => ({ ...s, autoSpin: e.target.checked }))
+                        }
+                        className="accent-[var(--accent)]"
+                      />
+                      自动自转(星星与节点一起转)
+                    </label>
+                    <p className="mt-2 text-[10px] leading-relaxed opacity-45">
+                      星星与节点共用同一份参数:大小 / 位置 / 倾斜对整个星系生效。
+                      文字始终水平,不会跟着旋转。
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
           ) : (
             <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
@@ -316,9 +423,10 @@ export default function AtlasWorkspace({ notes, graph, aiEnabled, userName }: Pr
                   <Row label="字数" value={`${selected.content.length}`} />
                   <Row label="可见性" value={selected.isPublic === 1 ? "公开" : "仅自己"} />
                   <Row
-                    label="链接"
+                    label="引用"
                     value={`← ${links.backlinks.length} · → ${links.outgoing.length}`}
                   />
+                  <Row label="同标签" value={`${links.related.length} 篇`} />
                 </dl>
               </section>
 
@@ -327,13 +435,15 @@ export default function AtlasWorkspace({ notes, graph, aiEnabled, userName }: Pr
                   <span className="inline-block h-4 w-1 rounded-full bg-accent" />
                   双向链接
                 </h3>
-                {links.backlinks.length === 0 && links.outgoing.length === 0 ? (
+                {links.backlinks.length === 0 &&
+                links.outgoing.length === 0 &&
+                links.related.length === 0 ? (
                   <p className="text-xs leading-relaxed opacity-55">
                     还没有关联。在这篇正文里写{" "}
                     <code className="rounded bg-foreground/10 px-1 py-0.5">
                       [[另一篇的标题]]
                     </code>
-                    ,就会建立双向链接。
+                    ,就会建立双向链接;给两篇打同一个标签也会自动出现在「同标签」里。
                   </p>
                 ) : (
                   <div className="space-y-3">
@@ -346,6 +456,13 @@ export default function AtlasWorkspace({ notes, graph, aiEnabled, userName }: Pr
                     <LinkList
                       title="出链"
                       notes={links.outgoing}
+                      onOpen={openNote}
+                      compact
+                    />
+                    <LinkList
+                      title="同标签"
+                      hint="内容相关,不是互相引用"
+                      notes={links.related}
                       onOpen={openNote}
                       compact
                     />
@@ -463,6 +580,43 @@ function TypeChip({
       {label}
       <span className="opacity-55">{count}</span>
     </button>
+  );
+}
+
+/** 星系面板里的一行滑杆:标签 + 数值 + range */
+function GalaxySlider({
+  label,
+  value,
+  min,
+  max,
+  step,
+  format,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  step: number;
+  format: (value: number) => string;
+  onChange: (value: number) => void;
+}) {
+  return (
+    <label className="mt-3 flex items-center gap-3 text-xs">
+      <span className="w-14 shrink-0 opacity-65">{label}</span>
+      <input
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+        className="min-w-0 flex-1 accent-[var(--accent)]"
+      />
+      <span className="w-11 shrink-0 text-right font-mono opacity-70">
+        {format(value)}
+      </span>
+    </label>
   );
 }
 

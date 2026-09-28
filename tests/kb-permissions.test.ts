@@ -20,7 +20,7 @@ vi.mock("next/headers", () => ({
 }));
 
 const { db, closeDb } = await import("../src/lib/db");
-const { notes, users } = await import("../src/db/schema");
+const { notes, tags, noteTags, users } = await import("../src/db/schema");
 const { createSessionToken } = await import("../src/lib/auth");
 const { getSessionUser } = await import("../src/lib/session");
 const { registerUser } = await import("../src/lib/users");
@@ -163,7 +163,7 @@ describe("知识图谱 graph.ts", () => {
     const roadmap = graph.nodes.find((n) => n.label === "路线图")!;
     const bookList = graph.nodes.find((n) => n.label === "读书清单")!;
     expect(graph.edges).toEqual([
-      { from: roadmap.id, to: bookList.id, label: "读书清单" },
+      { from: roadmap.id, to: bookList.id, label: "读书清单", kind: "wiki" },
     ]);
   });
 
@@ -171,6 +171,44 @@ describe("知识图谱 graph.ts", () => {
     const graph = await buildGraph(bob);
     expect(graph.nodes.map((n) => n.label)).toEqual(["Bob 的私密笔记"]);
     expect(graph.edges).toEqual([]);
+  });
+});
+
+// 大多数笔记之间并没有互相引用,只有引用关系的话图谱会是一盘散点。
+// 同标签关联(虚线)补的就是这一层:它表示"内容相关",不是"这篇引用了那篇"
+describe("同标签关联(tag 边)", () => {
+  beforeAll(async () => {
+    const rows = await db
+      .insert(notes)
+      .values([
+        { type: "note", slug: "tg-1", title: "标签甲", content: "见 [[标签乙]]", userId: alice.id },
+        { type: "note", slug: "tg-2", title: "标签乙", content: "没有别的", userId: alice.id },
+        { type: "note", slug: "tg-3", title: "标签丙", content: "没有别的", userId: alice.id },
+      ])
+      .returning({ id: notes.id });
+    const [tag] = await db
+      .insert(tags)
+      .values({ name: "同标签测试" })
+      .returning();
+    for (const row of rows) {
+      await db.insert(noteTags).values({ noteId: row.id, tagId: tag.id });
+    }
+  });
+
+  it("共用标签的两篇之间连虚线;已经互相引用的就不再重复连", async () => {
+    const graph = await buildGraph(alice);
+    const idOf = new Map(graph.nodes.map((n) => [n.label, n.id]));
+    const between = (left: string, right: string) =>
+      graph.edges.find(
+        (e) =>
+          (e.from === idOf.get(left) && e.to === idOf.get(right)) ||
+          (e.from === idOf.get(right) && e.to === idOf.get(left)),
+      );
+    // 甲乙已经互相引用过,保持实线,不再叠一条虚线
+    expect(between("标签甲", "标签乙")?.kind).toBe("wiki");
+    // 丙和它们没有引用关系,靠标签连起来
+    expect(between("标签甲", "标签丙")?.kind).toBe("tag");
+    expect(between("标签乙", "标签丙")?.kind).toBe("tag");
   });
 });
 

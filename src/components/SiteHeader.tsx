@@ -2,7 +2,6 @@ import Link from "next/link";
 
 import { siteConfig } from "@/lib/site-config";
 import { getAppearance } from "@/lib/settings";
-import NavMusic from "@/components/NavMusic";
 import ThemeDrawer from "@/components/ThemeDrawer";
 import ThemeToggle from "@/components/ThemeToggle";
 
@@ -45,7 +44,6 @@ export default async function SiteHeader() {
           ))}
         </nav>
         <div className="flex shrink-0 items-center gap-1">
-          <NavMusic playlist={appearance.music} neteasePlaylistId={appearance.neteasePlaylistId} />
           <ThemeDrawer />
           <Link
             href="/search"

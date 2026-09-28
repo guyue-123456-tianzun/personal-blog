@@ -9,7 +9,7 @@ import LoginModal from "@/components/LoginModal";
 import PetAssistant from "@/components/ai/PetAssistant";
 import WallpaperBackground from "@/components/WallpaperBackground";
 import { getAiConfig } from "@/lib/ai";
-import { getAppearance, getWallLibrary } from "@/lib/settings";
+import { getAppearance } from "@/lib/settings";
 import { siteConfig } from "@/lib/site-config";
 
 export const metadata: Metadata = {
@@ -33,10 +33,12 @@ export default async function RootLayout({
   const appearance = await getAppearance();
   const aiConfig = await getAiConfig();
 
-  // 轮播列表:当前设置的夜间/白天壁纸 + 壁纸库(public\wallpapers\)里的全部文件,去重
-  const library = getWallLibrary();
-  const nightList = [...new Set([appearance.wallImage, ...library])];
-  const dayList = [...new Set([appearance.wallImageDay, ...library])];
+  // 背景只用站长在外观后台选定的壁纸。
+  // 以前这里把 public\wallpapers\ 整个目录也拼进来当轮播播放列表,结果每 3 秒会在
+  // 站长选的那张和库里那个 336MB 的大文件之间来回切,又卡又闪。
+  // 壁纸库的用途是"后台一键选用"(见 AppearanceForm),不是自动播放列表
+  const nightList = [appearance.wallImage];
+  const dayList = [appearance.wallImageDay];
 
   return (
     <html lang="zh-CN" suppressHydrationWarning>

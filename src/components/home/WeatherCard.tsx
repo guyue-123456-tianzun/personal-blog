@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-import { wmoEmoji, wmoText } from "@/lib/weather";
+import { lookupPlace, wmoEmoji, wmoText } from "@/lib/weather";
 
 type Props = {
   defaultCity: string;
@@ -58,22 +58,37 @@ export default function WeatherCard({
     setError("");
     (async () => {
       try {
-        // 1. 城市名 → 经纬度(Open-Meteo 地理编码,中文可用)
-        const geoRes = await fetch(
-          `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=zh&format=json`,
-        );
-        const geo = (await geoRes.json()) as {
-          results?: { latitude: number; longitude: number; name: string }[];
-        };
-        const hit = geo.results?.[0];
-        if (!hit) {
-          setError("找不到这个城市");
-          setLoading(false);
-          return;
+        // 1. 先查内置地名表:常见地名直接命中,不受在线地理编码"认错地方"的影响
+        let coords = lookupPlace(city);
+        let resolvedName = city;
+
+        if (!coords) {
+          // 2. 表里没有才走在线地理编码(Open-Meteo,中文可用)
+          const geoRes = await fetch(
+            `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=zh&format=json`,
+          );
+          // 请求本身失败 和 "真的没有这个城市" 是两回事,别让网络问题背"城市名写错了"的锅
+          if (!geoRes.ok) {
+            setError("天气服务暂时联系不上");
+            setLoading(false);
+            return;
+          }
+          const geo = (await geoRes.json()) as {
+            results?: { latitude: number; longitude: number; name: string }[];
+          };
+          const hit = geo.results?.[0];
+          if (!hit) {
+            setError(`没找到「${city}」,可换成附近的大城市`);
+            setLoading(false);
+            return;
+          }
+          coords = { latitude: hit.latitude, longitude: hit.longitude };
+          resolvedName = hit.name;
         }
-        // 2. 拉天气
+
+        // 3. 拉天气
         const res = await fetch(
-          `https://api.open-meteo.com/v1/forecast?latitude=${hit.latitude}&longitude=${hit.longitude}&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=4`,
+          `https://api.open-meteo.com/v1/forecast?latitude=${coords.latitude}&longitude=${coords.longitude}&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=4`,
         );
         const raw = (await res.json()) as {
           current?: {
@@ -98,7 +113,7 @@ export default function WeatherCard({
           max: Math.round(raw.daily!.temperature_2m_max[i]),
         }));
         const next: WeatherData = {
-          city: hit.name,
+          city: resolvedName,
           temp: Math.round(raw.current.temperature_2m),
           feels: Math.round(raw.current.apparent_temperature),
           humidity: Math.round(raw.current.relative_humidity_2m),

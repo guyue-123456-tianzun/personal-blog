@@ -2,9 +2,8 @@ import Link from "next/link";
 
 import { siteConfig } from "@/lib/site-config";
 import type { Appearance } from "@/lib/settings";
-import type { SiteStats } from "@/lib/site-stats";
 
-type Props = { stats: SiteStats; appearance: Appearance };
+type Props = { appearance: Appearance };
 
 // 社交图标:内置常用类型的矢量图标,未识别的类型用链接图标兜底
 function SocialIcon({ type }: { type: string }) {
@@ -46,51 +45,47 @@ function SocialIcon({ type }: { type: string }) {
   );
 }
 
-// 个人资料卡:头像(跟随外观设置) + 签名 + 三个核心数字 + 社交图标
-export default function ProfileCard({ stats, appearance }: Props) {
+// 个人资料卡:头像 + 站名 + 一条签名 + 社交入口。
+// 刻意做减法:文章/标签/运行天数这些数字交给右栏"站点统计",两处不再重复;
+// 头像从"小圆头像"改成大号圆角方块,是和站长给的参考卡对齐的视觉重心所在
+export default function ProfileCard({ appearance }: Props) {
   return (
-    <section className="glass flex h-full flex-col items-center rounded-2xl p-5 text-center">
+    <section className="glass rounded-2xl px-5 py-6 text-center">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={appearance.avatar}
         alt="头像"
-        className="h-20 w-20 rounded-full border-2 border-white/40 object-cover shadow-lg"
+        className="mx-auto h-28 w-28 rounded-[26px] object-cover shadow-lg ring-1 ring-white/50"
       />
-      <h3 className="mt-3 text-lg font-bold">{siteConfig.siteName}</h3>
-      <p className="mt-1 text-sm opacity-70">{appearance.signature}</p>
+      <h3 className="mt-4 text-lg font-bold tracking-wide">
+        {siteConfig.siteName}
+      </h3>
+      {/* 名字下的一道短横线:参考卡的固定小细节,作用是给眼睛一个落点 */}
+      <span className="mx-auto mt-2 block h-[3px] w-7 rounded-full bg-accent" />
+      <p className="mt-2.5 text-sm leading-relaxed opacity-70">
+        {appearance.signature}
+      </p>
       {siteConfig.location && (
-        <p className="mt-1 text-xs opacity-50">📍 {siteConfig.location}</p>
+        <p className="mt-2 text-xs opacity-50">📍 {siteConfig.location}</p>
       )}
 
-      <div className="mt-4 flex w-full justify-center gap-8">
-        <div>
-          <p className="text-xl font-bold text-accent">{stats.posts}</p>
-          <p className="text-xs opacity-60">文章</p>
+      {siteConfig.socials.length > 0 && (
+        <div className="mt-5 flex flex-wrap justify-center gap-2">
+          {siteConfig.socials.map((social) => (
+            <Link
+              key={social.label}
+              href={social.url}
+              target="_blank"
+              aria-label={social.label}
+              title={social.label}
+              className="flex items-center gap-1.5 rounded-xl bg-foreground/5 px-3 py-2 text-xs opacity-80 transition-all hover:-translate-y-0.5 hover:bg-accent hover:text-white hover:opacity-100"
+            >
+              <SocialIcon type={social.type} />
+              {social.label}
+            </Link>
+          ))}
         </div>
-        <div>
-          <p className="text-xl font-bold text-accent">{stats.tags}</p>
-          <p className="text-xs opacity-60">标签</p>
-        </div>
-        <div>
-          <p className="text-xl font-bold text-accent">{stats.days}</p>
-          <p className="text-xs opacity-60">运行天数</p>
-        </div>
-      </div>
-
-      <div className="mt-4 flex justify-center gap-3">
-        {siteConfig.socials.map((social) => (
-          <Link
-            key={social.label}
-            href={social.url}
-            target="_blank"
-            aria-label={social.label}
-            title={social.label}
-            className="flex h-9 w-9 items-center justify-center rounded-full border border-border transition-all hover:-translate-y-0.5 hover:bg-foreground/10"
-          >
-            <SocialIcon type={social.type} />
-          </Link>
-        ))}
-      </div>
+      )}
     </section>
   );
 }

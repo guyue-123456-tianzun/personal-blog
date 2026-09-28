@@ -96,13 +96,24 @@ describe("站点统计 getSiteStats / 浏览计数", () => {
 });
 
 describe("沉浸式壁纸外观键", () => {
-  it("未设置壁纸时跟随 Hero 图;设置后独立生效", async () => {
+  it("没单独设 Hero 时,首屏跟着壁纸走(壁纸就是首屏那张脸)", async () => {
     const before = await settings.getAppearance();
     expect(before.wallImage).toBe(before.heroImage); // 默认跟随
+
     await settings.setSetting("wall_image_url", "/images/cover-1.svg");
     const after = await settings.getAppearance();
     expect(after.wallImage).toBe("/images/cover-1.svg");
-    expect(after.heroImage).toBe(before.heroImage); // Hero 不受影响
+    // 关键:换了壁纸,首屏跟着换,不会出现"上面一张系统插画、底下才是你的壁纸"
+    expect(after.heroImage).toBe("/images/cover-1.svg");
+    expect(after.heroImageDay).toBe("/images/cover-1.svg");
+  });
+
+  it("单独设了 Hero 背景图时,首屏以它为准,壁纸不受影响", async () => {
+    await settings.setSetting("hero_image_url", "/images/cover-2.svg");
+    const appearance = await settings.getAppearance();
+    expect(appearance.heroImage).toBe("/images/cover-2.svg");
+    expect(appearance.wallImage).toBe("/images/cover-1.svg");
+    await settings.clearSetting("hero_image_url");
   });
 
   it("壁纸虚化越界值被夹回 0~30", async () => {

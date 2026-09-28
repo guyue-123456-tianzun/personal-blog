@@ -74,3 +74,35 @@ describe("天气代码映射", () => {
     expect(weather.wmoEmoji(95)).toBe("⛈️");
   });
 });
+
+describe("内置城市坐标表 lookupPlace", () => {
+  it("常见城市直接命中,不依赖在线地理编码", () => {
+    const beijing = weather.lookupPlace("北京");
+    expect(beijing).not.toBeNull();
+    expect(beijing!.latitude).toBeCloseTo(39.9, 0);
+    expect(beijing!.longitude).toBeCloseTo(116.4, 0);
+  });
+
+  it("带行政后缀也能匹配(永修县 → 永修)", () => {
+    const direct = weather.lookupPlace("永修");
+    const withSuffix = weather.lookupPlace("永修县");
+    expect(withSuffix).toEqual(direct);
+    expect(withSuffix).not.toBeNull();
+  });
+
+  it("九江取的是江西那个,不是外省同名小地方", () => {
+    // 在线地理编码搜"九江"会先返回 28.16/109.12 的外省同名地,
+    // 表里写死坐标就是为了避免这种"认错地方"
+    const jiujiang = weather.lookupPlace("九江");
+    expect(jiujiang!.latitude).toBeGreaterThan(29);
+    expect(jiujiang!.longitude).toBeGreaterThan(115);
+  });
+
+  it("表里没有的地名返回 null,交给在线接口处理", () => {
+    expect(weather.lookupPlace("某个不存在的地名")).toBeNull();
+  });
+
+  it("首尾空格不影响匹配", () => {
+    expect(weather.lookupPlace("  南京  ")).toEqual(weather.lookupPlace("南京"));
+  });
+});

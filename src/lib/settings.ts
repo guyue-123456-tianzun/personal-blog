@@ -121,11 +121,19 @@ export async function getAppearance(): Promise<Appearance> {
   }
 
   return {
-    heroImage: map.get("hero_image_url") ?? siteConfig.heroImage,
-    // 白天 Hero:优先"白天"设置,其次跟随夜间自定义,最后落到日间默认插画
+    // Hero 图源:站长单独设过就用它,否则**跟随全站壁纸**——壁纸就是你选的绘梨衣,
+    // 它本来就该是首屏那张脸,而不是被压在最底下当背景。
+    // 只有两处都没设时才落到内置插画(保证全新站点也不会开天窗)
+    heroImage:
+      map.get("hero_image_url") ??
+      map.get("wall_image_url") ??
+      siteConfig.heroImage,
+    // 白天 Hero:优先"白天"设置 → 夜间 Hero → 白天壁纸 → 夜间壁纸 → 日间默认插画
     heroImageDay:
       map.get("hero_image_url_day") ??
       map.get("hero_image_url") ??
+      map.get("wall_image_url_day") ??
+      map.get("wall_image_url") ??
       DAY_HERO_DEFAULT,
     avatar: map.get("avatar_url") ?? siteConfig.avatar,
     heroBlur: Number.isFinite(blur) ? clamp(blur, 0, 24) : 0,

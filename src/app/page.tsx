@@ -79,7 +79,9 @@ export default async function Home() {
             </div>
           ),
         )}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/10 to-transparent" />
+        {/* 文字压在图上的暗色渐隐:上浓下淡。壁纸可能是亮的也可能是暗的,
+            这层罩子保证任何壁纸下站名/签名/胶囊都读得清 */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/25 to-black/10" />
         {/* 漂浮粒子:玻璃质感的小点缀 */}
         {[
           { left: "12%", delay: "0s", size: 9 },
@@ -100,21 +102,23 @@ export default async function Home() {
           />
         ))}
         <div className="relative z-10 mx-auto w-full max-w-2xl px-6 pb-36 text-center text-white">
-          <h1 className="text-4xl font-bold drop-shadow-lg sm:text-5xl">
+          <h1 className="text-4xl font-bold tracking-wide drop-shadow-[0_2px_14px_rgba(0,0,0,0.65)] sm:text-5xl">
             {siteConfig.siteName}
           </h1>
-          <p className="mt-4 text-base opacity-90 drop-shadow sm:text-lg">
+          <p className="mt-4 text-base drop-shadow-[0_1px_10px_rgba(0,0,0,0.75)] sm:text-lg">
             {appearance.signature}
           </p>
+          {/* 搜索框/胶囊统一用"深色半透 + 白字",不跟随深浅色主题:
+              它们永远压在壁纸上,用玻璃白底会在亮壁纸上变成白字压白底 */}
           <form
             action="/search"
             method="get"
-            className="glass mx-auto mt-8 flex max-w-md items-center rounded-full p-1.5 shadow-lg"
+            className="mx-auto mt-8 flex max-w-md items-center rounded-full border border-white/25 bg-black/35 p-1.5 shadow-lg backdrop-blur-md"
           >
             <input
               name="q"
               placeholder="输入暗号,探索更多…"
-              className="w-full bg-transparent px-4 py-2 text-sm text-white outline-none placeholder:text-white/60"
+              className="w-full bg-transparent px-4 py-2 text-sm text-white outline-none placeholder:text-white/70"
             />
             <button
               type="submit"
@@ -123,20 +127,21 @@ export default async function Home() {
               搜索
             </button>
           </form>
-          {/* Hero 数据胶囊条:参考站同款,一眼看到站点活跃度 */}
+          {/* Hero 数据胶囊条:一眼看到站点活跃度 */}
           <div className="mt-7 flex flex-wrap items-center justify-center gap-2.5 text-sm">
-            <span className="glass rounded-full px-4 py-1.5 text-white">
-              📝 文章 {posts.length}
-            </span>
-            <span className="glass rounded-full px-4 py-1.5 text-white">
-              👁️ 总浏览 {stats.views}
-            </span>
-            <span className="glass rounded-full px-4 py-1.5 text-white">
-              👥 在线 {stats.online}
-            </span>
-            <span className="glass rounded-full px-4 py-1.5 text-white">
-              📅 运行 {stats.days} 天
-            </span>
+            {[
+              { icon: "📝", label: "文章", value: posts.length },
+              { icon: "👁️", label: "总浏览", value: stats.views },
+              { icon: "👥", label: "在线", value: stats.online },
+              { icon: "📅", label: "运行", value: `${stats.days} 天` },
+            ].map((chip) => (
+              <span
+                key={chip.label}
+                className="rounded-full border border-white/20 bg-black/30 px-4 py-1.5 text-white backdrop-blur-md"
+              >
+                {chip.icon} {chip.label} {chip.value}
+              </span>
+            ))}
           </div>
         </div>
       </section>
@@ -146,7 +151,7 @@ export default async function Home() {
         <div className="relative z-20 -mt-28 grid items-start gap-4 lg:grid-cols-[260px_minmax(0,1fr)_270px]">
           {/* 左栏:人物 + 公告 + 恋爱 + 天气 + 音乐(高度与右栏错开) */}
           <div className="fade-up space-y-4" style={{ animationDelay: "0ms" }}>
-            <ProfileCard stats={stats} appearance={appearance} />
+            <ProfileCard appearance={appearance} />
             <TypewriterBanner />
             <LoveCard
               enabled={appearance.loveEnabled}

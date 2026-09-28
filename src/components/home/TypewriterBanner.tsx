@@ -33,8 +33,13 @@ export default function TypewriterBanner({ className = "" }: { className?: strin
   }, [text, phase, phraseIndex, phrases]);
 
   return (
-    <div className={`glass rounded-2xl px-6 py-4 text-center ${className}`}>
-      <p className="font-mono text-sm tracking-wider sm:text-base">
+    <div className={`glass rounded-2xl px-5 py-4 ${className}`}>
+      <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold">
+        <span className="inline-block h-4 w-1 rounded-full bg-accent" />
+        公告
+      </h3>
+      {/* 固定最小高度:打字/擦字的过程中卡片不会一跳一跳 */}
+      <p className="min-h-6 font-mono text-sm leading-relaxed">
         {text}
         <span className="animate-pulse text-accent">|</span>
       </p>

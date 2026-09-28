@@ -178,7 +178,7 @@ export default function PetAssistant({ enabled = true }: Props) {
           <img
             src="/images/pet-erii.png"
             alt="绘梨衣"
-            className="h-28 w-auto object-contain drop-shadow-2xl"
+            className="h-20 w-auto object-contain drop-shadow-2xl sm:h-28"
           />
         </button>
       </div>

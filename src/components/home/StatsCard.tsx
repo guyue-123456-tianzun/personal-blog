@@ -18,12 +18,12 @@ export default function StatsCard({ stats }: Props) {
   const yearPct = Math.round(((now.getTime() - yearStart) / (yearEnd - yearStart)) * 100);
   const daysLeft = Math.ceil((yearEnd - now.getTime()) / 86_400_000);
 
+  // 只留"别处没有的数字":文章/标签/总字数 + 运行时长。
+  // 全站浏览交给下面的大数字、今日浏览交给双格,避免同一张卡里自己重复自己
   const rows = [
     { icon: "📝", tone: "bg-blue-500/15 text-blue-500", label: "文章", value: `${stats.posts} 篇` },
     { icon: "🏷️", tone: "bg-violet-500/15 text-violet-500", label: "标签", value: `${stats.tags} 个` },
     { icon: "✍️", tone: "bg-pink-500/15 text-pink-500", label: "总字数", value: stats.words.toLocaleString() },
-    { icon: "📅", tone: "bg-amber-500/15 text-amber-500", label: "今日浏览", value: `${stats.today} 次` },
-    { icon: "👁️", tone: "bg-cyan-500/15 text-cyan-500", label: "全站浏览", value: `${stats.views} 次` },
   ];
 
   return (

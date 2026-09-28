@@ -22,7 +22,7 @@ async function PublicShellLayout({ children }: Props) {
       <div className="grid items-start gap-4 lg:grid-cols-[250px_minmax(0,1fr)_260px]">
         {/* 左栏:资料 + 打字机公告 + 音乐 */}
         <div className="fade-up space-y-4" style={{ animationDelay: "0ms" }}>
-          <ProfileCard stats={stats} appearance={appearance} />
+          <ProfileCard appearance={appearance} />
           <TypewriterBanner />
           <MusicPlayer playlist={appearance.music} neteasePlaylistId={appearance.neteasePlaylistId} />
         </div>

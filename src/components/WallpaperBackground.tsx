@@ -76,12 +76,12 @@ export default function WallpaperBackground({
       {/* 白天壁纸层:阳光模式 */}
       <div className="absolute inset-0 dark:hidden">
         {!plain && <Layer list={dayList} index={dayIndex} blur={blurOverride} />}
-        <div className="absolute inset-0 bg-background/60" />
+        <div className="absolute inset-0 bg-background/35" />
       </div>
       {/* 夜间壁纸层:紫色光感模式 */}
       <div className="absolute inset-0 hidden dark:block">
         {!plain && <Layer list={nightList} index={nightIndex} blur={blurOverride} />}
-        <div className="absolute inset-0 bg-[#07070f]/75" />
+        <div className="absolute inset-0 bg-[#07070f]/60" />
       </div>
     </div>
   );

@@ -15,7 +15,7 @@ export default async function SearchPage({ searchParams }: Props) {
   const results = query ? await searchPublishedPosts(query) : [];
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
+    <main className="mx-auto max-w-3xl px-4 pt-24 pb-10 sm:px-6">
       <h1 className="text-2xl font-bold">搜索</h1>
       <form action="/search" method="get" className="mt-4 flex gap-2">
         <input

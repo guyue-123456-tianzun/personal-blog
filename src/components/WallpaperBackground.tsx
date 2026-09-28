@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 
 import {
   readThemePrefs,
@@ -27,8 +28,10 @@ export default function WallpaperBackground({
   siteEnabled,
   siteSeconds,
 }: Props) {
+  const pathname = usePathname();
   const [prefs, setPrefs] = useState<ThemePrefs | null>(null);
   const [tick, setTick] = useState(0);
+  // /atlas 全屏工作台自带星系背景,全站壁纸在那里不渲染,避免两层背景打架
 
   useEffect(() => {
     const sync = () => setPrefs(readThemePrefs());
@@ -70,6 +73,8 @@ export default function WallpaperBackground({
     dayList.length > 0
       ? ((tick % dayList.length) + dayList.length) % dayList.length
       : 0;
+
+  if (pathname.startsWith("/atlas")) return null;
 
   return (
     <div className="fixed inset-0 -z-10" aria-hidden>

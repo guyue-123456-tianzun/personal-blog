@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import NavMusic from "@/components/NavMusic";
-import ThemeDrawer from "@/components/ThemeDrawer";
 import ThemeToggle from "@/components/ThemeToggle";
 import { neteasePlaylistEmbedUrl, type Song } from "@/lib/music";
 
@@ -123,11 +122,8 @@ export default function NavBar({
     return () => document.removeEventListener("mousedown", onClick);
   }, [musicOpen]);
 
-  // /atlas 是全屏工作台,有自己的顶栏和返回入口,不叠加站点胶囊
-  if (pathname.startsWith("/atlas")) return null;
-
   const overlay = isHome && !scrolled;
-  const itemClass = `whitespace-nowrap rounded-full px-3 py-1.5 transition-colors ${
+  const itemClass = `whitespace-nowrap rounded-full px-3.5 py-2 text-[15px] transition-colors ${
     overlay ? "hover:bg-white/15" : "hover:bg-foreground/10"
   }`;
 
@@ -137,7 +133,7 @@ export default function NavBar({
     <header className="fixed inset-x-0 top-3 z-50 px-3 sm:px-6">
       {/* 悬浮胶囊:覆盖态全透明浮在大图上;常规态半透明毛玻璃(比旧版更透) */}
       <div
-        className={`mx-auto flex h-12 max-w-4xl items-center gap-2 rounded-full px-3 shadow-lg transition-all duration-300 sm:px-4 ${
+        className={`mx-auto flex h-14 max-w-6xl items-center gap-3 rounded-full px-5 shadow-lg transition-all duration-300 sm:px-6 ${
           overlay
             ? "border border-white/10 bg-black/20"
             : "border border-white/25 bg-white/40 backdrop-blur-xl dark:border-white/10 dark:bg-white/10"
@@ -227,7 +223,7 @@ export default function NavBar({
             <input
               name="q"
               placeholder="搜索"
-              className={`w-20 bg-transparent text-xs outline-none xl:w-24 ${
+              className={`w-28 bg-transparent text-xs outline-none xl:w-36 ${
                 overlay ? "text-white placeholder:text-white/50" : "placeholder:opacity-50"
               }`}
             />

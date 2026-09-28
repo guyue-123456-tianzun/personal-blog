@@ -8,12 +8,12 @@ import ThemeDrawer from "@/components/ThemeDrawer";
 import ThemeToggle from "@/components/ThemeToggle";
 
 const NAV = [
-  { href: "/", label: "首页", icon: "🏠" },
-  { href: "/archives", label: "归档", icon: "📅" },
-  { href: "/moments", label: "说说", icon: "💬" },
-  { href: "/atlas", label: "知识库", icon: "🌌" },
-  { href: "/photos", label: "照片墙", icon: "📷" },
-  { href: "/media", label: "书影音", icon: "📚" },
+  { href: "/", label: "首页" },
+  { href: "/archives", label: "归档" },
+  { href: "/moments", label: "说说" },
+  { href: "/atlas", label: "知识库" },
+  { href: "/photos", label: "照片墙" },
+  { href: "/media", label: "书影音" },
 ];
 
 // 次要页收进"更多"下拉(参考站也是这个做法:主栏 4~5 项 + 一个下拉)。
@@ -34,12 +34,11 @@ type Props = {
   profileHref: string;
 };
 
-// 顶部导航:三段式——左 头像+站名,中 导航,右 工具图标。
-// 视觉上分两种状态:
-//   覆盖态(首页、还没往下滚):全透明 + 白字,浮在首屏大图之上,和参考站一样
-//   常规态(滚过一点 / 其它页面):毛玻璃底 + 跟随主题的文字色
-// 之所以要分两种:首页首屏是深色大图,透明+白字好看;其它页面上方是浅色壁纸,
-// 白字会糊掉,所以只有首页才用覆盖态
+// 顶部导航:悬浮胶囊造型(参考站同款)——
+//   离边缘留白、圆角收边、纯文字链接,不再是一条贴边直角长条。
+// 视觉两种状态:
+//   覆盖态(首页、还没往下滚):全透明 + 白字,浮在首屏大图之上
+//   常规态(滚过一点 / 其它页面):毛玻璃胶囊底 + 跟随主题的文字色
 export default function NavBar({ avatar, siteName, profileHref }: Props) {
   const pathname = usePathname();
   const isHome = pathname === "/";
@@ -57,19 +56,20 @@ export default function NavBar({ avatar, siteName, profileHref }: Props) {
   }, []);
 
   const overlay = isHome && !scrolled;
-  const itemClass = `whitespace-nowrap rounded-full px-2.5 py-1.5 transition-colors ${
+  const linkClass = `whitespace-nowrap rounded-full px-3 py-1.5 transition-colors ${
     overlay ? "hover:bg-white/15" : "hover:bg-foreground/10"
   }`;
 
   return (
-    <header
-      className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${
-        overlay
-          ? "border-b border-white/10 bg-transparent"
-          : "glass border-b border-border"
-      }`}
-    >
-      <div className="mx-auto flex h-14 max-w-6xl items-center gap-2 px-4 sm:px-6">
+    <header className="fixed inset-x-0 top-3 z-50 px-3 sm:px-6">
+      {/* 悬浮胶囊:覆盖态全透明浮在大图上;常规态毛玻璃 */}
+      <div
+        className={`mx-auto flex h-12 max-w-4xl items-center gap-2 rounded-full px-3 shadow-lg transition-all duration-300 sm:px-4 ${
+          overlay
+            ? "border border-white/10 bg-black/20"
+            : "glass"
+        }`}
+      >
         {/* 左:头像 + 站名 → 站长的个人主页 */}
         <Link
           href={profileHref}
@@ -82,7 +82,7 @@ export default function NavBar({ avatar, siteName, profileHref }: Props) {
           <img
             src={avatar}
             alt=""
-            className="h-8 w-8 rounded-xl object-cover ring-1 ring-white/25"
+            className="h-7 w-7 rounded-full object-cover ring-1 ring-white/25"
           />
           <span className="hidden sm:inline">{siteName}</span>
         </Link>
@@ -95,8 +95,7 @@ export default function NavBar({ avatar, siteName, profileHref }: Props) {
           }`}
         >
           {NAV.map((item) => (
-            <Link key={item.href} href={item.href} className={itemClass}>
-              <span className="mr-1 hidden sm:inline">{item.icon}</span>
+            <Link key={item.href} href={item.href} className={linkClass}>
               {item.label}
             </Link>
           ))}
@@ -106,7 +105,7 @@ export default function NavBar({ avatar, siteName, profileHref }: Props) {
             <button
               onClick={() => setMoreOpen((open) => !open)}
               aria-expanded={moreOpen}
-              className={`${itemClass} whitespace-nowrap`}
+              className={`${linkClass} whitespace-nowrap`}
             >
               更多 {moreOpen ? "⌃" : "⌄"}
             </button>
@@ -138,16 +137,40 @@ export default function NavBar({ avatar, siteName, profileHref }: Props) {
 
         {/* 右:工具图标 */}
         <div
-          className={`flex shrink-0 items-center gap-1 ${
+          className={`flex shrink-0 items-center gap-0.5 ${
             overlay ? "text-white [&_button]:text-white" : ""
           }`}
         >
+          <form
+            action="/search"
+            className={`hidden items-center rounded-full border px-3 py-1 lg:flex ${
+              overlay ? "border-white/30" : "border-border"
+            }`}
+          >
+            <input
+              name="q"
+              placeholder="搜索"
+              className={`w-20 bg-transparent text-xs outline-none xl:w-24 ${
+                overlay ? "text-white placeholder:text-white/50" : ""
+              }`}
+            />
+          </form>
+          <Link
+            href="/search"
+            aria-label="搜索"
+            title="搜索"
+            className={`flex h-8 w-8 items-center justify-center rounded-full text-sm transition-colors lg:hidden ${
+              overlay ? "hover:bg-white/15" : "hover:bg-foreground/10"
+            }`}
+          >
+            🔍
+          </Link>
           <ThemeDrawer />
           <Link
             href="/search"
             aria-label="搜索"
             title="搜索"
-            className={`flex h-9 w-9 items-center justify-center rounded-full transition-colors ${
+            className={`flex h-8 w-8 items-center justify-center rounded-full text-sm transition-colors ${
               overlay ? "hover:bg-white/15" : "hover:bg-foreground/10"
             }`}
           >
@@ -155,6 +178,7 @@ export default function NavBar({ avatar, siteName, profileHref }: Props) {
           </Link>
           <Link
             href="/kb"
+            title="站长入口"
             className={`hidden rounded-full px-2.5 py-1.5 text-sm transition-colors sm:block ${
               overlay ? "hover:bg-white/15" : "hover:bg-foreground/10"
             }`}

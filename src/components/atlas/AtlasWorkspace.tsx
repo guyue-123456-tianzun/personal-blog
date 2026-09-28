@@ -4,6 +4,9 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import AskPanel, { type AtlasNote } from "@/components/atlas/AskPanel";
+import BookmarkQuickForm from "@/components/atlas/BookmarkQuickForm";
+import ClipForm from "@/components/kb/ClipForm";
+import DiaryComposer from "@/components/kb/DiaryComposer";
 import GalaxyBackground, {
   DEFAULT_GALAXY,
   type GalaxySettings,
@@ -36,6 +39,11 @@ export default function AtlasWorkspace({ notes, graph, aiEnabled, userName }: Pr
   // 星系参数:大小/位置/立体倾斜/自转,星空与图谱共用同一份,是一个整体
   const [galaxy, setGalaxy] = useState<GalaxySettings>(ATLAS_GALAXY);
   const [galaxyPanelOpen, setGalaxyPanelOpen] = useState(false);
+  // "新建"下拉与对应弹层:剪藏/日记/书签在弹层里直接录,笔记仍去编辑器页
+  const [createMenuOpen, setCreateMenuOpen] = useState(false);
+  const [createPanel, setCreatePanel] = useState<"clip" | "diary" | "bookmark" | null>(
+    null,
+  );
 
   const noteById = useMemo(() => new Map(notes.map((n) => [n.id, n])), [notes]);
   const selected = selectedId !== null ? noteById.get(selectedId) ?? null : null;
@@ -96,7 +104,11 @@ export default function AtlasWorkspace({ notes, graph, aiEnabled, userName }: Pr
         setPaletteOpen(true);
         return;
       }
-      if (event.key === "Escape") setPaletteOpen(false);
+      if (event.key === "Escape") {
+        setPaletteOpen(false);
+        setCreateMenuOpen(false);
+        setCreatePanel(null);
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -161,12 +173,47 @@ export default function AtlasWorkspace({ notes, graph, aiEnabled, userName }: Pr
               阅读
             </button>
           </div>
-          <Link
-            href="/kb/notes/new"
-            className="rounded-lg bg-accent px-2.5 py-1.5 text-xs text-white transition-opacity hover:opacity-90"
-          >
-            + 新笔记
-          </Link>
+          <div className="relative">
+            <button
+              onClick={() => setCreateMenuOpen((v) => !v)}
+              className="rounded-lg bg-accent px-2.5 py-1.5 text-xs text-white transition-opacity hover:opacity-90"
+            >
+              + 新建 {createMenuOpen ? "⌃" : "⌄"}
+            </button>
+            {createMenuOpen && (
+              <>
+                <button
+                  aria-hidden
+                  tabIndex={-1}
+                  onClick={() => setCreateMenuOpen(false)}
+                  className="fixed inset-0 z-40 cursor-default"
+                />
+                <div className="absolute right-0 z-50 mt-2 w-36 rounded-xl border border-border bg-card p-1.5 text-sm text-foreground shadow-lg backdrop-blur-md">
+                  {[
+                    { key: "note", label: "📝 笔记" },
+                    { key: "clip", label: "✂️ 剪藏网页" },
+                    { key: "diary", label: "📔 写日记" },
+                    { key: "bookmark", label: "🔖 加书签" },
+                  ].map((item) => (
+                    <button
+                      key={item.key}
+                      onClick={() => {
+                        setCreateMenuOpen(false);
+                        if (item.key === "note") {
+                          window.location.href = "/kb/notes/new";
+                        } else {
+                          setCreatePanel(item.key as "clip" | "diary" | "bookmark");
+                        }
+                      }}
+                      className="block w-full rounded-lg px-2.5 py-1.5 text-left transition-colors hover:bg-foreground/10"
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
@@ -545,6 +592,58 @@ export default function AtlasWorkspace({ notes, graph, aiEnabled, userName }: Pr
                 ))
               )}
             </ul>
+          </div>
+        </div>
+      )}
+
+      {/* ===== 新建弹层:剪藏 / 日记 / 书签 ===== */}
+      {createPanel && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+          onClick={() => setCreatePanel(null)}
+        >
+          <div
+            className="max-h-[80vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-border bg-card p-5 text-foreground shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="font-bold">
+                {createPanel === "clip"
+                  ? "✂️ 剪藏网页"
+                  : createPanel === "diary"
+                    ? "📔 写日记"
+                    : "🔖 加书签"}
+              </h3>
+              <button
+                onClick={() => setCreatePanel(null)}
+                aria-label="关闭"
+                className="flex h-8 w-8 items-center justify-center rounded-full text-sm opacity-60 transition-colors hover:bg-foreground/10 hover:opacity-100"
+              >
+                ✕
+              </button>
+            </div>
+            {createPanel === "clip" && (
+              <>
+                <p className="mb-3 text-xs opacity-55">
+                  粘贴网址,服务端抓标题和正文存成剪藏笔记。
+                </p>
+                <ClipForm />
+              </>
+            )}
+            {createPanel === "diary" && (
+              <>
+                <p className="mb-3 text-xs opacity-55">日记默认仅自己可见。</p>
+                <DiaryComposer />
+              </>
+            )}
+            {createPanel === "bookmark" && (
+              <>
+                <p className="mb-3 text-xs opacity-55">
+                  三秒存一条;整理去「书签」管理页。
+                </p>
+                <BookmarkQuickForm />
+              </>
+            )}
           </div>
         </div>
       )}

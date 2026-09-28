@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import FriendButton from "@/components/social/FriendButton";
+import MomentImages from "@/components/social/MomentImages";
 import { listPublicMoments } from "@/lib/content-api";
 import { getRelationStatus } from "@/lib/friends";
 import { getSessionUser } from "@/lib/session";
@@ -80,20 +81,9 @@ export default async function UserProfilePage({ params }: Props) {
               <p className="whitespace-pre-wrap text-[15px] leading-7">
                 {moment.content}
               </p>
-              {moment.images.length > 0 && (
-                <div className="mt-3 grid grid-cols-2 gap-2">
-                  {moment.images.map((image) => (
-                    <a key={image.id} href={image.url} target="_blank">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={image.url}
-                        alt=""
-                        className="h-40 w-full rounded-xl object-cover"
-                      />
-                    </a>
-                  ))}
-                </div>
-              )}
+              <MomentImages
+                images={moment.images.map((image) => ({ id: image.id, url: image.url }))}
+              />
               <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs opacity-50">
                 <time>{moment.createdAt.slice(0, 16)}</time>
                 <span className="flex gap-1.5">

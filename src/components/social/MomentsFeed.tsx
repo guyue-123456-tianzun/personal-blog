@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 
 import FriendButton from "@/components/social/FriendButton";
+import MomentImages from "@/components/social/MomentImages";
 
 export type FeedMoment = {
   id: number;
@@ -99,22 +100,9 @@ export default function MomentsFeed({ moments, sessionUsername, relations }: Pro
             </p>
 
             {moment.images.length > 0 && (
-              <div
-                className={`mt-3 grid gap-2 ${
-                  moment.images.length === 1 ? "grid-cols-1" : "grid-cols-2"
-                }`}
-              >
-                {moment.images.map((image) => (
-                  <a key={image.id} href={image.url} target="_blank">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={image.url}
-                      alt=""
-                      className="h-44 w-full rounded-xl object-cover"
-                    />
-                  </a>
-                ))}
-              </div>
+              <MomentImages
+                images={moment.images.map((image) => ({ id: image.id, url: image.url }))}
+              />
             )}
 
             <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs opacity-50">

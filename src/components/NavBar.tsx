@@ -15,6 +15,7 @@ const NAV = [
   { href: "/atlas", label: "知识库" },
   { href: "/photos", label: "照片墙" },
   { href: "/media", label: "书影音" },
+  { href: "/life", label: "生活" },
 ];
 
 // 次要页收进"更多"下拉(参考站也是这个做法:主栏 4~5 项 + 一个下拉)。
@@ -65,6 +66,11 @@ const ICONS: Record<string, React.ReactNode> = {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5">
       <rect x="3" y="3" width="18" height="18" rx="2" />
       <path d="M7 3v18M17 3v18M3 8h18M3 16h18" />
+    </svg>
+  ),
+  "/life": (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5">
+      <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z" />
     </svg>
   ),
 };

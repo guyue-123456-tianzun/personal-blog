@@ -45,7 +45,7 @@ export default function FloatingMusicButton({ playlist }: Props) {
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/images/avatar-default.svg"
+          src="/images/music-cover.svg"
           alt=""
           className={`h-full w-full rounded-full object-cover ${playing ? "animate-spin [animation-duration:6s]" : ""}`}
         />

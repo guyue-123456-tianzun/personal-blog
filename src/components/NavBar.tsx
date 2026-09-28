@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 
 import NavMusic from "@/components/NavMusic";
 import ThemeToggle from "@/components/ThemeToggle";
-import { neteasePlaylistEmbedUrl, type Song } from "@/lib/music";
+import { type Song } from "@/lib/music";
 
 const NAV = [
   { href: "/", label: "首页" },
@@ -76,6 +76,8 @@ type Props = {
   profileHref: string;
   playlist: Song[];
   neteasePlaylistId: string | null;
+  /** 当前登录用户;null = 访客(更多菜单里给登录/注册入口) */
+  sessionUsername: string | null;
 };
 
 // 顶部导航:悬浮胶囊(参考站同款)——
@@ -89,6 +91,7 @@ export default function NavBar({
   profileHref,
   playlist,
   neteasePlaylistId,
+  sessionUsername,
 }: Props) {
   const pathname = usePathname();
   const isHome = pathname === "/";
@@ -122,12 +125,13 @@ export default function NavBar({
     return () => document.removeEventListener("mousedown", onClick);
   }, [musicOpen]);
 
-  const overlay = isHome && !scrolled;
+  // /atlas 整页就是深空背景,浅色胶囊浮在上面像条黑带——
+  // 沿用首页覆盖态的透明白字样式,导航就"长"在星空里了
+  const isAtlas = pathname.startsWith("/atlas");
+  const overlay = (isHome && !scrolled) || isAtlas;
   const itemClass = `whitespace-nowrap rounded-full px-3.5 py-2 text-[15px] transition-colors ${
     overlay ? "hover:bg-white/15" : "hover:bg-foreground/10"
   }`;
-
-  const audioSongs = playlist.filter((s) => !s.url.startsWith("netease:"));
 
   return (
     <header className="fixed inset-x-0 top-3 z-50 px-3 sm:px-6">
@@ -172,6 +176,7 @@ export default function NavBar({
             </Link>
           ))}
 
+
           {/* 更多:收着次要页面,免得主栏越加越长 */}
           <div className="relative shrink-0">
             <button
@@ -191,7 +196,20 @@ export default function NavBar({
                   className="fixed inset-0 z-40 cursor-default"
                 />
                 <div className="absolute right-0 z-50 mt-2 w-40 rounded-xl border border-border bg-card p-1.5 text-sm text-foreground shadow-lg backdrop-blur-md">
-                  {MORE.map((item) => (
+                  {(sessionUsername
+                    ? [
+                        {
+                          href: `/u/${encodeURIComponent(sessionUsername)}`,
+                          label: "我的主页",
+                        },
+                        { href: "/atlas", label: "知识库工作台" },
+                        ...MORE,
+                      ]
+                    : [
+                        { href: "/?login=1", label: "登录 / 注册" },
+                        ...MORE,
+                      ]
+                  ).map((item) => (
                     <Link
                       key={item.href}
                       href={item.href}

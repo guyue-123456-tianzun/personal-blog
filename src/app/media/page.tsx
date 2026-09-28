@@ -2,7 +2,9 @@ import Link from "next/link";
 
 import { fallbackCover } from "@/lib/site-config";
 import { listMedia, mediaTypeLabel, statusLabel } from "@/lib/media";
+import { getSessionUser } from "@/lib/session";
 import { PublicShell } from "@/components/public/PublicShell";
+import MediaQuickAdd from "@/components/public/MediaQuickAdd";
 
 // 书影音·番组计划(C1):全站记录,封面卡网格 + 状态筛选 + 评分角标
 export const dynamic = "force-dynamic";
@@ -19,6 +21,7 @@ export default async function MediaPage({ searchParams }: Props) {
   const activeType = TYPES.includes(type ?? "") ? (type ?? "") : "";
   const activeStatus = STATUS.includes(status ?? "") ? (status ?? "") : "";
 
+  const viewer = await getSessionUser();
   let items = await listMedia(activeType || undefined);
   if (activeStatus) {
     items = items.filter((item) => item.status === activeStatus);
@@ -32,6 +35,8 @@ export default async function MediaPage({ searchParams }: Props) {
           <h1 className="text-lg font-bold">番组计划</h1>
         </div>
         <p className="mt-1 text-sm opacity-60">记录读过的书、看过的片、玩过的游。</p>
+
+        {viewer?.role === "admin" && <MediaQuickAdd />}
 
         {/* 类型页签 */}
         <div className="mt-4 flex flex-wrap gap-2">

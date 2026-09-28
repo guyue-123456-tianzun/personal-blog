@@ -96,7 +96,7 @@ export default function MusicPlayer({ playlist, neteasePlaylistId }: Props) {
           <div className="flex items-center gap-3">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/images/avatar-default.svg"
+              src="/images/music-cover.svg"
               alt=""
               className={`h-14 w-14 shrink-0 rounded-full border border-border object-cover ${
                 playing ? "animate-spin [animation-duration:8s]" : ""

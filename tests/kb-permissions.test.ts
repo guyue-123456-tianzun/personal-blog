@@ -33,6 +33,7 @@ const {
 } = await import("../src/lib/attachments");
 const { clipUrl } = await import("../src/lib/clips");
 const { buildGraph, extractWikiLinks } = await import("../src/lib/graph");
+const { extractToc, slugId } = await import("../src/lib/toc");
 
 let admin: Awaited<ReturnType<typeof registerUser>>;
 let alice: Awaited<ReturnType<typeof registerUser>>;
@@ -170,5 +171,40 @@ describe("知识图谱 graph.ts", () => {
     const graph = await buildGraph(bob);
     expect(graph.nodes.map((n) => n.label)).toEqual(["Bob 的私密笔记"]);
     expect(graph.edges).toEqual([]);
+  });
+});
+
+describe("文章目录 lib/toc.ts", () => {
+  it("抽出标题,并跳过代码块里的 # 注释", () => {
+    const markdown = [
+      "# 文章标题",
+      "## 第一节",
+      "```js",
+      "# 这是代码注释,不是标题",
+      "```",
+      "### 小节",
+    ].join("\n");
+    expect(extractToc(markdown).map((i) => `${i.level}:${i.text}`)).toEqual([
+      "1:文章标题",
+      "2:第一节",
+      "3:小节",
+    ]);
+  });
+
+  it("目录锚点与正文标题共用同一套 id 规则(否则点了跳不过去)", () => {
+    const markdown = "## 技术栈\n### 代码高亮长这样\n";
+    const toc = extractToc(markdown);
+    // 正文渲染时也是用 slugId(标题文字) 生成 id,两边必须一致
+    expect(toc.map((i) => i.id)).toEqual([
+      slugId("技术栈"),
+      slugId("代码高亮长这样"),
+    ]);
+    // 同一个标题两次调用结果必须相同
+    expect(slugId("技术栈")).toBe(slugId("技术栈"));
+  });
+
+  it("纯符号标题也有兜底 id,不会生成空锚点", () => {
+    expect(slugId("!!!")).toBe("h-section");
+    expect(slugId("   ")).toBe("h-section");
   });
 });

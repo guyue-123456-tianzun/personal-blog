@@ -155,6 +155,7 @@ export async function listOwnNoteBasics(user: SiteUser) {
       id: notes.id,
       title: notes.title,
       type: notes.type,
+      slug: notes.slug,
       content: notes.content,
     })
     .from(notes)

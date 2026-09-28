@@ -142,6 +142,20 @@ export async function listLatestPublishedPosts(limit = 10) {
     .limit(limit);
 }
 
+/** 已发布文章的正文(公开知识网络:只在这些文章之间连 [[链接]]) */
+export async function listPublishedPostBodies() {
+  return db
+    .select({
+      id: notes.id,
+      title: notes.title,
+      type: notes.type,
+      slug: notes.slug,
+      content: notes.content,
+    })
+    .from(notes)
+    .where(await publishedPostFilter());
+}
+
 /** 归档:按年分组的公开文章 */
 export async function getArchives(): Promise<
   { year: string; posts: { slug: string; title: string; date: string }[] }[]

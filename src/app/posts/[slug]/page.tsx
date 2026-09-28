@@ -4,11 +4,13 @@ import { notFound } from "next/navigation";
 
 import CommentsSection from "@/components/CommentsSection";
 import { Markdown } from "@/components/Markdown";
+import ArticleToc from "@/components/public/ArticleToc";
 import { getPostBySlug } from "@/lib/content-api";
 import PublicShell from "@/components/public/PublicShell";
 import { listComments } from "@/lib/comments";
 import { fallbackCover } from "@/lib/site-config";
 import { getPostViews, recordPostView } from "@/lib/site-stats";
+import { extractToc } from "@/lib/toc";
 
 export const dynamic = "force-dynamic";
 
@@ -31,7 +33,7 @@ export default async function PostPage({ params }: Props) {
   const views = await getPostViews(post.slug);
 
   return (
-    <PublicShell>
+    <PublicShell rightTop={<ArticleToc items={extractToc(post.content)} />}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={post.cover || fallbackCover(post.slug)}

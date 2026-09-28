@@ -13,8 +13,17 @@ const NAV = [
   { href: "/moments", label: "说说", icon: "💬" },
   { href: "/photos", label: "照片墙", icon: "📷" },
   { href: "/media", label: "书影音", icon: "📚" },
-  { href: "/friends", label: "友链", icon: "🔗" },
-  { href: "/about", label: "关于", icon: "💡" },
+];
+
+// 次要页收进"更多"下拉(参考站也是这个做法:主栏 4~5 项 + 一个下拉)。
+// 学习路线/成长时间线/导航页/知识网络以前只能靠直接输网址进,没有任何入口
+const MORE = [
+  { href: "/network", label: "知识网络" },
+  { href: "/paths", label: "学习路线" },
+  { href: "/timeline", label: "成长时间线" },
+  { href: "/nav", label: "导航页" },
+  { href: "/friends", label: "友链" },
+  { href: "/about", label: "关于" },
 ];
 
 type Props = {
@@ -34,6 +43,10 @@ export default function NavBar({ avatar, siteName, profileHref }: Props) {
   const pathname = usePathname();
   const isHome = pathname === "/";
   const [scrolled, setScrolled] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
+
+  // 换页面就收起下拉,别让它跟着跑到下一页
+  useEffect(() => setMoreOpen(false), [pathname]);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -86,6 +99,40 @@ export default function NavBar({ avatar, siteName, profileHref }: Props) {
               {item.label}
             </Link>
           ))}
+
+          {/* 更多:收着次要页面,免得主栏越加越长 */}
+          <div className="relative shrink-0">
+            <button
+              onClick={() => setMoreOpen((open) => !open)}
+              aria-expanded={moreOpen}
+              className={`${itemClass} whitespace-nowrap`}
+            >
+              更多 {moreOpen ? "⌃" : "⌄"}
+            </button>
+            {moreOpen && (
+              <>
+                {/* 点空白处收起 */}
+                <button
+                  aria-hidden
+                  tabIndex={-1}
+                  onClick={() => setMoreOpen(false)}
+                  className="fixed inset-0 z-40 cursor-default"
+                />
+                <div className="absolute right-0 z-50 mt-2 w-40 rounded-xl border border-border bg-card p-1.5 text-sm text-foreground shadow-lg backdrop-blur-md">
+                  {MORE.map((item) => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setMoreOpen(false)}
+                      className="block rounded-lg px-2.5 py-1.5 opacity-80 transition-colors hover:bg-foreground/10 hover:opacity-100"
+                    >
+                      {item.label}
+                    </Link>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
         </nav>
 
         {/* 右:工具图标 */}

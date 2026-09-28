@@ -12,6 +12,8 @@ export default async function SiteHeader() {
     <NavBar
       avatar={appearance.avatar}
       siteName={siteConfig.siteName}
+      playlist={appearance.music}
+      neteasePlaylistId={appearance.neteasePlaylistId}
       // 站长账号缺失(全新库)时退回首页,别让图标点了没反应
       profileHref={admin ? `/u/${encodeURIComponent(admin.username)}` : "/"}
     />

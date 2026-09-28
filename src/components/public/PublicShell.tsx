@@ -21,7 +21,7 @@ async function PublicShellLayout({ children, rightTop }: Props) {
   const [stats, appearance] = await Promise.all([getSiteStats(), getAppearance()]);
 
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 pb-10 pt-8 sm:px-6">
+    <main className="mx-auto w-full max-w-6xl px-4 pb-10 pt-24 sm:px-6">
       <div className="grid items-start gap-4 lg:grid-cols-[250px_minmax(0,1fr)_260px]">
         {/* 左栏:资料 + 打字机公告 + 音乐 */}
         <div

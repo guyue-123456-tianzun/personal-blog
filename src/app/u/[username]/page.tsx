@@ -29,7 +29,7 @@ export default async function UserProfilePage({ params }: Props) {
   const displayName = target.nickname ?? target.username;
 
   return (
-    <main className="mx-auto max-w-2xl px-4 py-10 sm:px-6">
+    <main className="mx-auto max-w-2xl px-4 pt-24 pb-10 sm:px-6">
       {/* 资料卡:头像与站内保持同一套视觉语言(大号圆角方块) */}
       <section className="glass rounded-2xl p-6 text-center">
         {/* eslint-disable-next-line @next/next/no-img-element */}

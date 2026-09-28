@@ -9,6 +9,18 @@ import { parseNeteaseId, parseNeteasePlaylistId } from "@/lib/music";
 type Props = { initial: Appearance };
 
 // 内置预设:夜间用星夜插画,白天用阳光草地插画,封面渐变两边通用
+// 会被访客浏览器直接加载的外观图:上传时必须标成公开附件。
+// 这里以前只放行 wall_* 与白天 Hero,漏了 avatar_url ——
+// 站长上传的头像被存成私有附件,访客拿到 401,头像裂图
+const PUBLIC_IMAGE_KINDS = new Set([
+  "avatar_url",
+  "hero_image_url",
+  "hero_image_url_day",
+  "wall_image_url",
+  "wall_image_url_day",
+  "love_partner_avatar",
+]);
+
 const NIGHT_HERO = "/images/hero-default.svg";
 const DAY_HERO = "/images/hero-day-default.svg";
 const COVERS = [
@@ -203,9 +215,7 @@ export default function AppearanceForm({ initial }: Props) {
     try {
       const form = new FormData();
       form.append("file", file);
-      if (kind.startsWith("wall") || kind === "hero_image_url_day") {
-        form.append("public", "1"); // 背景图/头像必须访客可见
-      }
+      if (PUBLIC_IMAGE_KINDS.has(kind)) form.append("public", "1");
       const res = await fetch("/api/kb/attachments", { method: "POST", body: form });
       const data = (await res.json().catch(() => ({}))) as {
         error?: string;

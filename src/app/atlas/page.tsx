@@ -40,7 +40,9 @@ export default async function AtlasPage() {
     // 星系背景必须是暗的,挂在 .dark 上之后里面所有玻璃卡片、边框会自动用深色那套变量。
     // 注意还必须显式写 text-foreground:变量在子树上被覆盖了,但 color 早在 body 上
     // 就按浅色算好并继承下来了,不重新取一次的话文字会是深色、压在深空上看不见
-    <div className="dark atlas-app relative min-h-screen bg-[#05060f] pt-[76px] text-foreground">
+    // -mt-14 把深色背景顶到页面最上沿(根布局给内容留了 56px 让位悬浮导航,
+    // 不抵消掉的话浅色模式下导航后面会露出一条白带);内部 pt 再把内容推回导航下方
+    <div className="dark atlas-app relative -mt-14 min-h-screen bg-[#05060f] pt-[76px] text-foreground">
       <div className="relative">
         <AtlasWorkspace
           notes={notes}

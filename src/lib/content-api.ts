@@ -12,6 +12,7 @@ import {
   tags,
   users,
 } from "@/db/schema";
+import { getSiteAvatar } from "./settings";
 import { getAdminUser } from "./users";
 
 export type PostListItem = {
@@ -266,6 +267,14 @@ export async function listPublicMoments(
     imagesBy.set(row.noteId, list);
   }
 
+  // 站长的头像统一用外观设置那张(userId 为空的动态也算站长的)。
+  // 只有真有需要才查,普通用户的动态流不该多花这一次查询
+  const needsSiteAvatar = rows.some(
+    (row) =>
+      !row.authorAvatar && (row.userId === null || row.userId === admin?.id),
+  );
+  const siteAvatar = needsSiteAvatar ? await getSiteAvatar() : null;
+
   return rows.map((row) => ({
     id: row.id,
     content: row.content,
@@ -282,7 +291,9 @@ export async function listPublicMoments(
         admin?.nickname ??
         admin?.username ??
         "未知作者",
-      avatarUrl: row.authorAvatar,
+      avatarUrl:
+        row.authorAvatar ??
+        (row.userId === null || row.userId === admin?.id ? siteAvatar : null),
     },
   }));
 }

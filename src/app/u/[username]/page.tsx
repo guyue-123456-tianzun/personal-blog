@@ -5,6 +5,7 @@ import FriendButton from "@/components/social/FriendButton";
 import { listPublicMoments } from "@/lib/content-api";
 import { getRelationStatus } from "@/lib/friends";
 import { getSessionUser } from "@/lib/session";
+import { getSiteAvatar } from "@/lib/settings";
 import { getUserByUsername } from "@/lib/users";
 
 // 用户主页:公开形象(头像/昵称/简介) + 公开动态 + 加好友入口
@@ -25,7 +26,12 @@ export default async function UserProfilePage({ params }: Props) {
       : { status: "none" as const, requestId: null };
 
   const moments = await listPublicMoments(20, 0, target.username);
-  const avatar = target.avatarUrl || "/images/avatar-default.svg";
+  // 站长头像以"外观设置"里那张为准(users 表的头像没有编辑入口,历来为空);
+  // 只看 users.avatarUrl 的话,站长换完头像这里还是默认图
+  const avatar =
+    target.avatarUrl ??
+    (target.role === "admin" ? await getSiteAvatar() : null) ??
+    "/images/avatar-default.svg";
   const displayName = target.nickname ?? target.username;
 
   return (

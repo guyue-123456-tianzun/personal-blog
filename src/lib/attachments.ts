@@ -144,6 +144,14 @@ export function canManageAttachment(
   return isOwner(row.userId, user);
 }
 
+/**
+ * 把附件改成公开:外观图(头像/背景)引用到的附件必须访客可见。
+ * 漏了这一步,站长自己登录着看得见,访客却拿到 401、图片裂开
+ */
+export async function markAttachmentPublic(id: number) {
+  await db.update(attachments).set({ isPublic: 1 }).where(eq(attachments.id, id));
+}
+
 export async function deleteAttachment(id: number) {
   const row = await getAttachment(id);
   if (!row) return null;

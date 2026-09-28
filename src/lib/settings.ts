@@ -177,6 +177,21 @@ export async function getAppearance(): Promise<Appearance> {
   };
 }
 
+/**
+ * 站长头像:外观后台设置的那一张。
+ * 公开区所有"站长"身份的头像都该走它——users 表里的 avatarUrl 没有编辑入口,历来为空,
+ * 只看后者的话,站长改完头像个人主页/说说流还是默认图。
+ * 单独读一个键而不是 getAppearance:说说流每渲染一次不该顺带扫一遍壁纸目录
+ */
+export async function getSiteAvatar(): Promise<string | null> {
+  const [row] = await db
+    .select({ value: siteSettings.value })
+    .from(siteSettings)
+    .where(eq(siteSettings.key, "avatar_url"))
+    .limit(1);
+  return row?.value ?? null;
+}
+
 export async function setSetting(key: AppearanceKey, value: string) {
   await db
     .insert(siteSettings)

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { markAttachmentPublic } from "@/lib/attachments";
 import { getSessionUsername } from "@/lib/session";
 import {
   APPEARANCE_KEYS,
@@ -79,6 +80,22 @@ const VALIDATORS: Record<AppearanceKey, (value: string) => string> = {
   },
 };
 
+// 这些外观图会被访客的浏览器直接加载,引用到的附件必须公开
+const PUBLIC_IMAGE_KEYS = new Set<AppearanceKey>([
+  "avatar_url",
+  "hero_image_url",
+  "hero_image_url_day",
+  "wall_image_url",
+  "wall_image_url_day",
+  "love_partner_avatar",
+]);
+
+/** 从附件地址里取出附件 id;外链(https://...)返回 null 直接跳过 */
+function attachmentIdFromUrl(url: string): number | null {
+  const match = url.match(/^\/api\/kb\/attachments\/(\d+)$/);
+  return match ? Number(match[1]) : null;
+}
+
 export async function GET() {
   const username = await getSessionUsername();
   if (!username) {
@@ -111,6 +128,11 @@ export async function PATCH(request: Request) {
       } else {
         const value = VALIDATORS[key as AppearanceKey](raw);
         await setSetting(key as AppearanceKey, value);
+        // 兜底:前端上传时漏传 public=1 也没关系,这里按地址把附件补成公开
+        if (PUBLIC_IMAGE_KEYS.has(key as AppearanceKey)) {
+          const id = attachmentIdFromUrl(value);
+          if (id) await markAttachmentPublic(id);
+        }
       }
     }
   } catch (error) {

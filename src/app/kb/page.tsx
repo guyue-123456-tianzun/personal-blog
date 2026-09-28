@@ -27,6 +27,18 @@ export default async function KbDashboard() {
         这里只有你能看到。写作、整理、回顾,都在这一区完成。
       </p>
 
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+        <Link
+          href="/atlas"
+          className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90"
+        >
+          🛰️ 打开知识库工作台
+        </Link>
+        <span className="text-xs opacity-55">
+          左列表 · 中图谱/阅读 · 右属性与 AI 问答,一个页面读完整个知识库
+        </span>
+      </div>
+
       <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-5">
         {cards.map((card) => (
           <Link

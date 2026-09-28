@@ -59,7 +59,7 @@ export default function PetAssistant({ enabled = true }: Props) {
   if (!enabled) return null;
 
   return (
-    <div className="fixed bottom-4 right-4 z-40 flex flex-col items-end gap-2">
+    <div className="site-float fixed bottom-4 right-4 z-40 flex flex-col items-end gap-2">
       {/* 聊天面板 */}
       {open && (
         <div className="glass flex h-[26rem] w-80 flex-col overflow-hidden rounded-2xl shadow-2xl">

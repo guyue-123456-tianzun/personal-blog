@@ -138,14 +138,19 @@ export async function kbStats(user: SiteUser) {
   };
 }
 
-/** 导出用:该用户的全部未删除内容 + 各自标签 */
-export async function listAllForExport(user: SiteUser) {
+/** 该用户全部未删除内容 + 各自标签(知识库工作台、全量导出都从这里取) */
+export async function listOwnNotesWithTags(user: SiteUser) {
   const rows = await db
     .select()
     .from(notes)
     .where(and(isNull(notes.deletedAt), kbOwnerFilter(user)))
     .orderBy(desc(notes.updatedAt));
   return attachTagsKb(rows);
+}
+
+/** 导出用:与 listOwnNotesWithTags 是同一份数据,这里保留直白的旧名字 */
+export async function listAllForExport(user: SiteUser) {
+  return listOwnNotesWithTags(user);
 }
 
 /** 该用户全部未删除内容的基础字段(知识图谱这类要跨类型扫正文的场景用) */

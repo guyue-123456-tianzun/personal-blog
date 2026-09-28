@@ -36,7 +36,7 @@ export default function FloatingMusicButton({ playlist }: Props) {
   }
 
   return (
-    <div className="fixed bottom-5 left-5 z-40 flex items-center gap-2">
+    <div className="site-float fixed bottom-5 left-5 z-40 flex items-center gap-2">
       <button
         onClick={toggle}
         aria-label={playing ? "暂停音乐" : "播放音乐"}

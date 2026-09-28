@@ -249,3 +249,12 @@ body.no-particles .hero-particle {
 .dark .hljs-tag {
   color: #7ee787;
 }
+
+/* 知识库工作台(/atlas)是"自己即应用"的全屏页面:
+   把站点页脚、右下角桌宠、左下角音乐盘都让出去——它们会压在面板上,
+   页脚还会让整页多出一条滚动条。
+   用 :has() 判断当前页有没有工作台根节点;浏览器不支持 :has() 时自动退回原样,不影响功能 */
+body:has(.atlas-app) footer,
+body:has(.atlas-app) .site-float {
+  display: none;
+}

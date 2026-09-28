@@ -16,9 +16,15 @@ type Item = {
 
 const GROUPS: { title: string; items: Item[] }[] = [
   {
+    title: "总览",
+    items: [
+      { href: "/atlas", label: "知识库工作台", icon: "🛰️" },
+      { href: "/kb", label: "仪表盘", icon: "🏠" },
+    ],
+  },
+  {
     title: "写作",
     items: [
-      { href: "/kb", label: "仪表盘", icon: "🏠" },
       { href: "/kb/notes", label: "笔记", icon: "📝" },
       { href: "/kb/clips", label: "剪藏", icon: "✂️" },
       { href: "/kb/diary", label: "日记", icon: "🔒" },
@@ -50,11 +56,6 @@ const GROUPS: { title: string; items: Item[] }[] = [
       { href: "/kb/ai", label: "AI 助手", icon: "🤖" },
       { href: "/kb/report", label: "周报", icon: "📅" },
       { href: "/kb/friends", label: "好友", icon: "👥" },
-    ],
-  },
-  {
-    title: "系统",
-    items: [
       { href: "/kb/trash", label: "回收站", icon: "🗑️" },
       { href: "/kb/export", label: "导出", icon: "📦" },
     ],

@@ -39,5 +39,6 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/kb", "/kb/:path*", "/api/kb/:path*", "/login"],
+  // /atlas 是知识库工作台:独立成页(不套 /kb 的侧栏),所以路由要单独登记进守卫
+  matcher: ["/kb", "/kb/:path*", "/api/kb/:path*", "/atlas", "/login"],
 };

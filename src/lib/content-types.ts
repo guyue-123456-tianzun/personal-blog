@@ -26,3 +26,29 @@ export function isNoteType(value: unknown): value is NoteType {
 export function exportFolderFor(type: string): string {
   return FOLDER_BY_TYPE[type as NoteType] ?? type;
 }
+
+// 类型 → 中文名 / 代表色。界面(图谱配色、工作台标签、类型筛选)统一用这两份,
+// 免得同一个类型在三个地方被叫成三个名字、画成三种颜色
+export const NOTE_TYPE_LABEL: Record<NoteType, string> = {
+  post: "博客文章",
+  note: "笔记",
+  clip: "剪藏",
+  moment: "说说",
+  diary: "日记",
+};
+
+export const NOTE_TYPE_COLOR: Record<NoteType, string> = {
+  post: "#7C6BE8",
+  note: "#5B8DEF",
+  clip: "#39B98C",
+  moment: "#E879A8",
+  diary: "#E0A03C",
+};
+
+export function noteTypeLabel(type: string): string {
+  return NOTE_TYPE_LABEL[type as NoteType] ?? type;
+}
+
+export function noteTypeColor(type: string): string {
+  return NOTE_TYPE_COLOR[type as NoteType] ?? "#8B8BA0";
+}

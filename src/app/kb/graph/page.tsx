@@ -19,9 +19,14 @@ export default async function KbGraphPage() {
     <main className="px-6 py-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-bold">知识图谱</h1>
-        <Link href="/network" className="text-sm text-accent hover:underline">
-          → 看访客视角的知识网络
-        </Link>
+        <div className="flex gap-4 text-sm">
+          <Link href="/atlas" className="text-accent hover:underline">
+            🛰️ 工作台(图谱+阅读+问答)
+          </Link>
+          <Link href="/network" className="text-accent hover:underline">
+            → 访客视角
+          </Link>
+        </div>
       </div>
       <p className="mt-1 text-sm opacity-60">
         你全部内容之间的关系图:共 {graph.nodes.length} 个节点、

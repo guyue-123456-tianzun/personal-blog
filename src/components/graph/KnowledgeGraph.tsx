@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import { NOTE_TYPE_COLOR, noteTypeColor, noteTypeLabel } from "@/lib/content-types";
 import type { GraphData, GraphNode } from "@/lib/graph";
 
 // 知识图谱:Obsidian 那种关系图。
@@ -23,20 +24,8 @@ type SimNode = {
   dragging: boolean;
 };
 
-const TYPE_COLOR: Record<string, string> = {
-  post: "#7C6BE8",
-  note: "#5B8DEF",
-  clip: "#39B98C",
-  moment: "#E879A8",
-  diary: "#E0A03C",
-};
-const TYPE_LABEL: Record<string, string> = {
-  post: "博客文章",
-  note: "笔记",
-  clip: "剪藏",
-  moment: "说说",
-  diary: "日记",
-};
+// 节点配色与中文名来自 lib/content-types.ts(全站一份,见那里的注释)
+const TYPE_COLOR = NOTE_TYPE_COLOR;
 
 const REPULSION = 11000; // 节点之间的斥力
 const LINK_LENGTH = 96; // 连线的自然长度
@@ -48,10 +37,14 @@ const ALPHA_FLOOR = 0.014; // 冷却到这个值就停下,不再空转
 export default function KnowledgeGraph({
   data,
   mode,
+  variant = "card",
 }: {
   data: GraphData;
   mode: "private" | "public";
+  /** card = 一张卡片(默认);fill = 撑满父容器(工作台里用) */
+  variant?: "card" | "fill";
 }) {
+  const isFill = variant === "fill";
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const simRef = useRef<{ nodes: SimNode[]; alpha: number; pan: { x: number; y: number } }>({
@@ -255,7 +248,7 @@ export default function KnowledgeGraph({
         ctx.globalAlpha = dim ? 0.2 : 1;
         ctx.beginPath();
         ctx.arc(node.x, node.y, radiusOf(node), 0, Math.PI * 2);
-        ctx.fillStyle = TYPE_COLOR[meta?.type ?? ""] ?? "#8B8BA0";
+        ctx.fillStyle = noteTypeColor(meta?.type ?? "");
         ctx.fill();
         if (node.id === focusId) {
           ctx.lineWidth = 2;
@@ -429,7 +422,7 @@ export default function KnowledgeGraph({
   };
 
   return (
-    <div className="glass rounded-2xl p-4">
+    <div className={isFill ? "flex h-full flex-col gap-2" : "glass rounded-2xl p-4"}>
       {/* 工具条:搜索 / 筛选 / 重新布局 */}
       <div className="flex flex-wrap items-center gap-2 text-xs">
         <input
@@ -512,7 +505,7 @@ export default function KnowledgeGraph({
                 className="inline-block h-2 w-2 rounded-full"
                 style={{ background: color }}
               />
-              {TYPE_LABEL[type] ?? type}
+              {noteTypeLabel(type)}
             </span>
           ))}
         </span>
@@ -532,7 +525,9 @@ export default function KnowledgeGraph({
       {/* 画布 */}
       <div
         ref={wrapRef}
-        className="relative mt-3 h-[520px] w-full overflow-hidden rounded-xl border border-border"
+        className={`relative w-full overflow-hidden rounded-xl border border-border ${
+          isFill ? "min-h-0 flex-1" : "mt-3 h-[520px]"
+        }`}
       >
         <canvas ref={canvasRef} className="block h-full w-full touch-none" />
 
@@ -549,7 +544,7 @@ export default function KnowledgeGraph({
               <div className="min-w-0">
                 <p className="truncate font-semibold">{selected.label}</p>
                 <p className="mt-0.5 text-xs opacity-50">
-                  {TYPE_LABEL[selected.type] ?? selected.type}
+                  {noteTypeLabel(selected.type)}
                 </p>
               </div>
               <button
@@ -575,7 +570,7 @@ export default function KnowledgeGraph({
         )}
       </div>
 
-      <p className="mt-3 text-xs opacity-50">
+      <p className={`text-xs opacity-50 ${isFill ? "" : "mt-3"}`}>
         拖节点可以手动摆位置,空白处拖动是平移画布,点节点看摘要。节点越大表示连出去的线越多。
       </p>
     </div>

@@ -40,5 +40,13 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   // /atlas 是知识库工作台:独立成页(不套 /kb 的侧栏),所以路由要单独登记进守卫
-  matcher: ["/kb", "/kb/:path*", "/api/kb/:path*", "/atlas", "/login"],
+  // /settings 是站长设置页(不套 /kb 的侧栏),和 /atlas 一样单独登记
+  matcher: [
+    "/kb",
+    "/kb/:path*",
+    "/api/kb/:path*",
+    "/atlas",
+    "/settings",
+    "/login",
+  ],
 };

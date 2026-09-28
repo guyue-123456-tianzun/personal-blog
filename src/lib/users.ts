@@ -92,6 +92,25 @@ export async function registerUser(input: {
   return row;
 }
 
+/** 修改密码:验旧密码 → 存新哈希。新密码与注册同规(至少 6 位) */
+export async function changePassword(
+  userId: number,
+  oldPassword: string,
+  newPassword: string,
+) {
+  if (newPassword.length < 6) throw new Error("新密码至少 6 位");
+  const [row] = await db
+    .select({ passwordHash: users.passwordHash })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+  if (!row) throw new Error("账号不存在");
+  const valid = await bcrypt.compare(oldPassword, row.passwordHash);
+  if (!valid) throw new Error("旧密码不对");
+  const passwordHash = await bcrypt.hash(newPassword, 10);
+  await db.update(users).set({ passwordHash }).where(eq(users.id, userId));
+}
+
 /** 内容归属判定:null(历史内容)视为站长的 */
 export function isOwner(rowUserId: number | null, user: SiteUser) {
   if (rowUserId === null) return isSiteAdmin(user);

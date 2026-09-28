@@ -73,8 +73,8 @@ export default async function RootLayout({
             友链
           </Link>{" "}
           ·{" "}
-          <Link href="/kb" className="underline hover:opacity-100">
-            站长入口
+          <Link href="/settings" className="underline hover:opacity-100">
+            设置
           </Link>
         </footer>
       </body>

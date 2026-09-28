@@ -55,10 +55,10 @@ export default async function UserProfilePage({ params }: Props) {
         <div className="mt-4 flex justify-center">
           {isSelf ? (
             <Link
-              href="/kb"
+              href="/settings"
               className="rounded-full border border-border px-4 py-1.5 text-sm transition-colors hover:bg-foreground/10"
             >
-              进入我的后台
+              进入设置
             </Link>
           ) : (
             <FriendButton

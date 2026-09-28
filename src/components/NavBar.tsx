@@ -262,12 +262,13 @@ export default function NavBar({
             overlay={overlay}
           />
           <Link
-            href="/kb"
+            href="/settings"
+            title="外观 / AI / 备份 / 账号"
             className={`hidden rounded-full px-2.5 py-1.5 text-sm transition-colors sm:block ${
               overlay ? "hover:bg-white/15" : "hover:bg-foreground/10"
             }`}
           >
-            站长入口
+            设置
           </Link>
           <ThemeToggle />
         </div>

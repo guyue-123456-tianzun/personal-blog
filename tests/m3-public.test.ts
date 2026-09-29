@@ -37,7 +37,7 @@ describe("外观设置 settings.ts", () => {
     const appearance = await settings.getAppearance();
     expect(appearance.heroImage).toBe("/images/hero-default.svg");
     expect(appearance.heroBlur).toBe(0);
-    expect(appearance.heroHeightVh).toBe(70);
+    expect(appearance.heroHeightVh).toBe(100); // 默认已拉满一屏(2026-09-29 全屏 Hero)
     expect(appearance.announcements.length).toBeGreaterThan(0);
   });
 

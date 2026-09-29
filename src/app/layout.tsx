@@ -3,7 +3,6 @@ import Link from "next/link";
 import "./globals.css";
 
 import SiteHeader from "@/components/SiteHeader";
-import FloatingMusicButton from "@/components/home/FloatingMusicButton";
 import Heartbeat from "@/components/Heartbeat";
 import LoginModal from "@/components/LoginModal";
 import PetAssistant from "@/components/ai/PetAssistant";
@@ -59,7 +58,6 @@ export default async function RootLayout({
         {/* 顶栏是固定定位(fixed),所以内容要留出它的高度;
             首页首屏再用负边距钻回顶栏底下,做成"图从导航下面穿过去"的全出血效果 */}
         <div className="flex-1 pt-14">{children}</div>
-        <FloatingMusicButton playlist={appearance.music} />
         <Heartbeat />
         <PetAssistant enabled={aiConfig.enabled} />
         <LoginModal />

@@ -8,6 +8,8 @@ import ProfileCard from "@/components/home/ProfileCard";
 import StatsCard from "@/components/home/StatsCard";
 import TypewriterBanner from "@/components/home/TypewriterBanner";
 import CalendarWidget from "@/components/home/CalendarWidget";
+import MusicPlayer from "@/components/home/MusicPlayer";
+import TagCloudCard from "@/components/public/TagCloudCard";
 import ArticleBoard from "@/components/home/ArticleBoard";
 import LoveCard from "@/components/home/LoveCard";
 import WeatherCard from "@/components/home/WeatherCard";
@@ -164,12 +166,11 @@ export default async function Home() {
               音乐卡不在这里——左下角那个浮动圆盘本身就是完整播放器(播放/暂停/自动下一首,
               每页都在),首页再摆一张纯属重复;而且侧栏要能"吸附"就必须比视口矮,
               四张卡已经是这套栅格里装得下的上限 */}
-          <div
-            className="fade-up space-y-4 lg:sticky lg:top-[72px] lg:max-h-[calc(100vh-88px)] lg:self-start lg:overflow-y-auto"
-            style={{ animationDelay: "0ms" }}
-          >
+          <div className="fade-up space-y-4 lg:sticky lg:top-[72px] lg:self-start" style={{ animationDelay: "0ms" }}>
             <ProfileCard appearance={appearance} />
             <TypewriterBanner />
+            <MusicPlayer playlist={appearance.music} neteasePlaylistId={appearance.neteasePlaylistId} />
+            <TagCloudCard />
             <LoveCard
               enabled={appearance.loveEnabled}
               partnerNickname={appearance.lovePartnerNickname}
@@ -189,10 +190,7 @@ export default async function Home() {
           </div>
 
           {/* 右栏:站点数据 + 日历(同样吸附) */}
-          <div
-            className="fade-up space-y-4 lg:sticky lg:top-[72px] lg:max-h-[calc(100vh-88px)] lg:self-start lg:overflow-y-auto"
-            style={{ animationDelay: "240ms" }}
-          >
+          <div className="fade-up space-y-4 lg:sticky lg:top-[72px] lg:self-start" style={{ animationDelay: "240ms" }}>
             <StatsCard stats={stats} totalVisits={totalVisits} />
             <CountdownCard />
             <CalendarWidget monthViews={monthViews} />

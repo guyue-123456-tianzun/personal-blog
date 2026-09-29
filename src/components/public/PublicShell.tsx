@@ -35,14 +35,15 @@ async function PublicShellLayout({ children, rightTop }: Props) {
   return (
     <main className="mx-auto w-full max-w-6xl px-4 pb-10 pt-24 sm:px-6">
       <div className="grid items-start gap-4 lg:grid-cols-[250px_minmax(0,1fr)_260px]">
-        {/* 左栏:资料 + 打字机公告 + 音乐 */}
+        {/* 左栏:资料 + 打字机公告 + 音乐 + 标签(参考站式信息卡排布) */}
         <div
-          className="fade-up space-y-4 lg:sticky lg:top-[72px] lg:max-h-[calc(100vh-88px)] lg:self-start lg:overflow-y-auto"
+          className="fade-up space-y-4 lg:sticky lg:top-[72px] lg:self-start"
           style={{ animationDelay: "0ms" }}
         >
           <ProfileCard appearance={appearance} />
           <TypewriterBanner />
           <MusicPlayer playlist={appearance.music} neteasePlaylistId={appearance.neteasePlaylistId} />
+          <TagCloudCard />
         </div>
 
         {/* 中栏:页面内容 */}
@@ -50,11 +51,9 @@ async function PublicShellLayout({ children, rightTop }: Props) {
           {children}
         </div>
 
-        {/* 右栏:文章目录(文章页才有) + 站点数据 + 分类标签。
-            高度是有预算的:侧栏要能吸附就得比视口矮,所以文章页上"目录"优先、
-            把站点统计让出去(首页和其它页仍然有),否则三张卡叠起来会超出屏幕、出现内部滚动条 */}
+        {/* 右栏:文章目录(文章页才有) + 站点数据三件套。全部自然高度,无内部滚动条 */}
         <div
-          className="fade-up space-y-4 lg:sticky lg:top-[72px] lg:max-h-[calc(100vh-88px)] lg:self-start lg:overflow-y-auto"
+          className="fade-up space-y-4 lg:sticky lg:top-[72px] lg:self-start"
           style={{ animationDelay: "240ms" }}
         >
           {rightTop}
@@ -65,7 +64,6 @@ async function PublicShellLayout({ children, rightTop }: Props) {
               <CalendarWidget monthViews={monthViews} />
             </>
           )}
-          <TagCloudCard />
         </div>
       </div>
     </main>

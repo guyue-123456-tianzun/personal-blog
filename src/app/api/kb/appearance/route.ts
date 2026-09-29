@@ -25,7 +25,7 @@ const VALIDATORS: Record<AppearanceKey, (value: string) => string> = {
     return v;
   },
   hero_blur: (v) => String(clamp(Math.round(Number(v)) || 0, 0, 24)),
-  hero_height: (v) => String(clamp(Math.round(Number(v)) || 70, 40, 100)),
+  hero_height: (v) => String(clamp(Math.round(Number(v)) || 100, 40, 100)),
   signature: (v) => v.slice(0, 200),
   announcements: (v) => {
     const parsed = JSON.parse(v) as unknown;

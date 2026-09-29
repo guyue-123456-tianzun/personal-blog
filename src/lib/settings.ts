@@ -137,7 +137,7 @@ export async function getAppearance(): Promise<Appearance> {
       DAY_HERO_DEFAULT,
     avatar: map.get("avatar_url") ?? siteConfig.avatar,
     heroBlur: Number.isFinite(blur) ? clamp(blur, 0, 24) : 0,
-    heroHeightVh: Number.isFinite(height) ? clamp(height, 40, 100) : 70,
+    heroHeightVh: Number.isFinite(height) ? clamp(height, 40, 100) : 100,
     signature: map.get("signature") ?? siteConfig.signature,
     announcements: announcements.length > 0 ? announcements : ["欢迎来到我的个人站。"],
     // 夜间壁纸默认跟随夜间 Hero 图

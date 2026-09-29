@@ -34,7 +34,7 @@ export default async function Home() {
     <>
       {/* ===== Hero:首屏即人。图/虚化/高度都在外观设置里可调 ===== */}      <section
         className="relative -mt-14 flex items-center justify-center overflow-hidden pt-14"
-        style={{ minHeight: `${appearance.heroHeightVh}vh` }}
+        style={{ minHeight: `calc(${appearance.heroHeightVh}vh + 3.5rem)` }}
       >
         {/* Hero 媒体:夜间/白天各一层,跟随主题切换;下边缘渐隐融进壁纸 */}
         {[
@@ -53,9 +53,9 @@ export default async function Home() {
                   filter: `blur(${appearance.heroBlur}px)`,
                   transform: "scale(1.08)",
                   WebkitMaskImage:
-                    "linear-gradient(to bottom, black 0%, black 58%, transparent 100%)",
+                    "linear-gradient(to bottom, black 0%, black 82%, transparent 100%)",
                   maskImage:
-                    "linear-gradient(to bottom, black 0%, black 58%, transparent 100%)",
+                    "linear-gradient(to bottom, black 0%, black 82%, transparent 100%)",
                 }}
               >
                 <source src={layer.src} />
@@ -102,8 +102,8 @@ export default async function Home() {
             }}
           />
         ))}
-        <div className="relative z-10 mx-auto w-full max-w-2xl px-6 pb-36 text-center text-white">
-          <h1 className="text-4xl font-bold tracking-wide drop-shadow-[0_2px_14px_rgba(0,0,0,0.65)] sm:text-5xl">
+        <div className="relative z-10 mx-auto w-full max-w-2xl px-6 pb-20 text-center text-white">
+          <h1 className="text-5xl font-bold tracking-wide drop-shadow-[0_2px_14px_rgba(0,0,0,0.65)] sm:text-6xl lg:text-7xl">
             {siteConfig.siteName}
           </h1>
           <p className="mt-4 text-base drop-shadow-[0_1px_10px_rgba(0,0,0,0.75)] sm:text-lg">
@@ -145,13 +145,21 @@ export default async function Home() {
             ))}
           </div>
         </div>
+        {/* 向下箭头(参考站同款):点一下滚到内容区 */}
+        <a
+          href="#site-content"
+          aria-label="向下滚动查看内容"
+          className="absolute bottom-7 left-1/2 z-10 -translate-x-1/2 animate-bounce text-2xl text-white/85 transition-colors hover:text-white"
+        >
+          ⌄
+        </a>
       </section>
 
-      {/* ===== 错落三栏浮层:压在 Hero 下沿(参考站构图) =====
+      {/* ===== 三栏内容区:从全屏 Hero 下方开始(参考站构图,壁纸独占首屏) =====
           左右两栏 sticky:往下滚时跟着走,滚到自己内容的底部就停住不动,
           中间的文章列继续往下滑 */}
-      <main className="mx-auto w-full max-w-6xl px-4 pb-10 sm:px-6">
-        <div className="relative z-20 -mt-28 grid items-start gap-4 lg:grid-cols-[260px_minmax(0,1fr)_270px]">
+      <main id="site-content" className="mx-auto w-full max-w-6xl px-4 pb-10 sm:px-6">
+        <div className="relative z-20 grid items-start gap-4 pt-8 lg:grid-cols-[260px_minmax(0,1fr)_270px]">
           {/* 左栏:人物 + 公告 + 恋爱 + 天气。
               音乐卡不在这里——左下角那个浮动圆盘本身就是完整播放器(播放/暂停/自动下一首,
               每页都在),首页再摆一张纯属重复;而且侧栏要能"吸附"就必须比视口矮,

@@ -95,6 +95,22 @@ export async function recordSiteVisit() {
     });
 }
 
+/** 本月每日浏览量(日历热力格用):date 主键天然按日聚合 */
+export async function getMonthViews(): Promise<{ date: string; views: number }[]> {
+  const month = new Date().toISOString().slice(0, 7);
+  return db
+    .select({ date: siteViews.date, views: siteViews.views })
+    .from(siteViews)
+    .where(sql`${siteViews.date} like ${month + "%"}`)
+    .orderBy(siteViews.date);
+}
+
+/** 累计访问次数(site_views 总和;首页每渲染一次计一次) */
+export async function getTotalVisits(): Promise<number> {
+  const [row] = await db.select({ v: sum(siteViews.views).mapWith(Number) }).from(siteViews);
+  return row?.v ?? 0;
+}
+
 /** 记一次浏览(文章详情页每次渲染调用;个人站点粗粒度足够) */
 export async function recordPostView(slug: string) {
   await db

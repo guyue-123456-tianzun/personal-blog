@@ -1,5 +1,6 @@
 import { getPublishedPosts, getTagCloud } from "@/lib/content-api";
-import { getSiteStats, recordSiteVisit } from "@/lib/site-stats";
+import { getMonthViews, getSiteStats, getTotalVisits, recordSiteVisit } from "@/lib/site-stats";
+import CountdownCard from "@/components/home/CountdownCard";
 import { getAppearance } from "@/lib/settings";
 import { siteConfig } from "@/lib/site-config";
 
@@ -20,11 +21,13 @@ export default async function Home() {
   // 站点每日浏览计数(支撑站点数据卡的"今日浏览")
   await recordSiteVisit();
 
-  const [posts, tags, stats, appearance] = await Promise.all([
+  const [posts, tags, stats, appearance, monthViews, totalVisits] = await Promise.all([
     getPublishedPosts(),
     getTagCloud(),
     getSiteStats(),
     getAppearance(),
+    getMonthViews(),
+    getTotalVisits(),
   ]);
 
   return (
@@ -182,8 +185,9 @@ export default async function Home() {
             className="fade-up space-y-4 lg:sticky lg:top-[72px] lg:max-h-[calc(100vh-88px)] lg:self-start lg:overflow-y-auto"
             style={{ animationDelay: "240ms" }}
           >
-            <StatsCard stats={stats} />
-            <CalendarWidget />
+            <StatsCard stats={stats} totalVisits={totalVisits} />
+            <CountdownCard />
+            <CalendarWidget monthViews={monthViews} />
           </div>
         </div>
       </main>

@@ -4,7 +4,14 @@ import StatsCard from "@/components/home/StatsCard";
 import TypewriterBanner from "@/components/home/TypewriterBanner";
 import TagCloudCard from "@/components/public/TagCloudCard";
 import { getAppearance } from "@/lib/settings";
-import { getSiteStats, recordSiteVisit } from "@/lib/site-stats";
+import CalendarWidget from "@/components/home/CalendarWidget";
+import CountdownCard from "@/components/home/CountdownCard";
+import {
+  getMonthViews,
+  getSiteStats,
+  getTotalVisits,
+  recordSiteVisit,
+} from "@/lib/site-stats";
 
 type Props = {
   children: React.ReactNode;
@@ -18,7 +25,12 @@ type Props = {
 // 文章详情等页面把内容作为 children 传入。
 async function PublicShellLayout({ children, rightTop }: Props) {
   await recordSiteVisit();
-  const [stats, appearance] = await Promise.all([getSiteStats(), getAppearance()]);
+  const [stats, appearance, monthViews, totalVisits] = await Promise.all([
+    getSiteStats(),
+    getAppearance(),
+    getMonthViews(),
+    getTotalVisits(),
+  ]);
 
   return (
     <main className="mx-auto w-full max-w-6xl px-4 pb-10 pt-24 sm:px-6">
@@ -46,7 +58,13 @@ async function PublicShellLayout({ children, rightTop }: Props) {
           style={{ animationDelay: "240ms" }}
         >
           {rightTop}
-          {!rightTop && <StatsCard stats={stats} />}
+          {!rightTop && (
+            <>
+              <StatsCard stats={stats} totalVisits={totalVisits} />
+              <CountdownCard />
+              <CalendarWidget monthViews={monthViews} />
+            </>
+          )}
           <TagCloudCard />
         </div>
       </div>

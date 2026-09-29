@@ -253,7 +253,7 @@ export default function GalaxyBackground({
   }, []);
 
   return (
-    <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
+    <div className="pointer-events-none fixed inset-0 overflow-hidden" aria-hidden>
       {/* 星云:中心一团亮核 + 三团柔和的色斑,给星空"星系"的颜色层次(不动的部分用 CSS) */}
       <div
         className="absolute inset-0"

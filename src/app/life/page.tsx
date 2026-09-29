@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import LifeClient from "@/components/public/LifeClient";
 import { listFinance, listHabitsWithStreak, listTimeline } from "@/lib/collections";
+import { listKbNotes } from "@/lib/kb-content";
 import { getSessionUser } from "@/lib/session";
 import { PublicShell } from "@/components/public/PublicShell";
 
@@ -51,10 +52,11 @@ async function LifePageData() {
   const user = await getSessionUser();
   if (!user) return null;
 
-  const [habits, finance, timeline] = await Promise.all([
+  const [habits, finance, timeline, diaryRows] = await Promise.all([
     listHabitsWithStreak(user),
     listFinance(user),
     listTimeline(user),
+    listKbNotes("diary", user),
   ]);
 
   return (
@@ -78,6 +80,12 @@ async function LifePageData() {
         date: ev.date,
         title: ev.title,
         content: ev.content,
+      }))}
+      diary={diaryRows.map((row) => ({
+        id: row.id,
+        title: row.title,
+        preview: (row.content ?? "").replace(/\s+/g, " ").slice(0, 80),
+        updatedAt: row.updatedAt,
       }))}
     />
   );

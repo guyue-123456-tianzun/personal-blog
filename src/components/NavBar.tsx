@@ -21,6 +21,7 @@ const NAV = [
 // 次要页收进"更多"下拉(参考站也是这个做法:主栏 4~5 项 + 一个下拉)。
 // 学习路线/成长时间线/导航页/知识网络以前只能靠直接输网址进,没有任何入口
 const MORE = [
+  { href: "/buddies", label: "我的好友" },
   { href: "/network", label: "知识网络" },
   { href: "/paths", label: "学习路线" },
   { href: "/timeline", label: "成长时间线" },

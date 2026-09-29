@@ -13,11 +13,20 @@ export type LifeFinance = {
   date: string;
 };
 export type LifeEvent = { id: number; date: string; title: string; content: string | null };
+// 日记 = 生活记录(2026-09-29 站长拍板:写日记归生活,不归知识库)
+// preview = 正文摘要(服务端取数时截 80 字),列表里只展示摘要不整篇铺开
+export type LifeDiary = {
+  id: number;
+  title: string;
+  preview: string;
+  updatedAt: string;
+};
 
 type Props = {
   habits: LifeHabit[];
   finance: LifeFinance[];
   timeline: LifeEvent[];
+  diary: LifeDiary[];
 };
 
 const inputClass =
@@ -47,7 +56,7 @@ function Card({
 const todayStr = () => new Date().toISOString().slice(0, 10);
 
 // 生活页交互面板:习惯打卡 / 快捷记一笔 / 成长时间线,全部只操作登录用户自己的数据
-export default function LifeClient({ habits, finance, timeline }: Props) {
+export default function LifeClient({ habits, finance, timeline, diary }: Props) {
   const router = useRouter();
   const [hint, setHint] = useState("");
   const [newHabit, setNewHabit] = useState("");
@@ -55,6 +64,7 @@ export default function LifeClient({ habits, finance, timeline }: Props) {
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState("");
   const [note, setNote] = useState("");
+  const [diaryText, setDiaryText] = useState("");
   const [eventDate, setEventDate] = useState(todayStr());
   const [eventTitle, setEventTitle] = useState("");
   const [eventContent, setEventContent] = useState("");
@@ -159,6 +169,58 @@ export default function LifeClient({ habits, finance, timeline }: Props) {
             </button>
           </div>
         </div>
+      </Card>
+
+      {/* ===== 日记(2026-09-29 站长拍板:写作类的日记归生活,不归知识库) ===== */}
+      <Card title="日记" desc="今天过得怎么样,随手写下几笔;只有你自己能看到。">
+        <textarea
+          value={diaryText}
+          onChange={(e) => setDiaryText(e.target.value)}
+          placeholder="今天…(想到什么写什么,Markdown 也行)"
+          rows={4}
+          className={`${inputClass} w-full resize-y leading-6`}
+        />
+        <div className="mt-2 flex items-center gap-3">
+          <button
+            onClick={() => {
+              if (!diaryText.trim()) {
+                setHint("写点什么再存");
+                return;
+              }
+              void call(
+                "/api/kb/notes",
+                {
+                  type: "diary",
+                  title: `日记 ${todayStr()}`,
+                  content: diaryText.trim(),
+                  isPublic: 0,
+                },
+                "日记已保存 ✓",
+              );
+              setDiaryText("");
+            }}
+            disabled={busyRef.current.busy}
+            className="rounded-full bg-accent px-5 py-2 text-sm text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+          >
+            存日记
+          </button>
+          <span className="text-xs opacity-50">同一天再写会另存一条,历史都在下面。</span>
+        </div>
+        {diary.length > 0 && (
+          <ul className="mt-3 space-y-1.5">
+            {diary.slice(0, 5).map((entry) => (
+              <li
+                key={entry.id}
+                className="rounded-lg border border-border bg-card px-3 py-2 text-sm"
+              >
+                <span className="opacity-55">{entry.updatedAt.slice(0, 10)}</span>{" "}
+                <span className="opacity-80">
+                  {entry.preview || "(空)"}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
       </Card>
 
       {/* ===== 记账 ===== */}

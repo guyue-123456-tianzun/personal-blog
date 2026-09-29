@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import AskPanel, { type AtlasNote } from "@/components/atlas/AskPanel";
 import BookmarkQuickForm from "@/components/atlas/BookmarkQuickForm";
 import ClipForm from "@/components/kb/ClipForm";
-import DiaryComposer from "@/components/kb/DiaryComposer";
+import NoteQuickEditor from "@/components/atlas/NoteQuickEditor";
 import GalaxyBackground, {
   DEFAULT_GALAXY,
   type GalaxySettings,
@@ -41,9 +41,9 @@ export default function AtlasWorkspace({ notes, graph, aiEnabled, userName }: Pr
   const [galaxyPanelOpen, setGalaxyPanelOpen] = useState(false);
   // "新建"下拉与对应弹层:剪藏/日记/书签在弹层里直接录,笔记仍去编辑器页
   const [createMenuOpen, setCreateMenuOpen] = useState(false);
-  const [createPanel, setCreatePanel] = useState<"clip" | "diary" | "bookmark" | null>(
-    null,
-  );
+  const [createPanel, setCreatePanel] = useState<
+    "note" | "clip" | "bookmark" | null
+  >(null);
 
   const noteById = useMemo(() => new Map(notes.map((n) => [n.id, n])), [notes]);
   const selected = selectedId !== null ? noteById.get(selectedId) ?? null : null;
@@ -137,12 +137,6 @@ export default function AtlasWorkspace({ notes, graph, aiEnabled, userName }: Pr
       <GalaxyBackground settings={galaxy} />
       {/* ===== 顶部工具条 ===== */}
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-border px-4 py-2">
-        <Link
-          href="/kb"
-          className="rounded-lg px-2 py-1 text-sm opacity-60 transition-colors hover:bg-foreground/5 hover:opacity-100"
-        >
-          ← 后台
-        </Link>
         <span className="font-bold">知识库工作台</span>
         <span className="hidden text-xs opacity-45 sm:inline">
           {userName} 的 {notes.length} 篇内容
@@ -192,7 +186,6 @@ export default function AtlasWorkspace({ notes, graph, aiEnabled, userName }: Pr
                   {[
                     { key: "note", label: "📝 笔记" },
                     { key: "clip", label: "✂️ 剪藏网页" },
-                    { key: "diary", label: "📔 写日记" },
                     { key: "bookmark", label: "🔖 加书签" },
                   ].map((item) => (
                     <button
@@ -200,9 +193,9 @@ export default function AtlasWorkspace({ notes, graph, aiEnabled, userName }: Pr
                       onClick={() => {
                         setCreateMenuOpen(false);
                         if (item.key === "note") {
-                          window.location.href = "/kb/notes/new";
+                          setCreatePanel("note");
                         } else {
-                          setCreatePanel(item.key as "clip" | "diary" | "bookmark");
+                          setCreatePanel(item.key as "clip" | "bookmark");
                         }
                       }}
                       className="block w-full rounded-lg px-2.5 py-1.5 text-left transition-colors hover:bg-foreground/10"
@@ -608,10 +601,10 @@ export default function AtlasWorkspace({ notes, graph, aiEnabled, userName }: Pr
           >
             <div className="mb-3 flex items-center justify-between">
               <h3 className="font-bold">
-                {createPanel === "clip"
-                  ? "✂️ 剪藏网页"
-                  : createPanel === "diary"
-                    ? "📔 写日记"
+                {createPanel === "note"
+                  ? "📝 写笔记"
+                  : createPanel === "clip"
+                    ? "✂️ 剪藏网页"
                     : "🔖 加书签"}
               </h3>
               <button
@@ -622,18 +615,20 @@ export default function AtlasWorkspace({ notes, graph, aiEnabled, userName }: Pr
                 ✕
               </button>
             </div>
+            {createPanel === "note" && (
+              <>
+                <p className="mb-3 text-xs opacity-55">
+                  想好标题就开写;完整排版(附件/版本历史)后续轮搬进工作台。
+                </p>
+                <NoteQuickEditor />
+              </>
+            )}
             {createPanel === "clip" && (
               <>
                 <p className="mb-3 text-xs opacity-55">
                   粘贴网址,服务端抓标题和正文存成剪藏笔记。
                 </p>
                 <ClipForm />
-              </>
-            )}
-            {createPanel === "diary" && (
-              <>
-                <p className="mb-3 text-xs opacity-55">日记默认仅自己可见。</p>
-                <DiaryComposer />
               </>
             )}
             {createPanel === "bookmark" && (

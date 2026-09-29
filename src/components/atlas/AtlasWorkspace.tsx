@@ -188,7 +188,7 @@ export default function AtlasWorkspace({ notes, graph, aiEnabled, userName }: Pr
                   onClick={() => setCreateMenuOpen(false)}
                   className="fixed inset-0 z-40 cursor-default"
                 />
-                <div className="absolute right-0 z-50 mt-2 w-36 rounded-xl border border-border bg-card p-1.5 text-sm text-foreground shadow-lg backdrop-blur-md">
+                <div className="absolute right-0 z-50 mt-2 w-36 rounded-xl border border-white/15 bg-[#181830]/95 p-1.5 text-sm text-foreground shadow-2xl backdrop-blur-2xl">
                   {[
                     { key: "note", label: "📝 笔记" },
                     { key: "clip", label: "✂️ 剪藏网页" },

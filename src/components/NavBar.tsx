@@ -201,7 +201,7 @@ export default function NavBar({
                   onClick={() => setMoreOpen(false)}
                   className="fixed inset-0 z-40 cursor-default"
                 />
-                <div className="absolute right-0 z-50 mt-2 w-40 rounded-xl border border-border bg-card p-1.5 text-sm text-foreground shadow-lg backdrop-blur-md">
+                <div className="absolute right-0 z-50 mt-2 w-40 rounded-xl border border-white/15 bg-[#181830]/95 p-1.5 text-sm text-foreground shadow-2xl backdrop-blur-2xl">
                   {(sessionUsername
                     ? [
                         {

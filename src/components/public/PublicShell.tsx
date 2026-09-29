@@ -33,8 +33,8 @@ async function PublicShellLayout({ children, rightTop }: Props) {
   ]);
 
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 pb-10 pt-24 sm:px-6">
-      <div className="grid items-start gap-4 lg:grid-cols-[250px_minmax(0,1fr)_260px]">
+    <main className="mx-auto w-full max-w-[1700px] px-4 pb-10 pt-24 sm:px-6 lg:px-8">
+      <div className="grid items-start gap-5 lg:grid-cols-[300px_minmax(0,1fr)_300px]">
         {/* 左栏:资料 + 打字机公告 + 音乐 + 标签(参考站式信息卡排布) */}
         <div
           className="fade-up space-y-4 lg:sticky lg:top-[72px] lg:self-start"

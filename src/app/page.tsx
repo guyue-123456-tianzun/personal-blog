@@ -160,8 +160,8 @@ export default async function Home() {
       {/* ===== 三栏内容区:从全屏 Hero 下方开始(参考站构图,壁纸独占首屏) =====
           左右两栏 sticky:往下滚时跟着走,滚到自己内容的底部就停住不动,
           中间的文章列继续往下滑 */}
-      <main id="site-content" className="mx-auto w-full max-w-6xl px-4 pb-10 sm:px-6">
-        <div className="relative z-20 grid items-start gap-4 pt-8 lg:grid-cols-[260px_minmax(0,1fr)_270px]">
+      <main id="site-content" className="mx-auto w-full max-w-[1700px] px-4 pb-10 sm:px-6 lg:px-8">
+        <div className="relative z-20 grid items-start gap-5 pt-8 lg:grid-cols-[300px_minmax(0,1fr)_300px]">
           {/* 左栏:人物 + 公告 + 恋爱 + 天气。
               音乐卡不在这里——左下角那个浮动圆盘本身就是完整播放器(播放/暂停/自动下一首,
               每页都在),首页再摆一张纯属重复;而且侧栏要能"吸附"就必须比视口矮,
